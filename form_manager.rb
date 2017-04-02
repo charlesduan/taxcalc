@@ -5,7 +5,14 @@ class FormManager
 
   def initialize
     @forms = {}
+    @ordered_forms = []
     @interviewer = Interviewer.new
+  end
+
+  def export_all
+    @ordered_forms.each do |f|
+      f.export if f.exportable
+    end
   end
 
   attr_accessor :interviewer
@@ -17,6 +24,7 @@ class FormManager
     else
       @forms[name] = form
     end
+    @ordered_forms.push(form)
   end
 
   def compute_form(f)

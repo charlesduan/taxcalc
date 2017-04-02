@@ -37,6 +37,12 @@ class TaxForm
       @lines_order = []
     end
 
+    def each
+      @lines_order.each do |l|
+        yield(l, @lines_data[l])
+      end
+    end
+
     def line_name(line)
       "Form #{@form.name}, line #{line}"
     end
@@ -64,6 +70,7 @@ class TaxForm
 
       unless @lines_data.include?(line)
         return false if type == :present
+        return BlankZero if type == :opt
         raise "#{line_name(line)} not defined"
       end
       data = @lines_data[line]
@@ -100,7 +107,10 @@ class TaxForm
   def initialize(manager)
     @lines = Lines.new(self)
     @manager = manager
+    @exportable = true
   end
+
+  attr_accessor :exportable
 
   def name
     raise "Abstract form class"
@@ -112,6 +122,10 @@ class TaxForm
     else
       @lines[*args]
     end
+  end
+
+  def sum_lines(*args)
+    args.map { |l| line[l, :opt] }.inject(:+)
   end
 
   def has_line(num)
@@ -226,9 +240,11 @@ class NamedForm < TaxForm
   def initialize(name, data)
     super(data)
     @name = name.to_s
+    @exportable = false
   end
 
   def name
     @name
   end
+
 end
