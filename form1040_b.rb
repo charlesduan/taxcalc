@@ -1,9 +1,9 @@
 require 'tax_form'
 
-class ScheduleB < TaxForm
+class Form1040B < TaxForm
 
   def name
-    'Schedule B'
+    '1040 Schedule B'
   end
 
   def compute

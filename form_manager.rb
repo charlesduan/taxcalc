@@ -64,10 +64,15 @@ class FormManager
       until io.eof?
         line = io.gets
         next unless (line && line =~ /\w/)
-        raise "Invalid start of form" unless line =~ /^Form /
+        raise "Invalid start of form" unless (line =~ /^(Form|Table) /)
+        type = $1
         name = $'.strip
         new_form = NamedForm.new(name, self)
-        new_form.import(io)
+        if type == 'Table'
+          new_form.import_tabular(io)
+        else
+          new_form.import(io)
+        end
         add_form(new_form)
       end
     end

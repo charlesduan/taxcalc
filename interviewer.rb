@@ -47,7 +47,7 @@ class Interviewer
     case data
     when '-' then BlankZero
     when /^-?\d+$/ then data.to_i
-    when /^\d*\.\d*$/ then data.to_f
+    when /^-?\d*\.\d*$/ then data.to_f
     when /^-?\d+,[\d, -]*$/
       data.split(/,\s*/).map { |x| process_import_data(x) }
     else data

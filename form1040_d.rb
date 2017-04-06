@@ -1,8 +1,8 @@
 require 'tax_form'
 
-class ScheduleD < TaxForm
+class Form1040D < TaxForm
   def name
-    'Schedule D'
+    '1040 Schedule D'
   end
 
   def compute

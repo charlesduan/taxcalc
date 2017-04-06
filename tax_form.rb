@@ -60,8 +60,8 @@ class TaxForm
           raise "#{line_name(line)}: not expecting an array"
         end
       end
+      @lines_order.push(line) unless @lines_data[line]
       @lines_data[line] = value
-      @lines_order.push(line)
     end
 
     def [](line, type = nil)
@@ -185,6 +185,24 @@ class TaxForm
         line[line_no, :all] = data
       else
         line[line_no] = data
+      end
+    end
+  end
+
+  def import_tabular(io = STDIN)
+    lines = nil
+    io.each do |text|
+      break if (text =~ /^\s*$/)
+      unless lines
+        lines = text.strip.split(/\s+/)
+        next
+      end
+      elts = text.strip.split(/\s+/, lines.count).map { |x|
+        Interviewer.parse(x)
+      }
+      raise "Invalid table line #{text}" unless lines.count == elts.count
+      lines.zip(elts).each do |l, e|
+        line[l, :add] = e
       end
     end
   end
