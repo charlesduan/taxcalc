@@ -163,6 +163,12 @@ class TaxForm
     end
   end
 
+  def assert_question(question, answer)
+    if interview(question) != answer
+      raise 'Processing for that response is not implemented'
+    end
+  end
+
   def interview(prompt)
     @manager.interview(prompt)
   end

@@ -31,6 +31,7 @@ class FormManager
     f = f.new(self) if f.is_a?(Class)
     add_form(f)
     f.compute
+    return f
   end
 
   def has_form?(name)

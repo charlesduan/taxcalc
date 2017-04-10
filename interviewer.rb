@@ -38,12 +38,18 @@ class Interviewer
     puts prompt
     answer = gets.strip
     persist(prompt, answer)
-    answer = Interviewer.parse(answer)
+    answer = Interviewer.parse(question, answer)
     @answers[prompt] = answer
     return answer
   end
 
-  def self.parse(data)
+  def self.parse(question, data)
+    if question =~ /\?$/
+      return true if data =~ /^y(es)?/i
+      return false if data =~ /^no?/i
+      raise "Invalid answer to yes-no question"
+    end
+
     case data
     when '-' then BlankZero
     when /^-?\d+$/ then data.to_i

@@ -25,6 +25,8 @@ class Form1040A < TaxForm
     end
     line['29.no'] = 'X'
     line[29] = sum_lines(4, 9, 15, 19, 20, 27, 28)
-    always_itemize = interview("Do you want to always itemize deductions?")
+    if form(1040).force_itemize
+      line[30] = 'X'
+    end
   end
 end
