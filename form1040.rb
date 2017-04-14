@@ -81,10 +81,9 @@ class Form1040 < TaxForm
 
     line[12] = forms('1040 Schedule C').lines(31, :sum)
 
-    sched_d = Form1040D.new
-    sched_d.compute
-    @manager.add_form(sched_d)
-    line[13] = sched_d.report_1040
+    sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
+
+    line[13] = sched_d.report_1040 if sched_d
 
     assert_no_forms(4797)
 
@@ -110,13 +109,8 @@ class Form1040 < TaxForm
     line[22] = sum_lines(7, '8a', '9a', 10, 11, 12, 13, 14, '15b', '16b', 17,
                          18, 19, '20b', 21)
 
-    sched_se = Form1040SE.new
-    sched_se.compute
-    @manager.add_form(sched_se) if sched_se.needed?
-
-    if sched_se.needed?
-      line[27] = sched_se.line[13]
-    end
+    sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
+    line[27] = sched_se.line[13] if sched_se
 
     line[36] = sum_lines(23, 24, 25, 26, 27, 28, 29, 30, '31a', 32, 33, 34, 35)
     line[37] = line[22] - line[36]
@@ -200,7 +194,7 @@ class Form1040 < TaxForm
     line[55] = sum_lines(*48..54)
     line[56] = [ 0, line[47] - line[55] ].max
 
-    if has_form('1040 Schedule SE')
+    if has_form?('1040 Schedule SE')
       line[57] = form('1040 Schedule SE').line[12]
     end
 
@@ -267,7 +261,7 @@ class Form1040 < TaxForm
 
 
   def compute_tax
-    if has_form('1040 Schedule D')
+    if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       if sched_d.line['20no', :present]
         return compute_tax_schedule_d
@@ -319,7 +313,7 @@ class QdcgtWorksheet < TaxForm
     f1040 = form(1040)
     line[1] = f1040.line[43]
     line[2] = f1040.line['9b']
-    if has_form('1040 Schedule D')
+    if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       line['3yes'] = 'X'
       line[3] = [ 0, [ sched_d.line[15], sched_d.line[16] ].min ].max
@@ -329,7 +323,7 @@ class QdcgtWorksheet < TaxForm
     end
 
     line[4] = line[2] + line[3]
-    if has_form(4952)
+    if has_form?(4952)
       line[5] = form(4952).line['4g']
     else
       line[5] = 0
@@ -369,14 +363,13 @@ class AMTTestWorksheet < TaxForm
 
   def compute
     f1040 = form(1040)
-    if has_form('1040 Schedule A')
-      sched_a = form('1040 Schedule A')
+    with_form('1040 Schedule A') do |sched_a|
       line['1yes'] = 'X'
       line[1] = f1040.line[41]
       line[3] = sched_a.sum_lines(9, 27)
       line[4] = sum_lines(1, 2, 3)
       line[5] = f1040.sum_lines(10, 21)
-      if has_form('Itemized Deduction Worksheet')
+      if has_form?('Itemized Deduction Worksheet')
         line[6] = form('Itemized Deduction Worksheet').line[9]
       end
       line[7] = sum_lines(5, 6)

@@ -1,4 +1,9 @@
 class Form1040SE < TaxForm
+
+  def name
+    '1040 Schedule SE'
+  end
+
   def compute
     line[2] = forms('1040 Schedule C').lines(31, :sum) + \
       forms('1065 Schedule K-1').lines(14, :sum)
@@ -17,7 +22,7 @@ class Form1040SE < TaxForm
     line[6] = sum_lines('4c', '5b')
     line[7] = 118500
 
-    line['8a'] = forms('W-2').lines(3, :sum) + forms('W-2') + lines(7, :sum)
+    line['8a'] = forms('W-2').lines(3, :sum) + forms('W-2').lines(7, :sum)
     line['8d'] = sum_lines('8a', '8b', '8c')
 
     l9 = line[7] - line['8d']

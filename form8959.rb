@@ -15,9 +15,9 @@ class Form8959 < TaxForm
     line[6] = [ 0, line[4] - line[5] ].max
     line[7] = (line[6] * 0.009).round
 
-    if has_form('1040 Schedule SE')
+    with_form('1040 Schedule SE') do |sched_se|
       assert_no_forms('1040-PR', '1040-SS')
-      line[8] = [ 0, form('1040 Schedule SE').line[6] ].max
+      line[8] = [ 0, sched_se.line[6] ].max
       line[9] = form(1040).status.form_8959_limit
       line[10] = line[4]
       line[11] = [ 0, line[9] - line[10] ].max

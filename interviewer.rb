@@ -7,6 +7,8 @@ class Interviewer
     @answers = {}
   end
 
+  attr_reader :answers
+
   def file=(file)
     last_q = nil
     if File.exist?(file)
@@ -15,7 +17,7 @@ class Interviewer
           line = line.chomp
           next if line == ''
           if line =~ /^\s+/
-            @answers[last_q] = Interviewer.parse(line.strip)
+            @answers[last_q] = Interviewer.parse(last_q, line.strip)
           else
             last_q = line
           end
@@ -33,12 +35,15 @@ class Interviewer
     end
   end
 
-  def ask(prompt)
-    return @answers[prompt] if @answers[prompt]
+  def ask(prompt, form = nil)
+    return @answers[prompt] if @answers.include?(prompt)
+    if form
+      puts "For form #{form.name} for #{form.manager.name}:"
+    end
     puts prompt
     answer = gets.strip
     persist(prompt, answer)
-    answer = Interviewer.parse(question, answer)
+    answer = Interviewer.parse(prompt, answer)
     @answers[prompt] = answer
     return answer
   end
@@ -54,8 +59,8 @@ class Interviewer
     when '-' then BlankZero
     when /^-?\d+$/ then data.to_i
     when /^-?\d*\.\d*$/ then data.to_f
-    when /^-?\d+,[\d, -]*$/
-      data.split(/,\s*/).map { |x| process_import_data(x) }
+    when /^\[\s*(.*)\s*\]$/
+      $1.split(/,\s*/).map { |x| parse(question, x.strip) }
     else data
     end
   end

@@ -9,7 +9,7 @@ class Form6251 < TaxForm
 
   def compute
 
-    if has_form('1040 Schedule A')
+    if has_form?('1040 Schedule A')
       sched_a = form('1040 Schedule A')
       line[1] = form(1040).line(41)
       line[2] = [
@@ -58,7 +58,7 @@ class Form6251 < TaxForm
 
     l31test = false
     l31test = true if form(1040).line[13] > 0 or form(1040).line('9b') > 0
-    if !l31test and has_form('1040 Schedule D')
+    if !l31test and has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       l31test = true if sched_d.line[15] > 0 and sched_d.line[16] > 0
     end

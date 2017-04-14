@@ -3,15 +3,18 @@ require 'interviewer'
 
 class FormManager
 
-  def initialize
+  def initialize(name = nil)
+    @name = name
     @forms = {}
     @ordered_forms = []
     @interviewer = Interviewer.new
   end
 
-  def export_all
+  attr_reader :name
+
+  def export_all(all = false)
     @ordered_forms.each do |f|
-      f.export if f.exportable
+      f.export if all || f.exportable
     end
   end
 
@@ -19,6 +22,9 @@ class FormManager
 
   def add_form(form)
     name = form.name
+    if form.manager != self
+      raise 'Adding form, but wrong manager'
+    end
     if @forms[name]
       @forms[name] = [ @forms[name], form ].flatten
     else
@@ -27,10 +33,20 @@ class FormManager
     @ordered_forms.push(form)
   end
 
+  def copy_form(other_form)
+    new_form = other_form.copy(self)
+    add_form(new_form)
+    return new_form
+  end
+
   def compute_form(f)
     f = f.new(self) if f.is_a?(Class)
-    add_form(f)
+    puts "Computing form #{f.name}#{" for " + @name unless @name.nil?}"
     f.compute
+    unless f.needed?
+      return nil
+    end
+    add_form(f)
     return f
   end
 
@@ -79,8 +95,8 @@ class FormManager
     end
   end
 
-  def interview(prompt)
-    @interviewer.ask(prompt)
+  def interview(prompt, form = nil)
+    @interviewer.ask(prompt, form)
   end
 
 end

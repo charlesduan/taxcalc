@@ -2,11 +2,10 @@ require 'tax_form'
 
 class Form1040A < TaxForm
   def compute
-    line[5] = forms('State Taxes').line(:amount, :sum) + \
+    line[5] = forms('State Tax').line(:amount, :sum) + \
       forms('W-2').lines(17, :sum)
     line['5a'] = 'X'
-    line[6] = forms('Real Estate Taxes').line(:amount) + \
-      forms('1098-INT').lines(10, :sum)
+    line[6] = forms('1098-INT').lines(10, :sum)
     line[9] = sum_lines(5, 6, 7, 8)
 
     line[10] = forms('1098-INT').lines(1, :sum) + \
@@ -15,7 +14,7 @@ class Form1040A < TaxForm
     assert_no_forms(4952)
     line[15] = sum_lines(10, 11, 12, 13, 14)
 
-    line[16] = forms('Gifts to Charity').lines(:amount, :sum)
+    line[16] = forms('Charity Gift').lines(:amount, :sum)
     if line[16] > 0.2 * form(1040).line(38)
       raise "Pub. 526 limit on charitable contributions not implemented"
     end

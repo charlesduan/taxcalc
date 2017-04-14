@@ -7,12 +7,17 @@ class Form1065K1 < TaxForm
     @partner_form = partner_form
   end
 
+  def copy(manager)
+    super(Form1065K1.new(manager, @partner_form.copy(manager)))
+  end
+
   def name
     '1065 Schedule K-1'
   end
 
 
   def compute
+    line['B'] = form(1065).line['name']
     line['F'] = @partner_form.line['name']
     line["G.#{@partner_form.line['liability']}"] = 'X'
     line["H.#{@partner_form.line['nationality']}"] = 'X'

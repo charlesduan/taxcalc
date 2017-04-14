@@ -70,7 +70,7 @@ class TaxForm
 
       unless @lines_data.include?(line)
         return false if type == :present
-        return BlankZero if type == :opt
+        return BlankZero if type == :opt or type == :sum
         raise "#{line_name(line)} not defined"
       end
       data = @lines_data[line]
@@ -110,7 +110,25 @@ class TaxForm
     @exportable = true
   end
 
+  def copy(new_manager_or_obj)
+    if new_manager_or_obj.is_a?(FormManager)
+      new_copy = self.class.new(new_manager_or_obj)
+    else
+      new_copy = new_manager_or_obj
+    end
+    new_copy.exportable = @exportable
+    line.each do |lnum, val|
+      if val.is_a?(Enumerable)
+        new_copy.line[lnum, :all] = val.dup
+      else
+        new_copy.line[lnum] = val
+      end
+    end
+    return new_copy
+  end
+
   attr_accessor :exportable
+  attr_accessor :manager
 
   def name
     raise "Abstract form class"
@@ -157,10 +175,7 @@ class TaxForm
   end
 
   def assert_form_unnecessary(form_name)
-    value = interview("Does #{form_name} apply to you?")
-    unless value == 'no'
-      raise "#{form_name} is applicable but not implemented"
-    end
+    assert_question("Does #{form_name} apply to you?", false)
   end
 
   def assert_question(question, answer)
@@ -170,7 +185,7 @@ class TaxForm
   end
 
   def interview(prompt)
-    @manager.interview(prompt)
+    @manager.interview(prompt, self)
   end
 
 
@@ -182,9 +197,21 @@ class TaxForm
     end
   end
 
+  def has_form?(name)
+    @manager.has_form?(name)
+  end
+
   def with_form(name)
     if @manager.has_form?(name)
       yield(form(name))
+    end
+  end
+
+  def find_or_compute_form(name, form_class)
+    if has_form?(name)
+      return form(name)
+    else
+      @manager.compute_form(form_class)
     end
   end
 
@@ -192,7 +219,7 @@ class TaxForm
     io.each do |text|
       break if (text =~ /^\s*$/)
       line_no, data = text.strip.split(/\s+/, 2)
-      data = Interviewer.parse(data)
+      data = Interviewer.parse(line_no, data)
       if data.is_a?(Enumerable)
         line[line_no, :all] = data
       else
@@ -210,7 +237,7 @@ class TaxForm
         next
       end
       elts = text.strip.split(/\s+/, lines.count).map { |x|
-        Interviewer.parse(x)
+        Interviewer.parse('', x)
       }
       raise "Invalid table line #{text}" unless lines.count == elts.count
       lines.zip(elts).each do |l, e|
@@ -222,6 +249,12 @@ class TaxForm
   def export(io = STDOUT)
     @lines.export(io)
   end
+
+  def needed?
+    true
+  end
+
+
 end
 
 class MultiForm < Array
@@ -249,7 +282,12 @@ class MultiForm < Array
       res = @mf.map { |f| f.line[line, type] }
       case type
       when :all then res.flatten
-      when :sum then res.inject(:+)
+      when :sum then
+        if res.empty?
+          BlankZero
+        else
+          res.inject(:+)
+        end
       when :present then res.any? && !res.empty?
       else
         if res.any? { |x| x.is_a?(Enumerable) }
@@ -271,6 +309,10 @@ class NamedForm < TaxForm
     super(data)
     @name = name.to_s
     @exportable = false
+  end
+
+  def copy(new_manager)
+    super(self.class.new(name, new_manager))
   end
 
   def name

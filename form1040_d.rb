@@ -1,4 +1,5 @@
 require 'tax_form'
+require 'form8949'
 
 class Form1040D < TaxForm
   def name
@@ -6,6 +7,8 @@ class Form1040D < TaxForm
   end
 
   def compute
+    Form8949.generate(@manager) unless has_form?(8949)
+
     forms_a = forms(8949).select { |f| f.has_line('A') }
     if forms_a.empty?
       line['1b.h'] = BlankZero
@@ -34,7 +37,6 @@ class Form1040D < TaxForm
     if forms_d.empty?
       line['8b.h'] = BlankZero
     else
-      p forms_d.lines['II.2d', :sum]
       line['8b.d'] = forms_d.lines('II.2d', :sum)
       line['8b.e'] = forms_d.lines('II.2e', :sum)
       line['8b.h'] = forms_d.lines('II.2h', :sum)
@@ -63,12 +65,19 @@ class Form1040D < TaxForm
         assert_form_unnecessary('Schedule D Section 1250 Gain Worksheet')
 
         line['20yes'] = 'X'
+        return
       else
-        raise 'Not implemented'
+        line['17no'] = 'X'
       end
         
-    else
+    elsif line[16] < 0
       raise 'Not implemented'
+    end
+
+    if forms('1099-DIV').lines('1b', :sum) > 0
+      line['22yes'] = 'X'
+    else
+      line['22no'] = 'X'
     end
 
   end
