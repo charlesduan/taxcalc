@@ -182,6 +182,12 @@ class TaxForm
     end
   end
 
+  def with_form(name)
+    if @manager.has_form?(name)
+      yield(form(name))
+    end
+  end
+
   def import(io = STDIN)
     io.each do |text|
       break if (text =~ /^\s*$/)

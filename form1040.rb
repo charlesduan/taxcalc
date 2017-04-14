@@ -1,4 +1,12 @@
 require 'tax_form'
+require 'form1040_a'
+require 'form1040_b'
+require 'form1040_d'
+require 'form1040_e'
+require 'form1040_se'
+require 'form6251'
+require 'form8959'
+require 'form8960'
 
 class Form1040 < TaxForm
 
@@ -19,7 +27,9 @@ class Form1040 < TaxForm
     @status
   end
 
-  def calculate
+  def compute
+
+    assert_no_forms(2555, '2555-EZ')
 
     @status = FilingStatus.for(interview("Enter your filing status:"))
 
@@ -156,7 +166,103 @@ class Form1040 < TaxForm
 
     amt_test = @manager.compute_form(AMTTestWorksheet)
     if amt_test.line['fillform'] == 'yes'
-    
+      line[45] = @manager.compute_form(Form6251).line[35]
+    end
+
+    assert_no_forms('1095-A') # Line 46
+
+    line[47] = sum_lines(44, 45, 46)
+
+    # Line 48
+    assert_interview("Did you pay any foreign taxes?", false)
+    assert_no_lines('1099-DIV', 6)
+    assert_no_lines('1099-INT', 6)
+
+    unless status.is('mfs')
+      # Line 49
+      assert_question('Did you pay child care expenses?', false)
+
+      # Line 50
+      assert_question("Did you pay education expenses?", false)
+    end
+
+    # Line 51
+    if line[38] <= status.line_51_credit
+      raise 'Retirement Savings Contributions Credit not implemented'
+    end
+
+    # Line 52
+    line[52] = @manager.compute_form(ChildTaxCreditWorksheet).line['fill']
+
+    # Line 53
+    assert_no_forms(5695)
+
+    line[55] = sum_lines(*48..54)
+    line[56] = [ 0, line[47] - line[55] ].max
+
+    if has_form('1040 Schedule SE')
+      line[57] = form('1040 Schedule SE').line[12]
+    end
+
+    assert_question('Did you have health insurance the whole year?', true)
+    line['61box'] = 'X'
+
+    line[62] = BlankZero
+    f8959 = Form8959.new.compute
+    if f8959.needed?
+      line['62a'] = 'X'
+      @manager.add_form(f8959)
+      line[62] += f8959.line[18]
+    end
+
+    if line[38] > status.niit_threshold
+      f8960 = Form8960.new.compute
+      @manager.add_form(f8960)
+      line['62b'] = 'X'
+      line[62] += f8960.line[17]
+    end
+    line[63] = sum_lines(56, 57, 58, 59, '60a', '60b', 61, 62)
+
+    line[64] = forms('W-2').lines(2, :sum)
+    line[65] = forms('Estimated Tax').lines('amount', :sum)
+
+    ss_tax_paid = forms('W-2').lines[4].map { |x|
+      [ x, 7347 ].min
+     ].inject(:+)
+     if ss_tax_paid > 7347
+       line[71] = ss_tax_paid - 7347
+     end
+
+    line[74] = sum_lines(64, 65, '66a', 67, 68, 69, 70, 71, 72, 73)
+
+    if line[74] > line[63]
+      line[75] = line[74] - line[63]
+      line['76a'] = line[75]
+    else
+      line[78] = line[63] - line[74]
+
+      assert_no_forms(8828, 4137, 5329, 8885, 8919)
+      tax_shown = line[63] - sum_lines(61, '66a', 67, 68, 69, 72)
+
+      if line[78] > 1000 && line[78] > tax_shown
+
+        last_year_tax = interview('Enter your last year\'s tax shown:')
+        unless last_year_tax == 0
+          penalty_threshold = last_year_tax
+          last_year_agi = interview('Enter your last year\'s AGI:')
+          if last_year_agi > status.penalty_threshold
+            penalty_threshold = (1.1 * last_year_tax)
+          end
+
+          unless sum_lines(64, 65, 71) >= penalty_threshold
+            raise "Penalty computation not implemented"
+          end
+
+        end
+      end
+    end
+
+
   end
 
 
@@ -311,11 +417,45 @@ class AMTTestWorksheet < TaxForm
   end
 end
 
+class ChildTaxCreditWorksheet < TaxForm
+  def name
+    'Child Tax Credit Worksheet'
+  end
+
+  def compute
+    line[1] = form(1040).line['6c4', :all].select { |x| x == 'X' }.count
+    line[2] = form(1040).line[38]
+    line[3] = form(1040).status.child_tax_limit
+    if line[2] > line[3]
+      line[5] = 0
+    else
+      l4 = line[2] - line[3]
+      if l4 % 1000 == 0
+        line[4] = l4
+      else
+        line[4] = l4.round(-3) + 1000
+      end
+      line[5] = line[4] / 20
+    end
+    if line[1] > line[5]
+      raise 'Child tax credit not implemented'
+    else
+      line['fill'] = BlankZero
+      return
+    end
+  end
+end
+
 
 FilingStatus.set_param('qdcgt_exemption', 37650, 75300, 37650, 50400, 75300)
 FilingStatus.set_param('qdcgt_cap', 415050, 466950, 233475, 441000, 466950)
 FilingStatus.set_param('amt_exemption', 53900, 83800, 41900, 53900, 83800)
 FilingStatus.set_param('amt_exemption_2', 119700, 159700, 79850, 119700, 159700)
+FilingStatus.set_param('line_51_credit', 30750, 61500, 30750, 46125, 30750)
+FilingStatus.set_param('child_tax_limit', 75000, 110000, 55000, 75000, 75000)
+FilingStatus.set_param('niit_threshold', 200000, 250000, 125000, 200000, 250000)
+FilingStatus.set_param('penalty_threshold', 150000, 150000, 75000, 150000,
+                       150000)
 
 class SpouseExemption < FilingStatusVisitor
   def single(line)

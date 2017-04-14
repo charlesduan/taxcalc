@@ -1,5 +1,5 @@
 class Form1040E < TaxForm
-  def calculate
+  def compute
     k1s = forms('1065 Schedule K-1')
     assert_interview('What is your answer to Schedule E, line 27?', false)
 
