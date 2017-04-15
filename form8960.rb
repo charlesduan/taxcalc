@@ -16,9 +16,9 @@ class Form8960 < TaxForm
     with_form('1040 Schedule E') do |f|
       line4b = f.line('29a.j', :opt)
       if line4b != 0
-        assert_interview('Were your partnership activities a section 162 ' + \
-                         'trade or business but not trading financial ' + \
-                         'instruments or commodities?', true)
+        assert_question('Were your partnership activities a section 162 ' + \
+                        'trade or business but not trading financial ' + \
+                        'instruments or commodities?', true)
         line['4b'] = -line4b
       end
     end
@@ -30,7 +30,7 @@ class Form8960 < TaxForm
     line[8] = sum_lines(1, 2, 3, '4c', '5d', 6, 7)
 
     with_form('1040 Schedule A') do |f|
-      line['9a'] = f.line[14]
+      line['9a'] = f.line[14, :opt]
       line['9b'] = (f.line[5] * line[8] / form(1040).line[38]).round
       assert_no_forms(4952)
       line['9d'] = sum_lines('9a', '9b', '9c')

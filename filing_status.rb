@@ -37,6 +37,14 @@ class FilingStatus
     visitor.send(@name, *args)
   end
 
+  def halve_mfs(amt)
+    if is('mfs')
+      return amt / 2
+    else
+      return amt
+    end
+  end
+
   def self.for(name)
     raise "Invalid filing status #{name}" unless All[name]
     All[name]
@@ -53,7 +61,7 @@ class FilingStatus
 end
 
 FilingStatus.set_param('checkbox_1040', 1, 2, 3, 4, 5)
-FilingStatus.set_param('checkbox_1040_extra', nil, nil, 'Spouse\'s name',
+FilingStatus.set_param('checkbox_1040_extra', nil, nil, 'spouse\'s name',
                        'qualifying child\'s name', nil)
 
 FilingStatus.set_param('standard_deduction', 6300, 12600, 6300, 9300, 12600)

@@ -32,7 +32,7 @@ class Form8959 < TaxForm
     line[19] = forms('W-2').lines(6, :sum)
     line[20] = line[1]
     line[21] = (line[20] * 0.0145).round
-    line[22] = line[19] - line[22]
+    line[22] = [ 0, line[19] - line[21] ].max
 
     line[24] = sum_lines(22, 23)
   end

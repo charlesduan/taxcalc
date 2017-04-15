@@ -1,4 +1,6 @@
+require 'tax_table'
 require 'tax_form'
+require 'filing_status'
 require 'form1040_a'
 require 'form1040_b'
 require 'form1040_d'
@@ -10,18 +12,15 @@ require 'form8960'
 
 class Form1040 < TaxForm
 
-  def initialize(manager)
-    super(manager)
-    @force_itemize = nil
+  def name
+    '1040'
   end
 
-  def force_itemize=(val)
-    raise TypeError unless [ true, false ].include?(val)
-    @force_itemize = val
+  def initialize(manager)
+    super(manager)
   end
-  def force_itemize
-    @force_itemize
-  end
+
+  attr_reader :force_itemize
 
   def status
     @status
@@ -35,7 +34,9 @@ class Form1040 < TaxForm
 
     line[status.checkbox_1040] = 'X'
     extra = status.checkbox_1040_extra
-    line["#{status.checkbox_1040}text"] = interview(extra) if extra
+    if extra
+      line["#{status.checkbox_1040}text"] = interview("Enter your #{extra}:")
+    end
 
     unless interview("Can someone claim you as a dependent?")
       line['6a'] = 'X'
@@ -64,9 +65,8 @@ class Form1040 < TaxForm
 
     line[7] = forms('W-2').lines(1, :sum)
 
-    sched_b = Form1040B.new
-    sched_b.compute
-    @manager.add_form(sched_b)
+    sched_b = @manager.compute_form(Form1040B)
+
     line['8a'] = sched_b.line[4]
     line['8b'] = forms('1099-INT').lines[8, :sum] + \
       forms('1099-DIV').lines[10, :sum]
@@ -83,7 +83,11 @@ class Form1040 < TaxForm
 
     sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
 
-    line[13] = sched_d.report_1040 if sched_d
+    if sched_d
+      line[13] = sched_d.line['fill']
+    else
+      line[13] = BlankZero
+    end
 
     assert_no_forms(4797)
 
@@ -99,9 +103,7 @@ class Form1040 < TaxForm
       raise 'Not implemented'
     end
 
-    sched_e = Form1040E.new
-    sched_e.compute
-    @manager.add_form(sched_e)
+    sched_e = @manager.compute_form(Form1040E)
     line[17] = sched_e.line[41]
 
     assert_no_forms('SSA-1099', 'RRB-1099')
@@ -117,41 +119,51 @@ class Form1040 < TaxForm
 
     line[38] = line[37]
 
-    assert_question('Where you or your spouse born before 1952 or blind?',
+    assert_question('Were you or your spouse born before 1952 or blind?',
                     false)
     assert_question('Can someone claim you as a dependent?', false)
     line['39a'] = 0
 
+    @force_itemize = false
+    choose_itemize = false
     if status.is('mfs')
-      if @force_itemize.nil?
-        raise "Must specify whether to itemize when married filing separately"
-      end
-      if @force_itemize
-        line['39b'] = 'X'
+      itemize = interview('Do you want to itemize deductions?')
+      @force_itemize = true if itemize
+      line['39b'] = 'X' if itemize || interview('Are you a dual-status alien?')
+
+    else
+      if interview('Do you want the computer to choose whether to itemize?')
+        choose_itemize = true
+      else
+        itemize = interview('Do you want to itemize deductions?')
+        @force_itemize = true if itemize
       end
     end
 
-    sched_a = Form1040A.new
-    sched_a.compute
     sd = status.standard_deduction
+    if itemize || choose_itemize
 
-    if @force_itemize.nil?
-      @force_itemize = (sched_a.line[29] > sd)
-    end
 
-    if @force_itemize
-      @manager.add_form(sched_a)
-      line[40] = sched_a.line[29]
+      sched_a = @manager.compute_form(Form1040A)
+
+      if itemize || sched_a.line[29] > sd
+        line[40] = sched_a.line[29]
+      else
+        @manager.remove_form(sched_a)
+        line[40] = sd
+      end
+
     else
       line[40] = sd
     end
 
     line[41] = line[38] - line[40]
 
-    if line[38] <= 155650
+    if line[38] <= status.exemption_threshold
       line[42] = 4050 * line['6d']
     else
-      raise 'Line 42 for high incomes not implemented'
+      edw = @manager.compute_form(ExemptionsDeductionsWorksheet)
+      line[42] = edw.line['fill']
     end
 
     line[43] = [ line[41] - line[42], 0 ].max
@@ -168,7 +180,7 @@ class Form1040 < TaxForm
     line[47] = sum_lines(44, 45, 46)
 
     # Line 48
-    assert_interview("Did you pay any foreign taxes?", false)
+    assert_question("Did you pay any foreign taxes?", false)
     assert_no_lines('1099-DIV', 6)
     assert_no_lines('1099-INT', 6)
 
@@ -202,16 +214,14 @@ class Form1040 < TaxForm
     line['61box'] = 'X'
 
     line[62] = BlankZero
-    f8959 = Form8959.new.compute
-    if f8959.needed?
+    f8959 = @manager.compute_form(Form8959)
+    if f8959 && f8959.needed?
       line['62a'] = 'X'
-      @manager.add_form(f8959)
       line[62] += f8959.line[18]
     end
 
     if line[38] > status.niit_threshold
-      f8960 = Form8960.new.compute
-      @manager.add_form(f8960)
+      f8960 = @manager.compute_form(Form8960)
       line['62b'] = 'X'
       line[62] += f8960.line[17]
     end
@@ -222,7 +232,7 @@ class Form1040 < TaxForm
 
     ss_tax_paid = forms('W-2').lines[4].map { |x|
       [ x, 7347 ].min
-     ].inject(:+)
+     }.inject(:+)
      if ss_tax_paid > 7347
        line[71] = ss_tax_paid - 7347
      end
@@ -238,7 +248,7 @@ class Form1040 < TaxForm
       assert_no_forms(8828, 4137, 5329, 8885, 8919)
       tax_shown = line[63] - sum_lines(61, '66a', 67, 68, 69, 72)
 
-      if line[78] > 1000 && line[78] > tax_shown
+      if line[78] > 1000 && line[78] > 0.1 * tax_shown
 
         last_year_tax = interview('Enter your last year\'s tax shown:')
         unless last_year_tax == 0
@@ -263,6 +273,7 @@ class Form1040 < TaxForm
   def compute_tax
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
+      sched_d.export
       if sched_d.line['20no', :present]
         return compute_tax_schedule_d
       elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
@@ -277,11 +288,13 @@ class Form1040 < TaxForm
 
   def compute_tax_standard(income)
     if income < 100000
-      return compute_tax_table(income)
+      return compute_tax_table(income, status)
     else
       return compute_tax_worksheet(income)
     end
   end
+
+  include TaxTable
 
   def compute_tax_worksheet(income)
     if income < 100000
@@ -306,7 +319,7 @@ end
 
 class QdcgtWorksheet < TaxForm
   def name
-    '1040 Qualified Dividents and Capital Gains Tax Worksheet'
+    '1040 Qualified Dividends and Capital Gains Tax Worksheet'
   end
 
   def compute
@@ -349,9 +362,9 @@ class QdcgtWorksheet < TaxForm
     line[22] = line[12] - line[21]
     line[23] = (line[22] * 0.2).round
 
-    line[24] = compute_tax_standard(line[7])
+    line[24] = form(1040).compute_tax_standard(line[7])
     line[25] = sum_lines(20, 23, 24)
-    line[26] = compute_tax_standard(line[1])
+    line[26] = form(1040).compute_tax_standard(line[1])
     line[27] = [ line[25], line[26] ].min
   end
 end
@@ -363,49 +376,55 @@ class AMTTestWorksheet < TaxForm
 
   def compute
     f1040 = form(1040)
-    with_form('1040 Schedule A') do |sched_a|
-      line['1yes'] = 'X'
-      line[1] = f1040.line[41]
-      line[3] = sched_a.sum_lines(9, 27)
-      line[4] = sum_lines(1, 2, 3)
-      line[5] = f1040.sum_lines(10, 21)
-      if has_form?('Itemized Deduction Worksheet')
-        line[6] = form('Itemized Deduction Worksheet').line[9]
-      end
-      line[7] = sum_lines(5, 6)
-      line[8] = line[4] - line[7]
-      line[9] = f1040.status.amt_exemption
-      if line[8] <= line[9]
-        line['10no'] = 'X'
-        line['fillform'] = 'no'
-        return
-      end
-      line['10yes'] = 'X'
-      line[10] = line[8] - line[9]
-      line[11] = f1040.status.amt_exemption_2
-      if line[8] <= line[11]
-        line['12no'] = 'X'
-        line[12] = 0
-        line[14] = line[10]
+    with_or_without_form('1040 Schedule A') do |sched_a|
+      if sched_a
+        line['1yes'] = 'X'
+        line[1] = f1040.line[41]
+        line[3] = sched_a.sum_lines(9, 27)
+        line[4] = sum_lines(1, 2, 3)
       else
-        line['12yes'] = 'X'
-        line[12] = line[8] - line[11]
-        line[13] = [ line[9], (line[12] * 0.25).round ].min
-        line[14] = line[10] + line[13]
+        line[4] = form(1040).line(38)
       end
-      if line[14] > (f1040.status.is('mfs') ? 93150 : 186300)
-        line['15yes'] = 'X'
-        line['fillform'] = 'yes'
-      else
-        line['15no'] = 'X'
-        line[15] = (line[14] * 0.26).round
-      end
-      line[16] = f1040.sum_lines(44, 46)
-      if line[15] > line[16]
-        line['fillform'] = 'yes'
-      else
-        line['fillform'] = 'no'
-      end
+    end
+
+    line[5] = f1040.sum_lines(10, 21)
+    if has_form?('Itemized Deduction Worksheet')
+      line[6] = form('Itemized Deduction Worksheet').line[9]
+    end
+    line[7] = sum_lines(5, 6)
+    line[8] = line[4] - line[7]
+    line[9] = f1040.status.amt_exemption
+    if line[8] <= line[9]
+      line['10no'] = 'X'
+      line['fillform'] = 'no'
+      return
+    end
+    line['10yes'] = 'X'
+    line[10] = line[8] - line[9]
+    line[11] = f1040.status.amt_exemption_2
+    if line[8] <= line[11]
+      line['12no'] = 'X'
+      line[12] = 0
+      line[14] = line[10]
+    else
+      line['12yes'] = 'X'
+      line[12] = line[8] - line[11]
+      line[13] = [ line[9], (line[12] * 0.25).round ].min
+      line[14] = line[10] + line[13]
+    end
+    if line[14] > f1040.status.halve_mfs(186300)
+      line['15yes'] = 'X'
+      line['fillform'] = 'yes'
+      return
+    else
+      line['15no'] = 'X'
+      line[15] = (line[14] * 0.26).round
+    end
+    line[16] = f1040.sum_lines(44, 46)
+    if line[15] > line[16]
+      line['fillform'] = 'yes'
+    else
+      line['fillform'] = 'no'
     end
   end
 end
@@ -416,7 +435,13 @@ class ChildTaxCreditWorksheet < TaxForm
   end
 
   def compute
-    line[1] = form(1040).line['6c4', :all].select { |x| x == 'X' }.count
+    line['1num'] = form(1040).line['6c4', :all].select { |x| x == 'X' }.count
+    if line['1num'] == 0
+      line['fill'] = BlankZero
+      return
+    end
+
+    line[1] = line['1num'] * 1000
     line[2] = form(1040).line[38]
     line[3] = form(1040).status.child_tax_limit
     if line[2] > line[3]
@@ -430,12 +455,35 @@ class ChildTaxCreditWorksheet < TaxForm
       end
       line[5] = line[4] / 20
     end
-    if line[1] > line[5]
+    if line[1] <= line[5]
       raise 'Child tax credit not implemented'
     else
       line['fill'] = BlankZero
       return
     end
+  end
+end
+
+class ExemptionsDeductionsWorksheet < TaxForm
+  def name
+    'Deduction for Exemptions Worksheet'
+  end
+
+  def compute
+    line[2] = form(1040).line['6d'] * 4050
+    line[3] = form(1040).line(38)
+    line[4] = form(1040).status.exemption_threshold
+    line[5] = line[3] - line[4]
+
+    if line[5] > form(1040).status.halve_mfs(122500)
+      line['fill'] = 0
+      return
+    end
+
+    line[6] = (line[5] / form(1040).status.halve_mfs(2500.0)).ceil
+    line[7] = (line[6] * 0.02).round(3)
+    line[8] = line[2] * line[7]
+    line['fill'] = line[9] = line[2] - line[8]
   end
 end
 
@@ -449,25 +497,28 @@ FilingStatus.set_param('child_tax_limit', 75000, 110000, 55000, 75000, 75000)
 FilingStatus.set_param('niit_threshold', 200000, 250000, 125000, 200000, 250000)
 FilingStatus.set_param('penalty_threshold', 150000, 150000, 75000, 150000,
                        150000)
+FilingStatus.set_param('exemption_threshold', 259400, 311300, 155650, 285350,
+                       311300)
 
 class SpouseExemption < FilingStatusVisitor
+
   def single(line)
   end
 
   def mfj(line)
-    unless interview("Can someone claim your spouse as a dependent?")
+    unless line.form.interview("Can someone claim your spouse as a dependent?")
       line['6b'] = 'X'
     end
   end
 
   def mfs(line)
-    unless interview("Is your spouse filing a tax return?")
+    unless line.form.interview("Is your spouse filing a tax return?")
       mfj(line)
     end
   end
 
   def hoh(line)
-    if interview("Are you married?")
+    if line.form.interview("Are you married?")
       mfs(line)
     end
   end

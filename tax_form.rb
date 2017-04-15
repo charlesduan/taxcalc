@@ -37,6 +37,8 @@ class TaxForm
       @lines_order = []
     end
 
+    attr_reader :form
+
     def each
       @lines_order.each do |l|
         yield(l, @lines_data[l])
@@ -160,7 +162,7 @@ class TaxForm
 
   def assert_no_forms(*args)
     args.each do |num|
-      unless forms(num).empty?
+      if has_form?(num)
         raise "Form #{num} present but not implemented for #{name}"
       end
     end
@@ -204,6 +206,14 @@ class TaxForm
   def with_form(name)
     if @manager.has_form?(name)
       yield(form(name))
+    end
+  end
+
+  def with_or_without_form(name)
+    if @manager.has_form?(name)
+      yield(form(name))
+    else
+      yield(nil)
     end
   end
 

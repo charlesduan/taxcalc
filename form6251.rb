@@ -18,18 +18,18 @@ class Form6251 < TaxForm
       ].max
       line[3] = sched_a.line[9]
       line[4] = @manager.compute_form(MortgageInterestWorksheet).line[6]
-      line[5] = sched_a.line[27]
+      line[5] = sched_a.line[27, :opt]
 
-      if form(1040).line[38] <= 155650
-        line[6] = 0
+      if has_form?('Itemized Deductions Worksheet')
+        line[6] = -1 * form('Itemized Deductions Worksheet').line[9]
       else
-        raise 'Itemized Deductions Worksheet not implemented'
+        line[6] = 0
       end
     else
       line[1] = form(1040).line(38)
     end
 
-    line[7] = form(1040).line[10]
+    line[7] = form(1040).line[10, :opt]
 
     l28 = sum_lines(*1..27)
     if form(1040).status.is('mfs') && l28 > 247450
@@ -79,7 +79,7 @@ class Form6251 < TaxForm
       end
     end
 
-    assert_interview("Did you pay any foreign taxes?", false)
+    assert_question("Did you pay any foreign taxes?", false)
     assert_no_lines('1099-DIV', 6)
     assert_no_lines('1099-INT', 6)
 
@@ -92,10 +92,95 @@ class Form6251 < TaxForm
 
   end
 
+  def compute_part_iii
+    line[36] = line[30]
+
+    line[37] = compute_from_worksheets(6, 13) { BlankZero }
+
+    line[38] = form('1040 Schedule D').line[19, :opt]
+    with_or_without_form('Schedule D Tax Worksheet') do |sdtw|
+      if sdtw
+        line[39] = [ sum_lines(37, 38), sdtw.line[10] ].min
+      else
+        line[39] = line[37]
+      end
+    end
+
+    line[40] = [ line[36], line[39] ].min
+    line[41] = line[36] - line[40]
+
+    if line[41] <= form(1040).status.halve_mfs(186300)
+      line[42] = (line[41] * 0.26).round
+    else
+      line[42] = (line[41] * 0.28).round - form(1040).status.halve_mfs(3726)
+    end
+
+    line[43] = form(1040).status.amt_cg_exempt
+    line[44] = compute_from_worksheets(7, 14) {
+      [ 0, form(1040).line(43) ].max
+    }
+
+    line[45] = [ 0, line[43] - line[44] ].max
+    line[46] = [ line[36], line[37] ].min
+    line[47] = [ line[45], line[46] ].min
+    line[48] = line[46] - line[47]
+
+    line[49] = form(1040).status.amt_cg_upper
+
+    line[50] = line[45]
+    line[51] = compute_from_worksheets(7, 19) {
+      [ 0, form(1040).line(43) ].max
+    }
+
+    line[52] = sum_lines(50, 51)
+    line[53] = [ 0, line[49] - line[52] ].max
+    line[54] = [ line[48], line[53] ].min
+    line[55] = (line[54] * 0.15).round
+    line[56] = sum_lines(47, 54)
+
+    if line[56] != line[36]
+      line[57] = line[46] - line[56]
+      line[58] = (line[57] * 0.2).round
+      if line[38] != 0
+        line[59] = sum_lines(41, 56, 57)
+        line[60] = line[36] - line[59]
+        line[61] = (line[60] * 0.25).round
+      end
+    end
+
+    line[62] = sum_lines(42, 55, 58, 61)
+    if line[36] <= form(1040).status.halve_mfs(186300)
+      line[63] = (line[36] * 0.26).round
+    else
+      line[63] = (line[36] * 0.28) - form(1040).status.halve_mfs(3726)
+    end
+    line[64] = [ line[62], line[63] ].min
+  end
+
+  def compute_from_worksheets(qdcgt_line, sdtw_line)
+    with_or_without_form(
+      '1040 Qualified Dividends and Capital Gains Tax Worksheet'
+    ) do |qdcgt|
+      if qdcgt
+        return qdcgt.line[qdcgt_line]
+      else
+        with_or_without_form('Schedule D Tax Worksheet') do |sdtw|
+          if sdtw
+            return sdtw.line[sdtw_line]
+          else
+            return(yield)
+          end
+        end
+      end
+    end
+  end
+
 end
 
 FilingStatus.set_param('amt_exempt_max', 119700, 159700, 79850, 119700, 159700)
 FilingStatus.set_param('amt_exemption', 53900, 83800, 41900, 53900, 83800)
+FilingStatus.set_param('amt_cg_exempt', 37650, 75300, 37650, 50400, 75300)
+FilingStatus.set_param('amt_cg_upper', 415050, 466950, 233475, 441000, 466950)
 
 
 
@@ -108,7 +193,7 @@ class MortgageInterestWorksheet < TaxForm
     sched_a = form('1040 Schedule A')
     line[1] = sched_a.sum_lines(10, 11, 12, 13)
     if line[1] > 0
-      assert_interview('Were all of your Schedule A mortgage deductions ' + \
+      assert_question('Were all of your Schedule A mortgage deductions ' + \
                        'for eligible mortages (per form 6251)?', true)
       line[2] = forms('1098-INT').lines(1, :sum) + sched_a.sum_lines(11, 13)
     end
@@ -134,7 +219,7 @@ class Line29ExemptionWorksheet < TaxForm
     line[5] = (line[4] * 0.25).round
     line[6] = [ 0, line[1] - line[5] ].max
 
-    if Date.today.year - Date.parse(form("Personal").line['birthday']).year < 24
+    if interview('Are you under 24?')
       raise 'Special AMT exemption for children under 24 not implemented'
     end
     line['fill'] = line[6]

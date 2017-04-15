@@ -35,6 +35,7 @@ class Form8949 < TaxForm
   end
 
   def self.generate(manager)
+    no_forms = true
     fs = manager.forms('1099-B')
     [
       [ 'yes', 'short' ],
@@ -48,8 +49,10 @@ class Form8949 < TaxForm
       unless sfs.empty?
         f = self.new(manager, term, reported, sfs)
         manager.compute_form(f)
+        no_forms = false
       end
     end
+    manager.no_form('8949') if no_forms
   end
 
 end

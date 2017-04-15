@@ -17,6 +17,9 @@ class Interviewer
           line = line.chomp
           next if line == ''
           if line =~ /^\s+/
+            if @answers.include?(last_q)
+              warn("Duplicate interview question: #{last_q}")
+            end
             @answers[last_q] = Interviewer.parse(last_q, line.strip)
           else
             last_q = line
@@ -37,15 +40,21 @@ class Interviewer
 
   def ask(prompt, form = nil)
     return @answers[prompt] if @answers.include?(prompt)
+    puts ""
     if form
-      puts "For form #{form.name} for #{form.manager.name}:"
+      puts "  For form #{form.name} for #{form.manager.name}:"
     end
-    puts prompt
-    answer = gets.strip
-    persist(prompt, answer)
-    answer = Interviewer.parse(prompt, answer)
-    @answers[prompt] = answer
-    return answer
+    puts "    #{prompt}"
+    resp = gets.strip
+    return answer(prompt, resp)
+  end
+
+  def answer(prompt, resp, do_persist = true)
+    parsed_resp = Interviewer.parse(prompt, resp)
+    return if @answers[prompt] == parsed_resp
+    persist(prompt, resp) if do_persist
+    @answers[prompt] = parsed_resp
+    return parsed_resp
   end
 
   def self.parse(question, data)

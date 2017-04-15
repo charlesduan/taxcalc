@@ -8,6 +8,7 @@ class Form1065 < TaxForm
 
   def compute
     line['name'] = interview("Enter partnership name:")
+    line['D'] = interview("Enter the partnership's EIN:")
     line['1a'] = forms('1099-MISC').lines(7, :sum)
     line['1c'] = line['1a'] - line['1b', :opt]
     line[3] = line['1c'] - line[2, :opt]

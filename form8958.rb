@@ -14,31 +14,54 @@ class Form8958 < TaxForm
     super(manager)
     @my_manager = my_m || FormManager.new
     @spouse_manager = sp_m || FormManager.new
+
   end
 
   def compute
 
     line['my_name'] = interview("Enter your name:")
     line['spouse_name'] = interview('Enter your spouse\'s name:')
+    itemize = interview('Do you want to itemize deductions?')
+
+    @my_manager.interviewer.answer('Enter your filing status:', 'mfs', false)
+    @my_manager.interviewer.answer('Enter your spouse\'s name:',
+                                   line['spouse_name'], false)
+    @my_manager.interviewer.answer('Do you want to itemize deductions?',
+                                   itemize ? 'yes' : 'no', false)
+
+    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs',
+                                       false)
+    @spouse_manager.interviewer.answer('Enter your spouse\'s name:',
+                                       line['my_name'], false)
+    @spouse_manager.interviewer.answer('Do you want to itemize deductions?',
+                                       itemize ? 'yes' : 'no', false)
 
     split_w2 = split_forms('W-2')
+    split_1099int = split_forms('1099-INT')
+    split_1099div = split_forms('1099-DIV')
+    split_1099g = split_forms('1099-G')
+    split_1099b = split_forms('1099-B')
+    split_k1 = split_forms('1065 Schedule K-1')
+    split_1098int = split_forms('1098-INT')
+    split_state_tax = split_forms('State Tax')
+    split_charity = split_forms('Charity Gift')
+    split_est_tax = split_forms('Estimated Tax')
+    split_dependents = split_forms('Dependent')
+
     line[1, :all] = forms('W-2').lines('c')
     enter_split(1, 'W-2', split_w2, 1)
 
-    split_1099int = split_forms('1099-INT')
     line[2, :all] = forms('1099-INT').lines('name')
     enter_split(2, '1099-INT', split_1099int, 1)
 
-    split_1099div = split_forms('1099-DIV')
     line[3, :all] = forms('1099-DIV').lines('name')
     enter_split(3, '1099-DIV', split_1099div, '1a')
 
-    split_1099g = split_forms('1099-G')
     line[4, :all] = forms('1099-G').lines('name')
     enter_split(4, '1099-G', split_1099g, 2)
 
-    split_1099b = split_forms('1099-B')
     my_manager.compute_form(Form1040D)
+    spouse_manager.compute_form(Form1040D)
 
     line[6, :all] = my_manager.forms(8949).lines('II.1a', :all) + \
       spouse_manager.forms(8949).lines('II.1a', :all)
@@ -49,7 +72,6 @@ class Form8958 < TaxForm
     line['6C', :all] = my_manager.forms(8949).map { |x| BlankZero } + \
       spouse_manager.forms(8949).lines('II.1h', :all)
 
-    split_k1 = split_forms('1065 Schedule K-1')
     
     line[5, :all] = forms('1065 Schedule K-1').lines('B').zip(
       forms('1065 Schedule K-1').lines('F')
@@ -82,13 +104,11 @@ class Form8958 < TaxForm
 
     line[12, :add] = forms('W-2').lines('c').map { |x| "State tax: #{x}" }
     enter_split(12, 'W-2', split_w2, 17)
-    split_state_tax = split_forms('State Tax')
     line[12, :add] = forms('State Tax').lines('name').map { |x|
       "State tax: #{x}"
     }
     enter_split(12, 'State Tax', split_state_tax, 'amount')
 
-    split_1098int = split_forms('1098-INT')
     line[12, :add] = forms('1098-INT').lines('lender').map { |x|
       "Home mortgage interest: #{x}"
     }
@@ -99,16 +119,27 @@ class Form8958 < TaxForm
     }
     enter_split(12, '1098-INT', split_1098int, 10)
 
-    split_charity = split_forms('Charity Gift')
     line[12, :add] = forms('Charity Gift').lines('name').map { |x|
       "Gifts to charity: #{x}"
     }
     enter_split(12, 'Charity Gift', split_charity, 'amount')
 
+    line[12, :add] = forms('Estimated Tax').lines('confirm').map { |x|
+      "Estimated tax, confirmation #{x}"
+    }
+    enter_split(12, 'Estimated Tax', split_est_tax, 'amount')
+
   end
 
   def split_forms(form_name)
-    forms(form_name).map { |f| split_form(f) }
+    res = forms(form_name).map { |f| split_form(f) }
+    if res.map(&:first).all?(&:nil?)
+      @my_manager.no_form(form_name)
+    end
+    if res.map(&:last).all?(&:nil?)
+      @spouse_manager.no_form(form_name)
+    end
+    return res
   end
 
   def enter_split(this_line, form_name, split_forms, form_line)

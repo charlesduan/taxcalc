@@ -6,6 +6,10 @@ class Form1040D < TaxForm
     '1040 Schedule D'
   end
 
+  def needed?
+    has_form?(8949) or line[7] != 0 or line[15] != 0 or line[16] != 0
+  end
+
   def compute
     Form8949.generate(@manager) unless has_form?(8949)
 
@@ -27,7 +31,8 @@ class Form1040D < TaxForm
       line['2h'] = forms_b.lines('I.2h', :sum)
     end
 
-    assert_no_forms(6252, 4684, 6781, 8824, 'Schedule K-1')
+    assert_no_forms(6252, 4684, 6781, 8824)
+    line[5] = forms('1065 Schedule K-1').lines(8, :sum)
 
     assert_no_forms('Capital Loss Carryover Worksheet')
 
@@ -51,7 +56,9 @@ class Form1040D < TaxForm
       line['9h'] = forms_e.lines('II.2h', :sum)
     end
 
-    assert_no_forms(4797, 2439, 6252, 4684, 6781, 8824, 'Schedule K-1')
+    assert_no_forms(4797, 2439, 6252, 4684, 6781, 8824)
+    line[12] = forms('1065 Schedule K-1').lines('9a', :sum)
+
     assert_no_lines('1099-DIV', '2a', '2b', '2c', '2d')
     assert_no_forms('Capital Loss Carryover Worksheet')
     line[15] = line['8b.h'] + line['9h']
@@ -59,6 +66,7 @@ class Form1040D < TaxForm
     line[16] = line[7] + line[15]
 
     if line[16] > 0
+      line['fill'] = line[16]
       if line[15] > 0
         line['17yes'] = 'X'
         assert_form_unnecessary('Schedule D 28% Rate Gain Worksheet')
@@ -72,6 +80,10 @@ class Form1040D < TaxForm
         
     elsif line[16] < 0
       raise 'Not implemented'
+
+    else # line[16] == 0
+      line['fill'] = 0
+
     end
 
     if forms('1099-DIV').lines('1b', :sum) > 0

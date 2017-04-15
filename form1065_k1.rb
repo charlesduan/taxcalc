@@ -17,6 +17,7 @@ class Form1065K1 < TaxForm
 
 
   def compute
+    line['A'] = form(1065).line['D']
     line['B'] = form(1065).line['name']
     line['F'] = @partner_form.line['name']
     line["G.#{@partner_form.line['liability']}"] = 'X'
