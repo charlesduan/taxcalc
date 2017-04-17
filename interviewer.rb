@@ -45,14 +45,14 @@ class Interviewer
       puts "  For form #{form.name} for #{form.manager.name}:"
     end
     puts "    #{prompt}"
-    resp = gets.strip
+    resp = STDIN.gets.strip
+    persist(prompt, resp)
     return answer(prompt, resp)
   end
 
-  def answer(prompt, resp, do_persist = true)
+  def answer(prompt, resp)
     parsed_resp = Interviewer.parse(prompt, resp)
     return if @answers[prompt] == parsed_resp
-    persist(prompt, resp) if do_persist
     @answers[prompt] = parsed_resp
     return parsed_resp
   end

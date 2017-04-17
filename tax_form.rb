@@ -82,7 +82,7 @@ class TaxForm
       when :all
         [ data ].flatten
       when :sum
-        [ data ].flatten.inject(:+)
+        [ data ].flatten.inject(:+) || BlankZero
       else
         raise "Line #{line} is an array" if data.is_a?(Enumerable)
         data
@@ -97,7 +97,7 @@ class TaxForm
         prefix = "\t#{line}\t"
         [ data ].flatten.each do |item|
           io.puts("#{prefix}#{item}")
-          prefix = "\t\t"
+          prefix = "\t#{'"'.ljust(line.length)}\t"
         end
       end
       io.puts()

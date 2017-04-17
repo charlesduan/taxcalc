@@ -13,9 +13,9 @@ class FormManager
 
   attr_reader :name
 
-  def export_all(all = false)
+  def export_all(io = STDOUT, all = false)
     @ordered_forms.each do |f|
-      f.export if all || f.exportable
+      f.export(io) if all || f.exportable
     end
   end
 
@@ -58,6 +58,7 @@ class FormManager
 
   def copy_form(other_form)
     new_form = other_form.copy(self)
+    new_form.exportable = false
     add_form(new_form)
     return new_form
   end

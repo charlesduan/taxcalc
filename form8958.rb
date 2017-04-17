@@ -23,18 +23,17 @@ class Form8958 < TaxForm
     line['spouse_name'] = interview('Enter your spouse\'s name:')
     itemize = interview('Do you want to itemize deductions?')
 
-    @my_manager.interviewer.answer('Enter your filing status:', 'mfs', false)
+    @my_manager.interviewer.answer('Enter your filing status:', 'mfs')
     @my_manager.interviewer.answer('Enter your spouse\'s name:',
-                                   line['spouse_name'], false)
+                                   line['spouse_name'])
     @my_manager.interviewer.answer('Do you want to itemize deductions?',
-                                   itemize ? 'yes' : 'no', false)
+                                   itemize ? 'yes' : 'no')
 
-    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs',
-                                       false)
+    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs')
     @spouse_manager.interviewer.answer('Enter your spouse\'s name:',
-                                       line['my_name'], false)
+                                       line['my_name'])
     @spouse_manager.interviewer.answer('Do you want to itemize deductions?',
-                                       itemize ? 'yes' : 'no', false)
+                                       itemize ? 'yes' : 'no')
 
     split_w2 = split_forms('W-2')
     split_1099int = split_forms('1099-INT')
@@ -85,17 +84,21 @@ class Form8958 < TaxForm
       line[9, :add] = "Deduction for #{line['my_name']}"
       line['9A', :add] = my_se.line[13]
       line['9B', :add] = my_se.line[13]
+      line['9C', :add] = BlankZero
       line[10, :add] = "Tax for #{line['my_name']}"
       line['10A', :add] = my_se.line[12]
       line['10B', :add] = my_se.line[12]
+      line['10C', :add] = BlankZero
     end
 
     if spouse_se && spouse_se.line[12] > 0
       line[9, :add] = "Deduction for #{line['spouse_name']}"
       line['9A', :add] = spouse_se.line[13]
+      line['9B', :add] = BlankZero
       line['9C', :add] = spouse_se.line[13]
       line[10, :add] = "Tax for #{line['spouse_name']}"
       line['10A', :add] = spouse_se.line[12]
+      line['10B', :add] = BlankZero
       line['10C', :add] = spouse_se.line[12]
     end
 

@@ -152,7 +152,7 @@ class Form6251 < TaxForm
     if line[36] <= form(1040).status.halve_mfs(186300)
       line[63] = (line[36] * 0.26).round
     else
-      line[63] = (line[36] * 0.28) - form(1040).status.halve_mfs(3726)
+      line[63] = (line[36] * 0.28).round - form(1040).status.halve_mfs(3726)
     end
     line[64] = [ line[62], line[63] ].min
   end

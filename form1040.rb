@@ -259,7 +259,7 @@ class Form1040 < TaxForm
           end
 
           unless sum_lines(64, 65, 71) >= penalty_threshold
-            raise "Penalty computation not implemented"
+            warn "Penalty computation not implemented"
           end
 
         end
@@ -273,7 +273,6 @@ class Form1040 < TaxForm
   def compute_tax
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
-      sched_d.export
       if sched_d.line['20no', :present]
         return compute_tax_schedule_d
       elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
@@ -482,7 +481,7 @@ class ExemptionsDeductionsWorksheet < TaxForm
 
     line[6] = (line[5] / form(1040).status.halve_mfs(2500.0)).ceil
     line[7] = (line[6] * 0.02).round(3)
-    line[8] = line[2] * line[7]
+    line[8] = (line[2] * line[7]).round
     line['fill'] = line[9] = line[2] - line[8]
   end
 end
