@@ -2,6 +2,7 @@ require 'tax_form'
 require 'dc/d40s'
 require 'dc/dc_tax_table'
 require 'dc/d40wh'
+require 'dc/d2210'
 
 class FormD40 < TaxForm
   include DcTaxTable
@@ -96,7 +97,7 @@ class FormD40 < TaxForm
         if prepayments < 0.9 * line[26]
           last_year_tax = interview('Enter your last year\'s taxes:')
           if prepayments < 1.1 * last_year_tax
-            warn "Underpayment interest may be owed; compute form D-2210"
+            line[44] = @manager.compute_form(FormD2210).line[11]
           end
         end
       end

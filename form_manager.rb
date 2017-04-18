@@ -66,7 +66,6 @@ class FormManager
   def compute_form(f)
     f = f.new(self) if f.is_a?(Class)
     add_form(f)
-    puts "Computing form #{f.name}#{" for " + @name unless @name.nil?}"
     f.compute
     unless f.needed?
       remove_form(f)

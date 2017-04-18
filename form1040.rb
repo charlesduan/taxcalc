@@ -9,6 +9,7 @@ require 'form1040_se'
 require 'form6251'
 require 'form8959'
 require 'form8960'
+require 'ira_analysis'
 
 class Form1040 < TaxForm
 
@@ -91,13 +92,9 @@ class Form1040 < TaxForm
 
     assert_no_forms(4797)
 
-    line15 = forms('1099-R').lines(1, :sum)
-    if line15 > 0
-      if interview('Do any of the line 15a exceptions apply to you?')
-        raise 'Not implemented'
-      end
-      line['15b'] = line15
-    end
+    ira_analysis = @manager.compute_form(IraAnalysis)
+    line['15a'] = ira_analysis.line['15a'] if ira_analysis.line['15a', :present]
+    line['15b'] = ira_analysis.line['15b'] if ira_analysis.line['15a', :present]
 
     if interview('Did you receive any pension or annuity distributions?')
       raise 'Not implemented'
@@ -113,6 +110,9 @@ class Form1040 < TaxForm
 
     sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
     line[27] = sched_se.line[13] if sched_se
+
+    ira_analysis.compute_contributions
+    line[32] = ira_analysis.line[32]
 
     line[36] = sum_lines(23, 24, 25, 26, 27, 28, 29, 30, '31a', 32, 33, 34, 35)
     line[37] = line[22] - line[36]
