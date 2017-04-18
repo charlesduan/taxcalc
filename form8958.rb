@@ -59,6 +59,14 @@ class Form8958 < TaxForm
     line[4, :all] = forms('1099-G').lines('name')
     enter_split(4, '1099-G', split_1099g, 2)
 
+    line[5, :all] = forms('1065 Schedule K-1').lines('B').zip(
+      forms('1065 Schedule K-1').lines('F')
+    ).map { |x| x.join(", ") }
+    enter_split(5, '1065 Schedule K-1', split_k1, 14)
+
+    my_se = my_manager.compute_form(Form1040SE)
+    spouse_se = spouse_manager.compute_form(Form1040SE)
+
     my_manager.compute_form(Form1040D)
     spouse_manager.compute_form(Form1040D)
 
@@ -71,14 +79,10 @@ class Form8958 < TaxForm
     line['6C', :all] = my_manager.forms(8949).map { |x| BlankZero } + \
       spouse_manager.forms(8949).lines('II.1h', :all)
 
-    
-    line[5, :all] = forms('1065 Schedule K-1').lines('B').zip(
+    line[8, :all] = forms('1065 Schedule K-1').lines('B').zip(
       forms('1065 Schedule K-1').lines('F')
     ).map { |x| x.join(", ") }
-    enter_split(5, '1065 Schedule K-1', split_k1, 1)
-
-    my_se = my_manager.compute_form(Form1040SE)
-    spouse_se = spouse_manager.compute_form(Form1040SE)
+    enter_split(8, '1065 Schedule K-1', split_k1, 1)
 
     if my_se && my_se.line[12] > 0
       line[9, :add] = "Deduction for #{line['my_name']}"
