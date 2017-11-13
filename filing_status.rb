@@ -6,6 +6,8 @@ class FilingStatus
     All[name] = self
   end
 
+  attr_reader :name
+
   def method_missing(name, *args)
     super(name, *args) unless @params.include?(name.to_s)
 
