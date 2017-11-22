@@ -7,12 +7,38 @@ class Form1040X < TaxForm
     '1040X'
   end
 
-  def initialize(manager)
+  def initialize(manager, orig_1040, new_1040)
     super(manager)
+    @orig_1040 = orig_1040
+    @new_1040 = new_1040
+  end
+
+  def fill_cols(l)
+    col_a = yield(@orig_1040)
+    col_c = yield(@new_1040)
+    line["#{l}A"] = col_a
+    line["#{l}B"] = col_c - col_a unless col_c == col_a
+    line["#{l}C"] = col_c
+  end
+
+  def calc_cols(l)
+    col_a = yield('A')
+    col_c = yield('C')
+    line["#{l}A"] = col_a
+    line["#{l}B"] = col_c - col_a unless col_c == col_a
+    line["#{l}C"] = col_c
   end
 
   def compute
-    line[status.name] = 'X'
+    [
+      [ 1, 'single' ],
+      [ 2, 'mfj' ],
+      [ 3, 'mfs' ],
+      [ 4, 'hoh' ],
+      [ 5, 'qw' ]
+    ].each do |l, s|
+      line[s] = 'X' if @new_1040.line[l, :present]
+    end
 
     if form(1040).line('61box', :present)
       line['health-coverage.yes'] = 'X'
@@ -20,26 +46,41 @@ class Form1040X < TaxForm
       line['health-coverage.no'] = 'X'
     end
 
-    line['1A'] = form(1040).line(37)
-    line['2A'] = form(1040).line(40)
-    line['3A'] = line['1A'] - line['2A']
+    fill_cols(1) { |x| x.line(37) }
+    fill_cols(2) { |x| x.line(40) }
+    calc_cols(3) { |x| line["1#{x}"] - line["2#{x}"] }
 
-    line['4A'] = form(1040).line(42)
-    line['5A'] = line['3A'] - line['4A']
+    fill_cols(4) { |x| x.line(42) }
+    calc_cols(5) { |x| line["3#{x}"] - line["4#{x}"] }
 
-    line['6A'] = form(1040).line(47)
-    line['7A'] = form(1040).line(55)
-    line['8A'] = line['6A'] - line['7A']
+    fill_cols(6) { |x| x.line(47) }
+    fill_cols(7) { |x| x.line(55) }
+    calc_cols(8) { |x| line["6#{x}"] - line["7#{x}"] }
 
-    line['9A'] = form(1040).line(61)
-    line['10A'] = form(1040).sum_lines(57, 58, 59, '60a','60b', 62)
-    line['11A'] = sum_lines('8A', '9A', '10A')
+    fill_cols(9) { |x| x.line(61, :opt) }
+    fill_cols(10) { |x| x.sum_lines(57, 58, 59, '60a','60b', 62) }
+    calc_cols(11) { |x| sum_lines("8#{x}", "9#{x}", "10#{x}") }
 
-    line['12A'] = form(1040).sum_lines(64, 71)
-    line['13A'] = form(1040).line(65)
-    line['14A'] = form(1040).line('66a')
-    line['15A'] = form(1040).sum_lines(67, 68, 69, 72, 73)
+    fill_cols(12) { |x| x.sum_lines(64, 71) }
+    fill_cols(13) { |x| x.line(65) }
+    fill_cols(14) { |x| x.line('66a', :opt) }
+    fill_cols(15) { |x| x.sum_lines(67, 68, 69, 72, 73) }
 
+    assert_no_forms(4868, 2350)
+    line[16] = @orig_1040.line(70, :opt)
+
+    assert_no_forms(8689)
+    line[17] = sum_lines('12C', '13C', '14C', '15C', 16)
+
+    line[18] = @orig_1040.line(75, :opt)
+
+    line[19] = line[17] - line[18]
+    if line['11C'] > line[19]
+      line[20] = line['11C'] - line[19]
+    else
+      line[21] = line[19] - line['11C']
+      line[22] = line[21]
+    end
 
   end
 

@@ -2,14 +2,15 @@
 
 require 'tk'
 require 'tkextlib/tkimg/png'
+require 'tkextlib/bwidget'
 require 'tmpdir'
 
-dir = File.dirname(__FILE__)
-entries = Dir.entries(dir)
-CPDF = entries.include?("cpdf") ? File.join(dir, "cpdf") : "cpdf"
-GS = entries.include?("gs") ? File.join(dir, "gs") : "gs"
-
 class PdfFileParser
+
+  dir = File.dirname(__FILE__)
+  entries = Dir.entries(dir)
+  CPDF = entries.include?("cpdf") ? File.join(dir, "cpdf") : "cpdf"
+  GS = entries.include?("gs") ? File.join(dir, "gs") : "gs"
 
   def popen(*args)
     IO.popen("-", 'r+:iso-8859-1') do |io|
@@ -75,21 +76,38 @@ end
 
 class MarkingUI
 
-  def initialize(parser)
+  def initialize(parser, line_pos_data)
 
     @parser = parser
+    @line_pos_data = line_pos_data
     @resolution = 144
 
-    @root = TkRoot.new {
-      title("Mark Form Fields")
-    }
+    @root = TkRoot.new(title: "Mark Form Fields")
 
     initialize_top_frame
-
     initialize_canvas_frame
-
     load_image(1)
 
+  end
+
+  def to_page_coords(x1, y1, x2, y2)
+    return [
+      @page,
+      [ x1, x2 ].min,
+      (@image.height - [ y1, y2 ].max),
+      (x1 - x2).abs,
+      (y1 - y2).abs
+    ].map { |x| x * 72 / @resolution }
+  end
+
+  def to_screen_coords(pos)
+    page, x, y, w, h = *pos
+    return [
+      x * @resolution / 72,
+      @image.height - ((y + h) * @resolution / 72),
+      (x + w) * @resolution / 72,
+      @image.height - (y * @resolution / 72)
+    ]
   end
 
   def initialize_top_frame
@@ -108,6 +126,14 @@ class MarkingUI
     )
     @next_page_button.pack(side: 'left')
 
+    lv = TkVariable.new(@line_pos_data.lines)
+
+    @listbox = Tk::BWidget::ComboBox.new(
+      frame, height: 8, values: @line_pos_data.lines
+    )
+    @listbox.set_value(0)
+    @listbox.pack(side: 'left')
+
   end
 
   def initialize_canvas_frame
@@ -123,28 +149,58 @@ class MarkingUI
     )
     @canvas.pack(fill: 'both', expand: 1, side: 'left')
 
-    @canvas.itembind('image', '1') do |e|
-      process_click(e)
-    end
-    @canvas.itembind('rect', '1') do |e|
-      @canvas.find_withtag('current')[0].destroy
-    end
+    @canvas.itembind('image', 'Double-Button-1') { |e| process_click(e) }
+    @canvas.itembind('rect', 'Double-Button-1') { |e| process_item_click(e) }
+    @canvas.itembind('text', 'Double-Button-1') { |e| process_item_click(e) }
 
     @vscroll = TkScrollbar.new(frame) { orient 'vertical' }
     @canvas.yscrollbar(@vscroll)
     @vscroll.pack(side: 'left', fill: 'y', expand: 1)
 
-    frame.bind_all("MouseWheel") do |e|
+    @canvas.bind("MouseWheel") do |e|
       @canvas.yview_scroll(-e.delta, "units")
     end
   end
 
+  def process_item_click(e)
+    item = @canvas.find_withtag('current')[0]
+    line_tag = item.gettags.find { |x| x =~ /^line_/ }
+    return unless line_tag
+    line_tag.sub!(/^line_/, '')
+    delete_line_data(line_tag)
+    @listbox.configure(text: line_tag)
+  end
+
+  def delete_line_data(line)
+    @canvas.delete("line_#{line}")
+    @line_pos_data[line] = nil
+  end
+
+  def add_line_data(line, coords)
+    delete_line_data(line) if @line_pos_data[line]
+    TkcRectangle.new(
+      @canvas, *coords,
+      fill: 'red',
+      width: 0,
+      tags: [ 'rect', "line_#{line}" ]
+    )
+    TkcText.new(
+      @canvas,
+      (coords[0] + coords[2]) / 2,
+      (coords[1] + coords[3]) / 2,
+      text: line,
+      tags: [ 'text', "line_#{line}" ]
+    )
+    @line_pos_data[line] = to_page_coords(*coords)
+  end
+
   def process_click(e)
     cx, cy = @canvas.canvasx(e.x).round, @canvas.canvasy(e.y).round
-    puts "Got #{cx}, #{cy}"
     coords = find_box(cx, cy)
-    if coords
-      TkcRectangle.new(@canvas, *coords, fill: 'red', width: 0, tags: 'rect')
+    text = @listbox.get
+    if coords && text && !text.empty?
+      add_line_data(text, coords)
+      advance_listbox
     end
   end
 
@@ -221,23 +277,106 @@ class MarkingUI
       state: @page == @parser.pages ? 'disabled' : 'normal'
     )
   end
+
+  def advance_listbox
+    cur_pos = @listbox.get_value
+    values = @listbox.cget(:values)
+    if cur_pos < 0 || cur_pos == values.count - 1
+      range = 0 ... values.count
+    else
+      range = [
+        ((cur_pos + 1) ... values.count).to_a,
+        (0 ... cur_pos).to_a
+      ].flatten
+    end
+
+    range.each do |i|
+      unless @line_pos_data[values[i]]
+        @listbox.set_value(i)
+        return
+      end
+    end
+
+  end
+
+end
+
+class LinePosData
+
+  def initialize(pdf_file, tax_form, line_data)
+    @parser = PdfFileParser.new(pdf_file)
+
+    parse_line_data(line_data)
+
+    merge_lines(tax_form)
+  end
+
+  def parse_line_data(line_data)
+    @line_order = []
+    @line_data = {}
+
+    case line_data
+    when nil
+    when Hash
+      @line_data = line_data
+      @line_order = line_data.keys
+    end
+  end
+
+  def merge_lines(tax_form)
+    insert_pos = -1
+    tax_form.line.each do |l, v|
+      pos = @line_order.find_index(l)
+      if pos
+        insert_pos = pos
+      else
+        insert_pos += 1
+        @line_order.insert(insert_pos, l)
+      end
+    end
+  end
+
+  def lines(page = nil)
+    return @line_order unless page
+    return @line_order.select { |x| x[0] == page }
+  end
+
+  def [](line)
+    @line_data[line]
+  end
+
+  def []=(line, data)
+    if data.nil?
+      @line_data.delete(line)
+      return
+    end
+
+    raise "Invalid data" unless data.is_a?(Array) and data.count == 5
+    line = line.to_s
+    @line_data[line] = data
+    @line_order.push(line) unless @line_order.include?(line)
+  end
+
+  def show_ui
+    begin
+      ui = MarkingUI.new(@parser, self)
+      Tk.mainloop
+    ensure
+      @parser.cleanup
+      export
+    end
+  end
+
+  def export(f = STDOUT)
+    puts "File #@pdf_file"
+    @line_order.each do |line|
+      next unless @line_data[line]
+      puts "\tline\t[ #{@line_data[line].join(", ")} ]"
+    end
+  end
+
 end
 
 
 
-parser = PdfFileParser.new('f1040x--2016.pdf')
-
-begin
-
-  puts "File has #{parser.pages} pages"
-
-  ui = MarkingUI.new(parser)
-
-  Tk.mainloop
-
-ensure
-
-  parser.cleanup
-
-end
 
