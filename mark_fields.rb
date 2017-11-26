@@ -4,6 +4,8 @@ require 'tk'
 require 'tkextlib/tkimg/png'
 require 'tkextlib/bwidget'
 require 'tmpdir'
+require 'tax_form'
+require 'interviewer'
 
 class PdfFileParser
 
@@ -27,6 +29,8 @@ class PdfFileParser
     @resolutions = {}
     @tempdir = nil
   end
+
+  attr_accessor :file
 
   def tempdir
     return @tempdir if @tempdir
@@ -62,7 +66,6 @@ class PdfFileParser
         @file
       ) do |io|
         io.each do |line|
-          puts line
         end
       end
       @resolutions[resolution] = true
@@ -70,6 +73,19 @@ class PdfFileParser
     page_file = "#{tempdir}/img-#{resolution}-#{"%03d" % num}.png"
     return nil unless File.exist?(page_file)
     return page_file
+  end
+
+  def fill_form(commands, new_file)
+    command = [ CPDF, "-merge", @file ]
+    commands.each do |cmd|
+      command.push("AND", *cmd)
+    end
+    command.push("-o", new_file)
+    popen(*command) do |io|
+      io.each do |line|
+        puts line
+      end
+    end
   end
 
 end
@@ -92,12 +108,11 @@ class MarkingUI
 
   def to_page_coords(x1, y1, x2, y2)
     return [
-      @page,
       [ x1, x2 ].min,
       (@image.height - [ y1, y2 ].max),
       (x1 - x2).abs,
       (y1 - y2).abs
-    ].map { |x| x * 72 / @resolution }
+    ].map { |x| x * 72 / @resolution }.unshift(@page)
   end
 
   def to_screen_coords(pos)
@@ -131,7 +146,8 @@ class MarkingUI
     @listbox = Tk::BWidget::ComboBox.new(
       frame, height: 8, values: @line_pos_data.lines
     )
-    @listbox.set_value(0)
+    @listbox.clear_value
+    advance_listbox
     @listbox.pack(side: 'left')
 
   end
@@ -268,6 +284,10 @@ class MarkingUI
       tags: 'image'
     )
 
+    @line_pos_data.lines(@page).each do |l|
+      add_line_data(l, to_screen_coords(@line_pos_data[l]))
+    end
+
     update_buttons
   end
 
@@ -308,7 +328,12 @@ class LinePosData
 
     parse_line_data(line_data)
 
-    merge_lines(tax_form)
+    if tax_form.is_a?(TaxForm)
+      @form_name = tax_form.name
+      merge_lines(tax_form)
+    else
+      @form_name = tax_form.to_s
+    end
   end
 
   def parse_line_data(line_data)
@@ -321,6 +346,14 @@ class LinePosData
       @line_data = line_data
       @line_order = line_data.keys
     end
+  end
+
+  def add_line_data(line, params)
+    unless params.is_a?(Array) and params.count == 5
+      raise "Invalid parameter #{params}"
+    end
+    @line_data[line.to_s] = params
+    @line_order.push(line.to_s)
   end
 
   def merge_lines(tax_form)
@@ -336,9 +369,13 @@ class LinePosData
     end
   end
 
+  def all_filled?
+    @line_order.all? { |x| @line_data.include?(x) }
+  end
+
   def lines(page = nil)
     return @line_order unless page
-    return @line_order.select { |x| x[0] == page }
+    return @line_order.select { |x| @line_data[x] && @line_data[x][0] == page }
   end
 
   def [](line)
@@ -358,25 +395,127 @@ class LinePosData
   end
 
   def show_ui
+    until File.exist?(@parser.file)
+      @parser.file = Interviewer.new.ask(
+        "File name for Form #@form_name:"
+      )
+    end
+
     begin
       ui = MarkingUI.new(@parser, self)
       Tk.mainloop
+    rescue SystemExit
     ensure
       @parser.cleanup
-      export
     end
   end
 
   def export(f = STDOUT)
-    puts "File #@pdf_file"
+    f.puts "Form #@form_name, File #{@parser.file}"
     @line_order.each do |line|
       next unless @line_data[line]
-      puts "\tline\t[ #{@line_data[line].join(", ")} ]"
+      f.puts "\t#{line}\t[ #{@line_data[line].join(", ")} ]"
     end
+  end
+
+  def start_fill
+    @fill_data = []
+  end
+
+  def fill(line, value)
+    page, x, y, w, h = *self[line]
+    ypos = [ 0, h - 9, 3 ].sort[1] + y
+    res = [
+      "-add-text", "#{value}",
+      "-font", "Courier", "-font-size", "10",
+      "-range", "#{page}"
+    ]
+    if value.is_a?(Numeric) or value.is_a?(BlankNum)
+      xpos = w - [ 0, w - 8, 6 ].sort[1] + x
+      if value < 0
+        res[1] = "(#{-value})"
+        xpos -= 6
+      end
+      res.push("-pos-right")
+    elsif value == "X"
+      xpos, ypos = x + w / 2, y + h / 2
+      res.push("-midline", "-pos-center")
+    else
+      xpos = [ 0, w - 8, 6 ].sort[1] + x
+      res.push("-pos-left")
+    end
+    res.push("#{xpos} #{ypos}")
+    @fill_data.push(res)
+  end
+
+  def end_fill(filename)
+    @parser.fill_form(@fill_data, filename)
   end
 
 end
 
+class MultiFormManager
 
+  def initialize(filename = '')
+    @form_data = {}
+    import(filename)
+  end
+
+  def import(filename)
+    @filename = filename
+    return unless File.exist?(filename)
+
+    lpd = nil
+    File.open(filename) do |f|
+      f.each do |l|
+        case l
+        when /^Form (.*), File (.*)/
+          lpd = @form_data[$1] = LinePosData.new($2, $1, nil)
+        when /^\s*$/
+        when /^\s+/
+          line_no, data = $'.strip.split(/\s+/, 2)
+          data = Interviewer.parse(line_no, data)
+          lpd.add_line_data(line_no, data)
+        else
+          STDERR.puts("Unexpected line in #{filename}: #{l}")
+        end
+      end
+    end
+  end
+
+  def mark_form(form, filename = '')
+    if @form_data.include?(form.name)
+      lpd = @form_data[form.name]
+      lpd.merge_lines(form)
+    else
+      lpd = @form_data[form.name] = LinePosData.new(filename, form, nil)
+    end
+
+    lpd.show_ui unless lpd.all_filled?
+  end
+
+  def fill_form(form, filename)
+    lpd = @form_data[form.name]
+    lpd.start_fill
+    form.line.each do |l, v|
+      if lpd[l]
+        lpd.fill(l, v)
+      else
+        STDERR.puts("No position data for form #{form.name}, line #{l}")
+      end
+    end
+    lpd.end_fill(filename)
+  end
+
+  def export(filename = @filename)
+    File.open(filename, 'w') do |f|
+      @form_data.each do |form, lpd|
+        lpd.export(f)
+        f.puts
+      end
+    end
+  end
+
+end
 
 
