@@ -41,13 +41,19 @@ class Interviewer
   def ask(prompt, form = nil)
     return @answers[prompt] if @answers.include?(prompt)
     puts ""
-    if form
-      puts "  For form #{form.name} for #{form.manager.name}:"
+    if form && form != @last_form
+      mname = form.manager.name ? " for #{form.manager.name}" : ""
+      puts "  For form #{form.name}#{mname}:"
+      @last_form = form
     end
     puts "    #{prompt}"
     resp = STDIN.gets.strip
     persist(prompt, resp)
     return answer(prompt, resp)
+  end
+
+  def unask(prompt)
+    @answers.delete(prompt)
   end
 
   def answer(prompt, resp)

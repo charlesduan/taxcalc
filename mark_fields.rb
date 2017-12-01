@@ -6,6 +6,7 @@ require 'tkextlib/bwidget'
 require 'tmpdir'
 require 'tax_form'
 require 'interviewer'
+require 'biographical'
 
 class PdfFileParser
 
@@ -125,6 +126,10 @@ class MarkingUI
     ]
   end
 
+  def canvas_coords(e)
+    return @canvas.canvasx(e.x).round, @canvas.canvasy(e.y).round
+  end
+
   def initialize_top_frame
     frame = TkFrame.new(@root)
     frame.pack(fill: 'x', expand: true, side: 'top')
@@ -168,6 +173,8 @@ class MarkingUI
     @canvas.itembind('image', 'Double-Button-1') { |e| process_click(e) }
     @canvas.itembind('rect', 'Double-Button-1') { |e| process_item_click(e) }
     @canvas.itembind('text', 'Double-Button-1') { |e| process_item_click(e) }
+    @canvas.itembind('image', 'B1-Motion') { |e| process_drag(e) }
+    @canvas.itembind('image', 'ButtonRelease-1') { |e| process_release(e) }
 
     @vscroll = TkScrollbar.new(frame) { orient 'vertical' }
     @canvas.yscrollbar(@vscroll)
@@ -211,11 +218,43 @@ class MarkingUI
   end
 
   def process_click(e)
-    cx, cy = @canvas.canvasx(e.x).round, @canvas.canvasy(e.y).round
+    @in_drag = false
+    cx, cy = canvas_coords(e)
     coords = find_box(cx, cy)
     text = @listbox.get
     if coords && text && !text.empty?
       add_line_data(text, coords)
+      advance_listbox
+    end
+  end
+
+  def process_drag(e)
+    if @in_drag
+      cx, cy = canvas_coords(e)
+      @canvas.coords(@drag_rect, @drag_x, @drag_y, cx, cy)
+    else
+      @in_drag = true
+      @drag_x, @drag_y = canvas_coords(e)
+      @drag_rect = TkcRectangle.new(
+        @canvas, @drag_x, @drag_y, @drag_x, @drag_y,
+        outline: 'green'
+      )
+    end
+  end
+
+  def process_release(e)
+    return unless @in_drag
+    @in_drag = false
+    @canvas.delete(@drag_rect)
+    @drag_rect = nil
+    cx, cy = canvas_coords(e)
+    w, h = (@drag_x - cx).abs, (@drag_y - cy).abs
+    text = @listbox.get
+    if [ w, h ].min > 5 && text && !text.empty?
+      add_line_data(text, [
+        [ cx, @drag_x ].min, [ cy, @drag_y ].min,
+        [ cx, @drag_x ].max, [ cy, @drag_y ].max
+      ])
       advance_listbox
     end
   end
@@ -346,6 +385,9 @@ class LinePosData
       @line_data = line_data
       @line_order = line_data.keys
     end
+
+    merge_bio
+
   end
 
   def add_line_data(line, params)
@@ -353,12 +395,27 @@ class LinePosData
       raise "Invalid parameter #{params}"
     end
     @line_data[line.to_s] = params
-    @line_order.push(line.to_s)
+    @line_order.push(line.to_s) unless @line_order.include?(line.to_s)
   end
 
   def merge_lines(tax_form)
-    insert_pos = -1
+    insert_pos = @line_order.count - 1
     tax_form.line.each do |l, v|
+      pos = @line_order.find_index(l)
+      if pos
+        insert_pos = pos
+      else
+        insert_pos += 1
+        @line_order.insert(insert_pos, l)
+      end
+    end
+  end
+
+  def merge_bio
+    insert_pos = -1
+    Biographical::FIELDS.each do |l, q|
+      next if l == :status
+      l = "bio:#{l}"
       pos = @line_order.find_index(l)
       if pos
         insert_pos = pos
@@ -456,8 +513,9 @@ end
 
 class MultiFormManager
 
-  def initialize(filename = '')
+  def initialize(filename = '', bio = nil)
     @form_data = {}
+    @bio = bio
     import(filename)
   end
 
@@ -497,6 +555,11 @@ class MultiFormManager
   def fill_form(form, filename)
     lpd = @form_data[form.name]
     lpd.start_fill
+
+    @bio.line.each do |l, v|
+      lpd.fill("bio:#{l}", v) if lpd["bio:#{l}"]
+    end if @bio
+
     form.line.each do |l, v|
       if lpd[l]
         lpd.fill(l, v)
