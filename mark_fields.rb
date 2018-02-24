@@ -491,7 +491,7 @@ class LinePosData
       xpos = w - [ 0, w - 8, 6 ].sort[1] + x
       if value < 0
         res[1] = "(#{-value})"
-        xpos -= 6
+        xpos += 6
       end
       res.push("-pos-right")
     elsif value == "X"

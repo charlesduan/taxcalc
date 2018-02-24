@@ -274,8 +274,10 @@ class Form1040 < TaxForm
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       if sched_d.line['20no', :present]
+        line[:tax_method] = 'Sch D'
         return compute_tax_schedule_d
       elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
+        line[:tax_method] = 'QDCGTW'
         return compute_tax_qdcgt
       end
     elsif line['9b', :present] or line[13, :present]
@@ -287,8 +289,10 @@ class Form1040 < TaxForm
 
   def compute_tax_standard(income)
     if income < 100000
+      line[:tax_method] = 'Table'
       return compute_tax_table(income, status)
     else
+      line[:tax_method] = 'TCW'
       return compute_tax_worksheet(income)
     end
   end

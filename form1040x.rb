@@ -30,6 +30,13 @@ class Form1040X < TaxForm
   end
 
   def compute
+    year = interview("Tax year for this amended return:")
+    if (2012..2015).include?(year)
+      line["for_#{year}"] = 'X'
+    else
+      line[:for_year] = year
+    end
+
     [
       [ 1, 'single' ],
       [ 2, 'mfj' ],
@@ -54,6 +61,8 @@ class Form1040X < TaxForm
     calc_cols(5) { |x| line["3#{x}"] - line["4#{x}"] }
 
     fill_cols(6) { |x| x.line(47) }
+    line['6.method'] = interview("Method of figuring corrected tax:")
+
     fill_cols(7) { |x| x.line(55) }
     calc_cols(8) { |x| line["6#{x}"] - line["7#{x}"] }
 
