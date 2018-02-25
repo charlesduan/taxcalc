@@ -76,7 +76,8 @@ class Interviewer
     when /^-?\d*\.\d*$/ then data.to_f
     when /^\[\s*(.*)\s*\]$/
       $1.split(/,\s*/).map { |x| parse(question, x.strip) }
-    else data
+    else
+      data.gsub("\\n", "\n")
     end
   end
 

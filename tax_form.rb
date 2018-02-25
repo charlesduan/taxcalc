@@ -96,6 +96,7 @@ class TaxForm
         data = @lines_data[line]
         prefix = "\t#{line}\t"
         [ data ].flatten.each do |item|
+          item = item.to_s.gsub("\n", "\\n")
           io.puts("#{prefix}#{item}")
           prefix = "\t#{'"'.ljust(line.length)}\t"
         end
@@ -226,15 +227,19 @@ class TaxForm
   end
 
   def import(io = STDIN)
+    last_line = nil
     io.each do |text|
       break if (text =~ /^\s*$/)
       line_no, data = text.strip.split(/\s+/, 2)
-      data = Interviewer.parse(line_no, data)
-      if data.is_a?(Enumerable)
+      data = Interviewer.parse(line_no == '"' ? last_line : line_no, data)
+      if line_no == '"'
+        line[last_line, :all] = [ line[last_line, :all], data ].flatten
+      elsif data.is_a?(Enumerable)
         line[line_no, :all] = data
       else
         line[line_no] = data
       end
+      last_line = line_no unless line_no == '"'
     end
   end
 

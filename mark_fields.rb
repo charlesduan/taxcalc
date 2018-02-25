@@ -1,5 +1,10 @@
 #!/usr/bin/ruby
 
+if __FILE__ == $0
+  $LOAD_PATH.push(File.dirname(__FILE__))
+  require 'form_manager'
+end
+
 require 'tk'
 require 'tkextlib/tkimg/png'
 require 'tkextlib/bwidget'
@@ -362,10 +367,11 @@ end
 
 class LinePosData
 
-  def initialize(pdf_file, tax_form, line_data)
+  def initialize(pdf_file, tax_form)
     @parser = PdfFileParser.new(pdf_file)
 
-    parse_line_data(line_data)
+    @line_order = Biographical::FIELDS.keys.map { |x| "bio:#{x}" }
+    @line_data = {}
 
     if tax_form.is_a?(TaxForm)
       @form_name = tax_form.name
@@ -373,21 +379,6 @@ class LinePosData
     else
       @form_name = tax_form.to_s
     end
-  end
-
-  def parse_line_data(line_data)
-    @line_order = []
-    @line_data = {}
-
-    case line_data
-    when nil
-    when Hash
-      @line_data = line_data
-      @line_order = line_data.keys
-    end
-
-    merge_bio
-
   end
 
   def add_line_data(line, params)
@@ -400,22 +391,14 @@ class LinePosData
 
   def merge_lines(tax_form)
     insert_pos = @line_order.count - 1
+    lines = []
     tax_form.line.each do |l, v|
-      pos = @line_order.find_index(l)
-      if pos
-        insert_pos = pos
-      else
-        insert_pos += 1
-        @line_order.insert(insert_pos, l)
+      lines.push(l)
+      if v.is_a?(Array) && v.count > 1
+        lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
       end
     end
-  end
-
-  def merge_bio
-    insert_pos = -1
-    Biographical::FIELDS.each do |l, q|
-      next if l == :status
-      l = "bio:#{l}"
+    lines.each do |l|
       pos = @line_order.find_index(l)
       if pos
         insert_pos = pos
@@ -480,10 +463,24 @@ class LinePosData
   end
 
   def fill(line, value)
+    if value.is_a?(Array)
+      multi_lines = (0...value.count).map { |x|
+        x.zero? ? line : "#{line}##{x + 1}"
+      }
+      if self[multi_lines.last]
+        multi_lines.zip(value).each do |l, v|
+          fill(l, v)
+        end
+      else
+        warn("Insufficient space for line #{line}; use attached sheet")
+      end
+      return
+    end
+
     page, x, y, w, h = *self[line]
     ypos = [ 0, h - 9, 3 ].sort[1] + y
     res = [
-      "-add-text", "#{value}",
+      "-add-text", value.to_s.gsub("\n", "\\n"),
       "-font", "Courier", "-font-size", "10",
       "-range", "#{page}"
     ]
@@ -500,6 +497,7 @@ class LinePosData
     else
       xpos = [ 0, w - 8, 6 ].sort[1] + x
       res.push("-pos-left")
+      ypos = y + h - 10 if value =~ /\n/
     end
     res.push("#{xpos} #{ypos}")
     @fill_data.push(res)
@@ -528,7 +526,7 @@ class MultiFormManager
       f.each do |l|
         case l
         when /^Form (.*), File (.*)/
-          lpd = @form_data[$1] = LinePosData.new($2, $1, nil)
+          lpd = @form_data[$1] = LinePosData.new($2, $1)
         when /^\s*$/
         when /^\s+/
           line_no, data = $'.strip.split(/\s+/, 2)
@@ -542,12 +540,21 @@ class MultiFormManager
   end
 
   def mark_form(form, filename = '')
+    if form.is_a?(Array)
+      extra_forms = form
+      form = extra_forms.shift
+    else
+      extra_forms = []
+    end
+
     if @form_data.include?(form.name)
       lpd = @form_data[form.name]
       lpd.merge_lines(form)
     else
-      lpd = @form_data[form.name] = LinePosData.new(filename, form, nil)
+      lpd = @form_data[form.name] = LinePosData.new(filename, form)
     end
+
+    extra_forms.each do |f| lpd.merge_lines(f) end
 
     lpd.show_ui unless lpd.all_filled?
   end
@@ -581,4 +588,20 @@ class MultiFormManager
 
 end
 
+if __FILE__ == $0
+  input_data, form_name, pdf_file, pos_data = ARGV
+  mgr = FormManager.new("Mark")
+  mgr.import(input_data)
 
+  if mgr.has_form?('Biographical')
+    bio = mgr.form('Biographical')
+  else
+    bio = NamedForm.new('Biographical', mgr)
+  end
+
+  mfm = MultiFormManager.new(pos_data, bio)
+  mfm.mark_form(mgr.forms(form_name), pdf_file)
+  open(pos_data, 'w') do |f|
+    mfm.export(f)
+  end
+end

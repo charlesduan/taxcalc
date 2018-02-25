@@ -19,6 +19,9 @@ class Form1065B1 < TaxForm
 
     raise 'Entities not implemented' unless entities.empty?
 
+    line['name'] = form('Partnership').line('name')
+    line['ein'] = form('Partnership').line('ein')
+
     line['II.i', :all] = individuals.lines('name')
     line['II.ii', :all] = individuals.lines('ssn')
     line['II.iii', :all] = individuals.lines('country')
