@@ -589,6 +589,11 @@ class MultiFormManager
 end
 
 if __FILE__ == $0
+  unless ARGV.count == 4
+    puts "Usage: #{File.basename($0)} [input-data] [form] [pdf] [pos-data]"
+    exit
+  end
+
   input_data, form_name, pdf_file, pos_data = ARGV
   mgr = FormManager.new("Mark")
   mgr.import(input_data)

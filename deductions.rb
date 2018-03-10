@@ -23,6 +23,7 @@ class Deductions < TaxForm
 
     total = 0.0
     deds.keys.sort.each do |cat|
+      deds[cat] = deds[cat].round(2)
       line[cat] = deds[cat]
       total += deds[cat]
     end

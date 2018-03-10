@@ -51,6 +51,7 @@ class Form1065K1 < TaxForm
 
     line[1] = (f1065.line['K1'] * share).round
     line[5] = (f1065.line['K5'] * share).round if f1065.line[:K5, :present]
+    line[12] = (f1065.line['K12'] * share).round if f1065.line[:K12, :present]
     line[14] = (f1065.line['K14a'] * share).round
     line['14.code'] = 'A'
   end

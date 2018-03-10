@@ -1,9 +1,10 @@
 require 'tax_form'
+require 'form4562'
 
 class Form1065 < TaxForm
 
   def name
-    '1065'
+    1065
   end
 
   def compute
@@ -32,6 +33,10 @@ class Form1065 < TaxForm
     line['1c'] = line['1a'] - line['1b', :opt]
     line[3] = line['1c'] - line[2, :opt]
     line[8] = sum_lines(3, 4, 5, 6, 7)
+
+    if has_form?('Asset')
+      @manager.compute_form(Form4562)
+    end
 
     line[20] = form('Deductions').line[:fill]
     line[21] = sum_lines(9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20)
@@ -100,6 +105,10 @@ class Form1065 < TaxForm
 
     line['K1'] = line[22]
     line['K5'] = forms('1099-INT').lines(1, :sum)
+    if has_form?(4562)
+      line['K12'] = form(4562).line[12]
+    end
+
     line['K14a'] = line['K1']
 
     line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4 K5 K6a K7 K8 K9a K10 K11)) \

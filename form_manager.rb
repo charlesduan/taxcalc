@@ -22,7 +22,7 @@ class FormManager
   attr_reader :interviewer
 
   def add_form(form)
-    name = form.name
+    name = form.name.to_s
     if @no_forms.include?(name)
       raise "Adding form #{name} after No Form flag given"
     end
@@ -75,7 +75,7 @@ class FormManager
   end
 
   def has_form?(name)
-    @forms.include?(name)
+    @forms.include?(name.to_s)
   end
 
   def list_forms
@@ -109,7 +109,9 @@ class FormManager
       until io.eof?
         line = io.gets
         next unless (line && line =~ /\w/)
-        raise "Invalid start of form" unless (line =~ /^((No )?Form|Table) /)
+        unless (line =~ /^((No )?Form|Table) /)
+          raise "Invalid start of form"
+        end
         type = $1
         name = $'.strip
         new_form = NamedForm.new(name, self)
