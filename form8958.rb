@@ -124,7 +124,7 @@ class Form8958 < TaxForm
     line[12, :add] = forms('1098-INT').lines('lender').map { |x|
       "Real estate taxes: #{x}"
     }
-    enter_split(12, '1098-INT', split_1098int, 10)
+    enter_split(12, '1098-INT', split_1098int, 11)
 
     line[12, :add] = forms('Charity Gift').lines('name').map { |x|
       "Gifts to charity: #{x}"

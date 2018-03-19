@@ -1,3 +1,5 @@
+require 'form4562'
+
 class Form1040E < TaxForm
 
   def name
@@ -6,25 +8,52 @@ class Form1040E < TaxForm
 
   def compute
     k1s = forms('1065 Schedule K-1')
-    assert_question('What is your answer to Schedule E, line 27?', false)
+    assert_question(
+      'Do you have prior year unallowed losses for Schedule E?', false
+    )
+    assert_question(
+      'Do you have unreimbursed partnership expenses (other than home office)?',
+      false
+    )
 
-    line['27.no'] = 'X'
-    line['28a', :all] = k1s.lines['B']
-    line['28b', :all] = k1s.map { |x| 'P' }
-    assert_question('Are any of your partnerships foreign?', false)
-    line['28d', :all] = k1s.lines['A']
-
-    if k1s.lines[1].any? { |x| x < 0 }
-      raise 'Partnership losses not implemented'
+    if form('Home Office Manager').line[:upe, :present]
+      line['27.yes'] = 'X'
+    else
+      line['27.no'] = 'X'
     end
 
+    assert_question('Are any of your partnerships foreign?', false)
     assert_question('Were you active in all your partnerships?', true)
 
-    assert_no_lines('1065 Schedule K-1', 12)
+    @manager.compute_form(Form4562)
 
-    line['28j', :all] = k1s.lines[1]
+    k1s.each do |k1|
+      raise 'Partnership losses not implemented' if k1.line[1] < 0
+      pship_name = k1.line[:B].split("\n")[0]
+      f4562 = forms(4562).find { |x| x.line[:business] == pship_name }
 
+      add_table_row(
+        '28a' => pship_name,
+        '28b' => 'P',
+        '28d' => k1.line[:A],
+        '28i' => f4562.line[12],
+        '28j' => k1.line[1]
+      )
+    end
+
+    if form('Home Office Manager').line[:upe, :present]
+      add_table_row(
+        '28a' => 'UPE',
+        '28h' => form('Home Office Manager').line[:upe, :sum]
+      )
+    end
+
+    line['29a.g'] = line['28g', :sum]
     line['29a.j'] = line['28j', :sum]
+    line['29b.f'] = line['28f', :sum]
+    line['29b.h'] = line['28h', :sum]
+    line['29b.i'] = line['28i', :sum]
+
     line[30] = sum_lines('29a.g', '29a.j')
     line[31] = sum_lines('29b.f', '29b.h', '29b.i')
     line[32] = line[30] - line[31]

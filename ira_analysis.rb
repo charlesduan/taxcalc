@@ -28,9 +28,13 @@ class IraAnalysis < TaxForm
     get_contributions
 
     # Was it a Roth conversion?
-    line[:roth_conversion] = interview(
-      'Enter the amount you converted from traditional/SEP/SIMPLE to Roth IRAs:'
-    )
+    if interview('Were all your 1099-R distributions for Roth conversions?')
+      line[:roth_conversion] = all_distribs
+    else
+      line[:roth_conversion] = interview(
+        'Enter the amount converted from traditional/SEP/SIMPLE to Roth IRAs:'
+      )
+    end
 
     if line[:this_year_contrib] == 0
 

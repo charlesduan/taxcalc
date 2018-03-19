@@ -109,6 +109,8 @@ class FormManager
       until io.eof?
         line = io.gets
         next unless (line && line =~ /\w/)
+        next if line =~ /^\s*#/
+
         unless (line =~ /^((No )?Form|Table) /)
           raise "Invalid start of form"
         end

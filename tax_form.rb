@@ -191,6 +191,9 @@ class TaxForm
     @manager.interview(prompt, self)
   end
 
+  def copy_line(l, form)
+    line[l] = form.line[l] if form.line[l, :present]
+  end
 
   def form_line_or(form_name, form_line, default)
     if @manager.has_form?(form_name)
@@ -226,11 +229,22 @@ class TaxForm
     end
   end
 
+  def add_table_row(hash)
+    max_rows = hash.keys.map { |x|
+      line[x, :present] ? line[x, :all].count : 0
+    }.max
+    hash.keys.each do |x|
+      arr = line[x, :present] ? line[x, :all] : []
+      line[x, :all] = arr + ([ BlankZero ] * (max_rows - arr.count) << hash[x])
+    end
+  end
+
   def import(io = STDIN)
     last_line = nil
     io.each do |text|
       break if (text =~ /^\s*$/)
       line_no, data = text.strip.split(/\s+/, 2)
+      data ||= ''
       data = Interviewer.parse(line_no == '"' ? last_line : line_no, data)
       if line_no == '"'
         line[last_line, :all] = [ line[last_line, :all], data ].flatten

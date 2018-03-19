@@ -10,6 +10,7 @@ require 'form6251'
 require 'form8959'
 require 'form8960'
 require 'ira_analysis'
+require 'home_office'
 
 class Form1040 < TaxForm
 
@@ -31,12 +32,47 @@ class Form1040 < TaxForm
 
     assert_no_forms(2555, '2555-EZ')
 
+    @manager.compute_form(HomeOfficeManager)
+
+    bio = form('Biographical')
+    copy_line(:first_name, bio)
+    copy_line(:last_name, bio)
+
+    line[:ssn_1], line[:ssn_2], line[:ssn_3] = bio.line[:ssn].split(/-/)
+
     @status = FilingStatus.for(interview("Enter your filing status:"))
 
+    if @status.is('mfj')
+      copy_line(:spouse_first_name, bio)
+      copy_line(:spouse_last_name, bio)
+    end
+    if @status.is(%w(mfj mfs))
+      line[:spouse_ssn_1], line[:spouse_ssn_2], line[:spouse_ssn_3] = \
+        bio.line[:spouse_ssn].split(/-/)
+    end
+
+    copy_line('home_address', bio)
+    copy_line('apt_no', bio)
+    copy_line('city_zip', bio)
+    copy_line('foreign_country', bio)
+    copy_line('foreign_state', bio)
+    copy_line('foreign_zip', bio)
+
+    line['campaign.you'] = 'X' if interview(
+      'Do you want to donate to the Presidential Election Campaign?'
+    )
+    line['campaign.spouse'] = 'X' if @status.is('mfj') && interview(
+      'Does your spouse want to donate to the Presidential Election Campaign?'
+    )
+
     line[status.checkbox_1040] = 'X'
-    extra = status.checkbox_1040_extra
-    if extra
-      line["#{status.checkbox_1040}text"] = interview("Enter your #{extra}:")
+    if status.is('mfs')
+      line['3.spouse_name'] = bio.line[:spouse_first_name] + ' ' + \
+        bio.line['spouse_last_name']
+    elsif status.is('hoh')
+      line['4.child'] = interview(
+        'Name of head-of-household qualifying child, if not a dependent:'
+      )
     end
 
     unless interview("Can someone claim you as a dependent?")
