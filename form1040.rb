@@ -130,7 +130,7 @@ class Form1040 < TaxForm
 
     ira_analysis = @manager.compute_form(IraAnalysis)
     line['15a'] = ira_analysis.line['15a'] if ira_analysis.line['15a', :present]
-    line['15b'] = ira_analysis.line['15b'] if ira_analysis.line['15a', :present]
+    line['15b'] = ira_analysis.line['15b'] if ira_analysis.line['15b', :present]
 
     if interview('Did you receive any pension or annuity distributions?')
       raise 'Not implemented'

@@ -1,6 +1,14 @@
 require 'tax_form'
 require 'filing_status'
 
+#
+# Computes 1040 information relating to IRA distributions and contributions.
+#
+# The methods of this meta-form are invoked at two points in the 1040
+# computation. First, the compute method is called at 1040 line 15, to compute
+# just the IRA distributions. Second, the compute_contributions method is called
+# at 1040 line 32, to compute any IRA deduction.
+#
 class IraAnalysis < TaxForm
 
   def name
@@ -9,45 +17,39 @@ class IraAnalysis < TaxForm
 
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
 
-  def get_contributions
-    line[:this_year_contrib] = interview(
-      'Enter this year\'s traditional IRA contributions:'
-    ) unless line[:this_year_contrib, :present]
-  end
-
   def compute
 
-    return unless has_form?('1099-R')
-    all_distribs = forms('1099-R').lines(1, :sum)
+    assert_question(
+      'Did you have a qualified disaster distribution (Form 8915)?', false
+    )
 
-    # No IRA rollovers, QCD, HFD
-    assert_question("Did you do an IRA rollover, qualified charitable " + \
-                    "distribution, or HSA funding distribution?", false)
+    all_1099rs = forms('1099-R')
+    if all_1099rs.any? { |x| !x.line['ira-sep-simple?'] }
+      raise "Non-IRA 1099-R forms not implemented"
+    end
+
+    # Since we're only computing distributions, quit if there weren't any
+    return if all_1099rs.empty?
+
+    all_distribs = all_1099rs.lines(1, :sum)
 
     # Were there contributions?
     get_contributions
 
-    # Was it a Roth conversion?
-    if interview('Were all your 1099-R distributions for Roth conversions?')
-      line[:roth_conversion] = all_distribs
-    else
-      line[:roth_conversion] = interview(
-        'Enter the amount converted from traditional/SEP/SIMPLE to Roth IRAs:'
-      )
+    #
+    # The destination could also be a traditional-to-traditional rollover, a
+    # Roth-to-Roth rollover, a qualified charitable distribution, an HSA funding
+    # distribution, or cash. The "destination" field in Form 1099-R should
+    # reflect these. To implement any other destinations for an IRA
+    # distribution, see the 1040 line 15a instructions.
+    #
+    if all_1099rs.any? { |x| x.line['destination'] != 'Roth conversion' }
+      raise "Cannot handle 1099-R distributions that are not Roth conversions"
     end
+    line[:roth_conversion] = all_distribs
+    line[:cash_distribution] = 0
 
-    if line[:this_year_contrib] == 0
-
-      # Distributions only. Terminate unless Form 8606 is needed.
-      unless line[:roth_conversion] > 0 or \
-        interview('Do you need to file Form 8606 (see 1040 line 15a)?')
-
-        line['15b'] = all_distribs
-        return
-      end
-
-    else
-
+    if line[:this_year_contrib] > 0
       # Both contributions and distributions.
       # Follow Pub. 590-B, Worksheet 1-1 and instructions
       @pub590b_w1_1 = @manager.compute_form(
@@ -58,7 +60,14 @@ class IraAnalysis < TaxForm
     # Compute form 8606 (just distributions)
     @form8606 = @manager.compute_form(Form8606.new(@manager, self))
     line['15a'] = all_distribs
-    line['15b'] = @form8606.sum_lines(15, 18, 25)
+    line['15b'] = @form8606.sum_lines('15c', 18, 25)
+
+  end
+
+  def get_contributions
+    line[:this_year_contrib] = interview(
+      'Enter this year\'s traditional IRA contributions:'
+    ) unless line[:this_year_contrib, :present]
 
   end
 
@@ -97,18 +106,20 @@ class IraAnalysis < TaxForm
 
     def compute
       analysis = @ira_analysis
-      line[1] = interview(
-        'Enter your traditional IRA basis from Dec. 31 of last year:'
-      )
+      line[1] = interview('Enter last year\'s Form 8606, line 14:')
       line[2] = analysis.line[:this_year_contrib]
       line[3] = sum_lines(1, 2)
 
       line[4] = interview(
         'Enter the value of all traditional IRAs as of Dec. 31 of this year:'
       )
+
+      # Line 5 is the sum of line 1 of those 1099-R forms that are traditional
+      # IRA distributions
       line[5] = forms('1099-R').select { |f|
-        [ 1, 2, 3, 4, 5, 7 ].include?(f.line[7])
+        [ 1, 2, 3, 4, 5, 7 ].include?(f.line[7]) && f.line['ira-sep-simple?']
       }.lines(1, :sum)
+
       line[6] = sum_lines(4, 5)
       line[7] = [ 1.0, line[3].to_f / line[6] ].min.round(3)
       line[8] = (line[5] * line[7]).round
@@ -140,7 +151,7 @@ class IraAnalysis < TaxForm
         w1_1 = @ira_analysis.pub590b_w1_1
         line[13] = line[17] = w1_1.line[8]
         line[18] = w1_1.line[10] if w1_1.line[10, :present]
-        line[15] = w1_1.line[11, :present] ? w1_1.line[11] : w1_1.line[9]
+        line['15a'] = w1_1.line[11, :present] ? w1_1.line[11] : w1_1.line[9]
         line['note'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
       elsif @ira_analysis.line[:this_year_contrib] == 0
         line[1] = 0
@@ -160,7 +171,7 @@ class IraAnalysis < TaxForm
         compute_4_to_5
 
         if line[5] < w1_1.line[8]
-          compute_6_to_15
+          compute_6_to_15(w1_1)
         else
           line[14] = line[3] - line[13]
         end
@@ -175,7 +186,7 @@ class IraAnalysis < TaxForm
     end
 
     def compute_2_to_3
-      line[2] = interview('Enter your total basis in traditional IRAs:')
+      line[2] = interview('Enter last year\'s Form 8606, line 14:')
       line[3] = sum_lines(1, 2)
     end
 
@@ -188,8 +199,19 @@ class IraAnalysis < TaxForm
       line[5] = line[3] - line[4]
     end
 
-    def compute_6_to_15
-      raise 'Not implemented'
+    def compute_6_to_15(p590b_w1_1)
+      line[6] = p590b_w1_1.line[4]
+      line[7] = @ira_analysis.line[:cash_distribution]
+      line[8] = @ira_analysis.line[:roth_conversion]
+      line[9] = sum_lines(6, 7, 8)
+      line[10] = [ (line[5] / line[9]).round(3), 1.0 ].min
+      line[11] = (line[8] * line[10]).round
+      line[12] = (line[7] * line[10]).round
+      # Not sure if I need to do line 13?
+      line[14] = line[3] - line[13]
+      # Same as line 13? line['15a'] = line[7] - line[12]
+      line['15b'] = 0 # No qualified disaster
+      line['15c'] = line['15a'] - line['15b']
     end
 
     def compute_part_iii

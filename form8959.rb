@@ -25,7 +25,9 @@ class Form8959 < TaxForm
       line[13] = (line[12] * 0.009).round
     end
 
-    assert_no_lines('W-2', 14)
+    if forms('W-2').any? { |w2| w2.line[14, :present] }
+      assert_question('Did you receive any RRTA compensation or tips?', false)
+    end
 
     line[18] = sum_lines(7, 13, 17)
 
