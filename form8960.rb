@@ -7,6 +7,9 @@ class Form8960 < TaxForm
   end
 
   def compute
+    line[:name] = form(1040).full_name
+    line[:ssn] = form(1040).ssn
+
     line[1] = form(1040).line['8a']
     line[2] = form(1040).line['9a']
 

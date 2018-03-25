@@ -7,6 +7,9 @@ class Form1040E < TaxForm
   end
 
   def compute
+    line[:name] = form(1040).full_name
+    line[:ssn] = form(1040).ssn
+
     k1s = forms('1065 Schedule K-1')
     assert_question(
       'Do you have prior year unallowed losses for Schedule E?', false

@@ -30,12 +30,12 @@ class Form4562 < TaxForm
 
     else
       bio = form('Biographical')
-      line['name'] = bio.line(:first_name) + ' ' + bio.line(:last_name)
+      line[:name] = form(1040).full_name
       unless forms('1065 Schedule K-1').count == 1
         raise "Cannot handle multiple businesses"
       end
       line['business'] = k1_form.line['B'].split("\n")[0]
-      line['id'] = bio.line(:ssn)
+      line[:id] = form(1040).ssn
 
       line[1] = 510_000
       l2 = k1_form.line[12]

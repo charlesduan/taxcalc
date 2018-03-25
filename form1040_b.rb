@@ -7,6 +7,9 @@ class Form1040B < TaxForm
   end
 
   def compute
+    line[:name] = form(1040).full_name
+    line[:ssn] = form(1040).ssn
+
     line['1l', :all] = forms('1099-INT').lines('name')
     line['1r', :all] = forms('1099-INT').lines(1)
     line[2] = line['1r', :sum]

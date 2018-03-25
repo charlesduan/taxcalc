@@ -12,6 +12,8 @@ module TaxTable
   end
 
   def compute_tax_table(income, status)
+    raise "Tax Table not implemented this year yet"
+
     TAX_TABLE.each do |row|
       if income >= row[0] && income < row[1]
         return row[status.tax_table_column]

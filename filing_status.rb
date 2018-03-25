@@ -14,6 +14,8 @@ class FilingStatus
     val = @params[name.to_s]
     case val
     when :err then raise "#{name} not implemented for filing status #{@name}"
+    when :half_mfj then MarriedFilingJointly.send(name, *args) / 2
+    when Symbol then FilingStatus.for(val.to_s).send(name, *args)
     when Proc then val.call(*args)
     else val
     end
@@ -67,8 +69,6 @@ class FilingStatus
 end
 
 FilingStatus.set_param('checkbox_1040', 1, 2, 3, 4, 5)
-
-FilingStatus.set_param('standard_deduction', 6300, 12600, 6300, 9300, 12600)
 
 class FilingStatusVisitor
 end

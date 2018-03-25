@@ -6,6 +6,9 @@ class Form8959 < TaxForm
   end
 
   def compute
+    line[:name] = form(1040).full_name
+    line[:ssn] = form(1040).ssn
+
     line[1] = forms('W-2').lines(5, :sum)
 
     assert_no_forms(4137, 8919)

@@ -8,18 +8,19 @@ class Form6251 < TaxForm
   end
 
   def compute
+    line[:name] = form(1040).full_name
+    line[:ssn] = form(1040).ssn
 
     if has_form?('1040 Schedule A')
       sched_a = form('1040 Schedule A')
       line[1] = form(1040).line(41)
-      line[2] = [
-        0,
-        [ sched_a.line[4, :opt], (0.025 * form(1040).line[38]).round ].min
-      ].max
+      # Line 2 removed by legislation
       line[3] = sched_a.line[9]
       line[4] = @manager.compute_form(MortgageInterestWorksheet).line[6]
       line[5] = sched_a.line[27, :opt]
 
+      # The worksheet will be present if Form 1040 line 38 is greater than the
+      # itemized deduction limit.
       if has_form?('Itemized Deductions Worksheet')
         line[6] = -1 * form('Itemized Deductions Worksheet').line[9]
       else
@@ -32,11 +33,12 @@ class Form6251 < TaxForm
     line[7] = form(1040).line[10, :opt]
 
     l28 = sum_lines(*1..27)
-    if form(1040).status.is('mfs') && l28 > 247450
-      if l28 > 415050
-        line[28] = l28 + 41900
+    # Special adjustment for mfs status; inflation adjusted
+    if form(1040).status.is('mfs') && l28 > 249450
+      if l28 > 418450
+        line[28] = l28 + 42250
       else
-        line[28] = l28 + (0.25 * (l28 - 247450)).round
+        line[28] = l28 + (0.25 * (l28 - 249450)).round
       end
     else
       line[28] = l28
@@ -65,18 +67,8 @@ class Form6251 < TaxForm
     if l31test
       compute_part_iii
       line[31] = line[64]
-    elsif form(1040).status.is('mfs')
-      if line[30] <= 93150
-        line[31] = (0.26 * line[30]).round
-      else
-        line[31] = (0.28 * line[30]).round - 1863
-      end
     else
-      if line[30] <= 186300
-        line[31] = (0.26 * line[30]).round
-      else
-        line[31] = (0.28 * line[30]).round - 3726
-      end
+      line[31] = amt_tax(line[30])
     end
 
     assert_question("Did you pay any foreign taxes?", false)
@@ -112,11 +104,7 @@ class Form6251 < TaxForm
     line[40] = [ line[36], line[39] ].min
     line[41] = line[36] - line[40]
 
-    if line[41] <= form(1040).status.halve_mfs(186300)
-      line[42] = (line[41] * 0.26).round
-    else
-      line[42] = (line[41] * 0.28).round - form(1040).status.halve_mfs(3726)
-    end
+    line[42] = amt_tax(line[41])
 
     line[43] = form(1040).status.amt_cg_exempt
     line[44] = compute_from_worksheets(7, 14) {
@@ -152,12 +140,16 @@ class Form6251 < TaxForm
     end
 
     line[62] = sum_lines(42, 55, 58, 61)
-    if line[36] <= form(1040).status.halve_mfs(186300)
-      line[63] = (line[36] * 0.26).round
-    else
-      line[63] = (line[36] * 0.28).round - form(1040).status.halve_mfs(3726)
-    end
+    line[63] = amt_tax(line[36])
     line[64] = [ line[62], line[63] ].min
+  end
+
+  def amt_tax(amount)
+    if amount <= form(1040).status.amt_bracket_max
+      return (amount * 0.26).round
+    else
+      return (amount * 0.28).round - form(1040).status.amt_bracket_sub
+    end
   end
 
   def compute_from_worksheets(qdcgt_line, sdtw_line)
@@ -180,11 +172,6 @@ class Form6251 < TaxForm
 
 end
 
-FilingStatus.set_param('amt_exempt_max', 119700, 159700, 79850, 119700, 159700)
-FilingStatus.set_param('amt_exemption', 53900, 83800, 41900, 53900, 83800)
-FilingStatus.set_param('amt_cg_exempt', 37650, 75300, 37650, 50400, 75300)
-FilingStatus.set_param('amt_cg_upper', 415050, 466950, 233475, 441000, 466950)
-
 
 
 class MortgageInterestWorksheet < TaxForm
@@ -198,7 +185,7 @@ class MortgageInterestWorksheet < TaxForm
     if line[1] > 0
       assert_question('Were all of your Schedule A mortgage deductions ' + \
                        'for eligible mortages (per form 6251)?', true)
-      line[2] = forms('1098-INT').lines(1, :sum) + sched_a.sum_lines(11, 13)
+      line[2] = line[1]
     end
     line[5] = sum_lines(2, 3, 4)
     line[6] = line[1] - line[5]
@@ -229,5 +216,13 @@ class Line29ExemptionWorksheet < TaxForm
   end
 end
 
-FilingStatus.set_param('amt_exempt_zero', 335300, 494900, 247450, 335300,
-                       494900)
+FilingStatus.set_param('amt_exempt_max', 120700, 160900, :half_mfj, :single,
+                       :mfj)
+FilingStatus.set_param('amt_exemption', 54300, 84500, :half_mfj, :single, :mfj)
+FilingStatus.set_param('amt_exempt_zero', 337900, 498900, :half_mfj, :single,
+                       :mfj)
+FilingStatus.set_param('amt_bracket_max', :mfj, 187800, :half_mfj, :mfj, :mfj)
+FilingStatus.set_param('amt_bracket_sub', :mfj, 3756, :half_mfj, :mfj, :mfj)
+FilingStatus.set_param('amt_cg_exempt', 37950, 75900, :single, 50800, :mfj)
+FilingStatus.set_param('amt_cg_upper', 418400, 470700, :half_mfj, 444550, :mfj)
+

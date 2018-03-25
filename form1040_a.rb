@@ -7,6 +7,9 @@ class Form1040A < TaxForm
   end
 
   def compute
+    line[:name] = form(1040).full_name
+    line[:ssn] = form(1040).ssn
+
     line[5] = forms('State Tax').lines(:amount, :sum) + \
       forms('W-2').lines(17, :sum)
     line['5a'] = 'X'
@@ -19,7 +22,7 @@ class Form1040A < TaxForm
     assert_no_forms(4952)
     line[15] = sum_lines(10, 11, 12, 13, 14)
 
-    line[16] = forms('Charity Gift').lines(:amount, :sum)
+    line[16] = forms('Charity Gift').lines(:amount, :sum).round
     if line[16] > 0.2 * form(1040).line(38)
       raise "Pub. 526 limit on charitable contributions not implemented"
     end
@@ -42,7 +45,7 @@ class Form1040A < TaxForm
   end
 end
 
-FilingStatus.set_param('itemize_limit', 259400, 311300, 155650, 285350, 311300)
+FilingStatus.set_param('itemize_limit', 261500, 313800, 156900, 287650, 313800)
 
 class ItemizedDeductionsWorksheet < TaxForm
   def name

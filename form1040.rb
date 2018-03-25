@@ -28,6 +28,14 @@ class Form1040 < TaxForm
     @status
   end
 
+  def full_name
+    line[:first_name] + ' ' + line[:last_name]
+  end
+
+  def ssn
+    %w(ssn_1 ssn_2 ssn_3).map { |x| line[x] }.join("-")
+  end
+
   def compute
 
     assert_no_forms(2555, '2555-EZ')
@@ -116,7 +124,8 @@ class Form1040 < TaxForm
     alimony = interview("Enter any amount you received as alimony:")
     line[11] = alimony if alimony > 0
 
-    line[12] = forms('1040 Schedule C').lines(31, :sum)
+    assert_no_forms('1099-MISC')
+    #line[12] = forms('1040 Schedule C').lines(31, :sum)
 
     sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
 
@@ -129,12 +138,10 @@ class Form1040 < TaxForm
     assert_no_forms(4797)
 
     ira_analysis = @manager.compute_form(IraAnalysis)
-    line['15a'] = ira_analysis.line['15a'] if ira_analysis.line['15a', :present]
-    line['15b'] = ira_analysis.line['15b'] if ira_analysis.line['15b', :present]
-
-    if interview('Did you receive any pension or annuity distributions?')
-      raise 'Not implemented'
-    end
+    copy_line('15a', ira_analysis)
+    copy_line('15b', ira_analysis)
+    copy_line('16a', ira_analysis)
+    copy_line('16b', ira_analysis)
 
     sched_e = @manager.compute_form(Form1040E)
     line[17] = sched_e.line[41]
@@ -237,7 +244,7 @@ class Form1040 < TaxForm
     line[52] = @manager.compute_form(ChildTaxCreditWorksheet).line['fill']
 
     # Line 53
-    assert_no_forms(5695)
+    assert_question("Did you install energy-efficient home equipment?", false)
 
     line[55] = sum_lines(*48..54)
     line[56] = [ 0, line[47] - line[55] ].max
@@ -266,11 +273,15 @@ class Form1040 < TaxForm
     line[64] = forms('W-2').lines(2, :sum)
     line[65] = forms('Estimated Tax').lines('amount', :sum)
 
+    ss_threshold = 7886
     ss_tax_paid = forms('W-2').lines[4].map { |x|
-      [ x, 7347 ].min
+      warn "Employer withheld too much social security tax" if x > ss_threshold
+      [ x, ss_threshold ].min
      }.inject(:+)
-     if ss_tax_paid > 7347
-       line[71] = ss_tax_paid - 7347
+     # The next line isn't exactly correct for mfj filers
+     ss_threshold *= 2 if @status.is('mfj')
+     if ss_tax_paid > ss_threshold
+       line[71] = ss_tax_paid - ss_threshold
      end
 
     line[74] = sum_lines(64, 65, '66a', 67, 68, 69, 70, 71, 72, 73)
@@ -278,6 +289,15 @@ class Form1040 < TaxForm
     if line[74] > line[63]
       line[75] = line[74] - line[63]
       line['76a'] = line[75]
+      if interview("Do you want your refund direct deposited?")
+        line['76b'] = interview("Direct deposit routing number:")
+        if interview("Direct deposit is to checking?")
+          line['76c.checking'] = 'X'
+        else
+          line['76c.savings'] = 'X'
+        end
+        line['76d'] = interview("Direct deposit account number:")
+      end
     else
       line[78] = line[63] - line[74]
 
@@ -290,7 +310,7 @@ class Form1040 < TaxForm
         unless last_year_tax == 0
           penalty_threshold = last_year_tax
           last_year_agi = interview('Enter your last year\'s AGI:')
-          if last_year_agi > status.penalty_threshold
+          if last_year_agi > status.halve_mfs(150000)
             penalty_threshold = (1.1 * last_year_tax)
           end
 
@@ -336,17 +356,14 @@ class Form1040 < TaxForm
   include TaxTable
 
   def compute_tax_worksheet(income)
-    if income < 100000
-      raise 'Worksheet not applicable for less than $100,000'
-    elsif income <= 190150
-      return (income * 0.28 - 6963.25).round
-    elsif income <= 413350
-      return (income * 0.33 - 16470.75).round
-    elsif income <= 415050
-      return (income * 0.35 - 24737.75).round
-    else
-      return (income * 0.396 - 43830.05).round
+    raise 'Worksheet not applicable for less than $100,000' if income < 100000
+    brackets = @status.tax_brackets
+    raise "Cannot compute tax worksheet for your filing status" unless brackets
+    brackets.each do |limit, rate, subtract|
+      next if limit && income > limit
+      return (income * rate - subtract).round
     end
+    raise "No suitable tax bracket found"
   end
 
   def compute_tax_qdcgt
@@ -419,48 +436,50 @@ class AMTTestWorksheet < TaxForm
       if sched_a
         line['1yes'] = 'X'
         line[1] = f1040.line[41]
-        line[3] = sched_a.sum_lines(9, 27)
-        line[4] = sum_lines(1, 2, 3)
+        line[2] = sched_a.sum_lines(9, 27)
+        line[3] = sum_lines(1, 2)
       else
-        line[4] = form(1040).line(38)
+        line['1no'] = 'X'
+        line[3] = form(1040).line(38)
       end
     end
 
-    line[5] = f1040.sum_lines(10, 21)
+    line[4] = f1040.sum_lines(10, 21)
     if has_form?('Itemized Deduction Worksheet')
-      line[6] = form('Itemized Deduction Worksheet').line[9]
+      line[5] = form('Itemized Deduction Worksheet').line[9]
     end
-    line[7] = sum_lines(5, 6)
-    line[8] = line[4] - line[7]
-    line[9] = f1040.status.amt_exemption
-    if line[8] <= line[9]
-      line['10no'] = 'X'
+    line[6] = sum_lines(4, 5)
+    line[7] = line[3] - line[6]
+    line[8] = f1040.status.amt_exemption
+    if line[7] <= line[8]
+      line['9no'] = 'X'
       line['fillform'] = 'no'
       return
     end
-    line['10yes'] = 'X'
-    line[10] = line[8] - line[9]
-    line[11] = f1040.status.amt_exemption_2
-    if line[8] <= line[11]
-      line['12no'] = 'X'
-      line[12] = 0
-      line[14] = line[10]
+    line['9yes'] = 'X'
+    line[9] = line[7] - line[8]
+    line[10] = f1040.status.amt_exemption_2
+    if line[7] <= line[10]
+      line['11no'] = 'X'
+      line[11] = 0
+      line[13] = line[9]
     else
-      line['12yes'] = 'X'
-      line[12] = line[8] - line[11]
-      line[13] = [ line[9], (line[12] * 0.25).round ].min
-      line[14] = line[10] + line[13]
+      line['11yes'] = 'X'
+      line[11] = line[7] - line[10]
+      line[12] = [ line[8], (line[11] * 0.25).round ].min
+      line[13] = line[9] + line[12]
     end
-    if line[14] > f1040.status.halve_mfs(186300)
-      line['15yes'] = 'X'
+    if line[13] > f1040.status.halve_mfs(187800)
+      line['14yes'] = 'X'
       line['fillform'] = 'yes'
       return
     else
-      line['15no'] = 'X'
-      line[15] = (line[14] * 0.26).round
+      line['14no'] = 'X'
+      line[14] = (line[13] * 0.26).round
     end
-    line[16] = f1040.sum_lines(44, 46)
-    if line[15] > line[16]
+    assert_no_forms('1040 Schedule J')
+    line[15] = f1040.sum_lines(44, 46)
+    if line[14] > line[15]
       line['fillform'] = 'yes'
     else
       line['fillform'] = 'no'
@@ -527,18 +546,32 @@ class ExemptionsDeductionsWorksheet < TaxForm
 end
 
 
-FilingStatus.set_param('qdcgt_exemption', 37650, 75300, 37650, 50400, 75300)
-FilingStatus.set_param('qdcgt_cap', 415050, 466950, 233475, 441000, 466950)
-FilingStatus.set_param('amt_exemption', 53900, 83800, 41900, 53900, 83800)
-FilingStatus.set_param('amt_exemption_2', 119700, 159700, 79850, 119700, 159700)
-FilingStatus.set_param('line_51_credit', 30750, 61500, 30750, 46125, 30750)
+FilingStatus.set_param('standard_deduction', 6350, 12700, 6350, 9350, 12700)
+FilingStatus.set_param('exemption_threshold', 261500, 313800, 156900, 287650,
+                       313800)
+FilingStatus.set_param('qdcgt_exemption', 37950, 75900, 37950, 50800, 75900)
+FilingStatus.set_param('qdcgt_cap', 418400, 470700, 235350, 444550, 470700)
+FilingStatus.set_param('amt_exemption', 54300, 84500, 42250, 54300, 84500)
+FilingStatus.set_param('amt_exemption_2', 120700, 160900, 80450, 120700, 160900)
+FilingStatus.set_param('line_51_credit', 31000, 62000, 31000, 64500, 31000)
+
+# Not inflation-adjusted
 FilingStatus.set_param('child_tax_limit', 75000, 110000, 55000, 75000, 75000)
 FilingStatus.set_param('niit_threshold', 200000, 250000, 125000, 200000, 250000)
-FilingStatus.set_param('penalty_threshold', 150000, 150000, 75000, 150000,
-                       150000)
-FilingStatus.set_param('exemption_threshold', 259400, 311300, 155650, 285350,
-                       311300)
 
+FilingStatus.set_param(
+  'tax_brackets',
+  nil,
+  nil,
+  [
+    [ 116675, 0.28, 6557.75 ],
+    [ 208350, 0.33, 12391.50 ],
+    [ 235350, 0.35, 16558.50 ],
+    [ nil, 0.396, 27384.60 ]
+  ],
+  nil,
+  nil
+)
 class SpouseExemption < FilingStatusVisitor
 
   def single(line)
