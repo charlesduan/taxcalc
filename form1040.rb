@@ -375,7 +375,7 @@ end
 
 class QdcgtWorksheet < TaxForm
   def name
-    '1040 Qualified Dividends and Capital Gains Tax Worksheet'
+    'Qualified Dividends and Capital Gains Tax Worksheet'
   end
 
   def compute

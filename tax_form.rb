@@ -63,6 +63,7 @@ class TaxForm
         end
       end
       @lines_order.push(line) unless @lines_data[line]
+      form.explain("    #{line}:  #{value.inspect}")
       @lines_data[line] = value
     end
 
@@ -283,6 +284,17 @@ class TaxForm
     true
   end
 
+  def explain(text)
+    if @manager.explaining?(self)
+      STDERR.puts(text)
+    end
+  end
+
+  def set_name_ssn
+    bio = form("Biographical")
+    line[:name] = bio.line[:first_name] + ' ' + bio.line[:last_name]
+    line[:ssn] = bio.line[:ssn]
+  end
 
 end
 

@@ -154,7 +154,7 @@ class Form6251 < TaxForm
 
   def compute_from_worksheets(qdcgt_line, sdtw_line)
     with_or_without_form(
-      '1040 Qualified Dividends and Capital Gains Tax Worksheet'
+      'Qualified Dividends and Capital Gains Tax Worksheet'
     ) do |qdcgt|
       if qdcgt
         return qdcgt.line[qdcgt_line]

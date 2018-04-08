@@ -121,7 +121,7 @@ class IraAnalysis < TaxForm
       }.lines(1, :sum)
 
       line[6] = sum_lines(4, 5)
-      line[7] = [ 1.0, line[3].to_f / line[6] ].min.round(3)
+      line[7] = [ 1.0, line[3].to_f / line[6] ].min.round(5)
       line[8] = (line[5] * line[7]).round
 
       line[9] = line[5] - line[8]
@@ -147,13 +147,27 @@ class IraAnalysis < TaxForm
 
     def compute
 
+      set_name_ssn
+
       if @ira_analysis.pub590b_w1_1
+        explain("      Applying Pub. 590-B Worksheet 1-1 analysis")
         w1_1 = @ira_analysis.pub590b_w1_1
-        line[13] = line[17] = w1_1.line[8]
-        line[18] = w1_1.line[10] if w1_1.line[10, :present]
+        explain("      Taxable IRA distributions, lines 13 and 15a-c, taken" +
+                " from worksheet")
+        line[13] = w1_1.line[8]
         line['15a'] = w1_1.line[11, :present] ? w1_1.line[11] : w1_1.line[9]
-        line['note'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
+        line['15b'] = 0 # No qualified disaster
+        line['15c'] = line['15a'] - line['15b']
+        line['note_1'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
+
+        explain("      Roth conversions, lines 17-18, taken from worksheet")
+        line[16] = @ira_analysis.line[:roth_conversion]
+        line[17] = w1_1.line[8]
+        line[18] = w1_1.line[10] if w1_1.line[10, :present]
+        line[:note_2] = 'Line 18 from Pub. 590-B Worksheet 1-1'
+
       elsif @ira_analysis.line[:this_year_contrib] == 0
+        explain("      No contribution found for this year")
         line[1] = 0
         compute_2_to_3
         if has_form?('1099-R')
@@ -164,25 +178,33 @@ class IraAnalysis < TaxForm
     end
 
     def compute_contributions
+      explain("Computing Form #{name} contributions for #{@manager.name}")
       w1_1 = @ira_analysis.pub590b_w1_1
       line[1] = @ira_analysis.pub590a_w1_2.line[8]
       if w1_1
+        explain("      Found Pub. 590-B Worksheet 1-1; computing lines 2 to 5")
         compute_2_to_3
         compute_4_to_5
 
         if line[5] < w1_1.line[8]
+          explain("      Line 5 was less than Worksheet 1-1, line 8")
+          explain("      Computing lines 6 to 15")
           compute_6_to_15(w1_1)
         else
+          explain("      Line 5 was at least Worksheet 1-1, line 8")
+          explain("      Setting line 14 to line 3 - line 13")
           line[14] = line[3] - line[13]
         end
       else
+        explain("      No Pub. 590-B Worksheet 1-1, so no IRA distributions")
+        explain("      Setting line 14 to line 3")
         # If Pub. 590-B Worksheet 1-1 was not computed, then there were no IRA
         # distributions.
         compute_2_to_3
         line[14] = line[3]
-        compute_part_iii
       end
 
+      explain("Done computing Form #{name} contributions")
     end
 
     def compute_2_to_3
@@ -204,7 +226,7 @@ class IraAnalysis < TaxForm
       line[7] = @ira_analysis.line[:cash_distribution]
       line[8] = @ira_analysis.line[:roth_conversion]
       line[9] = sum_lines(6, 7, 8)
-      line[10] = [ (line[5] / line[9]).round(3), 1.0 ].min
+      line[10] = [ (1.0 * line[5] / line[9]).round(8), 1.0 ].min
       line[11] = (line[8] * line[10]).round
       line[12] = (line[7] * line[10]).round
       # Not sure if I need to do line 13?
@@ -215,6 +237,7 @@ class IraAnalysis < TaxForm
     end
 
     def compute_part_iii
+      explain("      Confirming that no Roth IRA distributions were taken")
       roth_forms = forms('1099-R').select { |f|
         [ 'B', 'J', 'T' ].include?(f.line[7])
       }

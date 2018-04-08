@@ -9,6 +9,7 @@ class FormManager
     @no_forms = {}
     @ordered_forms = []
     @interviewer = Interviewer.new
+    @explain = {}
   end
 
   attr_reader :name
@@ -19,7 +20,15 @@ class FormManager
     end
   end
 
+  def each(&block)
+    @ordered_forms.each(&block)
+  end
+
   attr_reader :interviewer
+
+  def empty?
+    @forms.empty?
+  end
 
   def add_form(form)
     name = form.name.to_s
@@ -66,8 +75,11 @@ class FormManager
   def compute_form(f)
     f = f.new(self) if f.is_a?(Class)
     add_form(f)
+    f.explain("Computing Form #{f.name} for #{name}")
     f.compute
+    f.explain("Done computing Form #{f.name}")
     unless f.needed?
+      f.explain("Removing Form #{f.name} as not needed")
       remove_form(f)
       return nil
     end
@@ -135,6 +147,14 @@ class FormManager
 
   def interview(prompt, form = nil)
     @interviewer.ask(prompt, form)
+  end
+
+  def explain(form)
+    @explain[form.to_s] = true
+  end
+
+  def explaining?(form)
+    @explain.include?(form.name.to_s)
   end
 
 end

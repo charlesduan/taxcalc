@@ -28,7 +28,7 @@ class HomeOfficeManager < TaxForm
     end
 
     forms('1065 Schedule K-1').each do |k1_form|
-      next unless k1_form.line['A'] == line['ein']
+      next unless k1_form.line['A'] == ho_form.line['ein']
       f = @manager.compute_form(
         Pub587SimplifiedWorksheet.new(@manager, k1_form)
       )
@@ -77,7 +77,7 @@ class Pub587SimplifiedWorksheet < TaxForm
 
   def compute_gross_income_limitation
 
-    unless @income_form.name = '1065 Schedule K-1'
+    unless @income_form.name == '1065 Schedule K-1'
       raise 'Home office deduction for non-partnerships not implemented'
     end
 

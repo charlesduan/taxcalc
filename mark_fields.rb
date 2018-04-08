@@ -3,15 +3,13 @@
 if __FILE__ == $0
   $LOAD_PATH.push(File.dirname(__FILE__))
   require 'form_manager'
+  require 'optparse'
+  require 'ostruct'
 end
 
-require 'tk'
-require 'tkextlib/tkimg/png'
-require 'tkextlib/bwidget'
 require 'tmpdir'
 require 'tax_form'
 require 'interviewer'
-require 'biographical'
 
 class PdfFileParser
 
@@ -160,6 +158,12 @@ class MarkingUI
     advance_listbox
     @listbox.pack(side: 'left')
 
+    @next_elt_button = TkButton.new(
+      frame, text: "Skip line",
+      command: proc { advance_listbox }
+    )
+    @next_elt_button.pack(side: 'left')
+
   end
 
   def initialize_canvas_frame
@@ -170,7 +174,7 @@ class MarkingUI
     @canvas = TkCanvas.new(
       frame,
       width: @resolution * 17 /2,
-      height: 500,
+      height: 700,
       scrollregion: "0 0 #{@resolution * 17 / 2} #{@resolution * 11}"
     )
     @canvas.pack(fill: 'both', expand: 1, side: 'left')
@@ -370,7 +374,7 @@ class LinePosData
   def initialize(pdf_file, tax_form)
     @parser = PdfFileParser.new(pdf_file)
 
-    @line_order = Biographical::FIELDS.keys.map { |x| "bio:#{x}" }
+    @line_order = []
     @line_data = {}
 
     if tax_form.is_a?(TaxForm)
@@ -511,9 +515,8 @@ end
 
 class MultiFormManager
 
-  def initialize(filename = '', bio = nil)
+  def initialize(filename = '')
     @form_data = {}
-    @bio = bio
     import(filename)
   end
 
@@ -539,7 +542,15 @@ class MultiFormManager
     end
   end
 
-  def mark_form(form, filename = '')
+  def has_form?(form_name)
+    @form_data.include?(form_name)
+  end
+
+  def has_form_line?(form_name, line)
+    !@form_data[form_name][line].nil?
+  end
+
+  def mark_form(form, filename = nil)
     if form.is_a?(Array)
       extra_forms = form
       form = extra_forms.shift
@@ -556,16 +567,12 @@ class MultiFormManager
 
     extra_forms.each do |f| lpd.merge_lines(f) end
 
-    lpd.show_ui unless lpd.all_filled?
+    lpd.show_ui
   end
 
   def fill_form(form, filename)
     lpd = @form_data[form.name]
     lpd.start_fill
-
-    @bio.line.each do |l, v|
-      lpd.fill("bio:#{l}", v) if lpd["bio:#{l}"]
-    end if @bio
 
     form.line.each do |l, v|
       if lpd[l]
@@ -589,24 +596,89 @@ class MultiFormManager
 end
 
 if __FILE__ == $0
-  unless ARGV.count == 4
-    puts "Usage: #{File.basename($0)} [input-data] [form] [pdf] [pos-data]"
+
+  @mgr = FormManager.new("Mark")
+  @pos_data = "pos-data.txt"
+
+  opt_parser = OptionParser.new do |opts|
+    opts.banner = "Usage: #{File.basename $0} [options] [form] [file]"
+    opts.separator("")
+    opts.separator("Options:")
+
+    opts.on('-i', '--input-data FILE', 'Tax form data file') do |f|
+      @mgr.import(f)
+    end
+    opts.on('-p', '--pos-data FILE', 'Line position data file') do |f|
+      @pos_data = f
+    end
+    opts.on_tail('-h', '--help', 'Show this message') do
+      puts opts
+      exit
+    end
+  end
+
+  opt_parser.parse!(ARGV)
+
+  if @mgr.empty?
+    warn("No tax form data provided; supply a file name with the -i option")
+    exit 1
+  end
+  @mfm = MultiFormManager.new(@pos_data)
+
+  if ARGV.count == 0
+    missing = {}
+    @mgr.each do |form|
+      next unless form.name =~ /^\d/
+      if @mfm.has_form?(form.name)
+        form.line.each do |l, v|
+          all_lines = [ l ]
+          if v.is_a?(Array) && v.count > 1
+            all_lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
+          end
+          all_lines.each do |line|
+            unless @mfm.has_form_line?(form.name, line)
+              (missing[form.name] ||= {})[line] = true
+              break
+            end
+          end
+        end
+      else
+        missing[form.name] = true
+      end
+    end
+
+    if missing.empty?
+      puts "All forms and lines have position data; done!"
+      exit
+    end
+
+    puts "Unprocessed forms/lines:"
+    missing.each do |form, lines|
+      if lines.is_a?(Hash)
+        puts "Form #{form}, Lines #{lines.keys.join(", ")}"
+      else
+        puts "Form #{form}"
+      end
+    end
     exit
   end
 
-  input_data, form_name, pdf_file, pos_data = ARGV
-  mgr = FormManager.new("Mark")
-  mgr.import(input_data)
-
-  if mgr.has_form?('Biographical')
-    bio = mgr.form('Biographical')
-  else
-    bio = NamedForm.new('Biographical', mgr)
+  @form_name = ARGV.shift
+  @form_file = ARGV.shift
+  if @mfm.has_form?(@form_name)
+  elsif !@form_file
+    warn("The blank PDF filename for Form #{@form_name} is unknown.")
+    warn("Please provide it as an argument on the command line.")
+    exit 1
   end
+end
+require 'tk'
+require 'tkextlib/tkimg/png'
+require 'tkextlib/bwidget'
 
-  mfm = MultiFormManager.new(pos_data, bio)
-  mfm.mark_form(mgr.forms(form_name), pdf_file)
-  open(pos_data, 'w') do |f|
-    mfm.export(f)
+if __FILE__ == $0
+  @mfm.mark_form(@mgr.forms(@form_name), @form_file)
+  open(@pos_data, 'w') do |f|
+    @mfm.export(f)
   end
 end
