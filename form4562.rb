@@ -94,10 +94,7 @@ class Form4562 < TaxForm
     line[22] = sum_lines(
       14, 15, 16, 17, '19a.g', '19b.g', '19c.g', '19d.g', '19e.g', '19f.g',
       '19g.g', '19h.g', '19i.g', '20a.g', '20b.g', '20c.g', 21
-    )
-    unless has_form?(1065)
-      line[22] += line[12, :opt]
-    end
+    ) + (has_form?(1065) ? line[12, :opt] : 0)
 
   end
 

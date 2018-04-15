@@ -46,10 +46,12 @@ class FormD40 < TaxForm
       line[16] = @manager.compute_form(CalculationF).line['fill']
     else
       line['15standard'] = 'X'
+
+      # Standard deduction amounts
       line[16] = case line[1]
-                 when 'single', 'dep', 'mfs' then 5200
-                 when 'hoh' then 6500
-                 when 'mfj', 'qw', 'mfssr' then 8350
+                 when 'single', 'dep', 'mfs' then 5650
+                 when 'hoh' then 7800
+                 when 'mfj', 'qw', 'mfssr' then 10275
                  end
     end
 

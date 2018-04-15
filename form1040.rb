@@ -256,18 +256,20 @@ class Form1040 < TaxForm
     assert_question('Did you have health insurance the whole year?', true)
     line['61box'] = 'X'
 
-    line[62] = BlankZero
+    l62 = BlankZero
     f8959 = @manager.compute_form(Form8959)
     if f8959 && f8959.needed?
       line['62a'] = 'X'
-      line[62] += f8959.line[18]
+      l62 += f8959.line[18]
     end
 
     if line[38] > status.niit_threshold
       f8960 = @manager.compute_form(Form8960)
       line['62b'] = 'X'
-      line[62] += f8960.line[17]
+      l62 += f8960.line[17]
     end
+    line[62] = l62
+
     line[63] = sum_lines(56, 57, 58, 59, '60a', '60b', 61, 62)
 
     line[64] = forms('W-2').lines(2, :sum)
@@ -345,10 +347,10 @@ class Form1040 < TaxForm
 
   def compute_tax_standard(income)
     if income < 100000
-      line[:tax_method] = 'Table'
+      line[:tax_method] = 'Table' unless line[:tax_method, :present]
       return compute_tax_table(income, status)
     else
-      line[:tax_method] = 'TCW'
+      line[:tax_method] = 'TCW' unless line[:tax_method, :present]
       return compute_tax_worksheet(income)
     end
   end

@@ -188,13 +188,15 @@ class IraAnalysis < TaxForm
 
         if line[5] < w1_1.line[8]
           explain("      Line 5 was less than Worksheet 1-1, line 8")
-          explain("      Computing lines 6 to 15")
-          compute_6_to_15(w1_1)
+          explain("      Computing lines 6 to 12")
+          compute_6_to_12(w1_1)
         else
           explain("      Line 5 was at least Worksheet 1-1, line 8")
-          explain("      Setting line 14 to line 3 - line 13")
-          line[14] = line[3] - line[13]
+          explain("      Skipping lines 6 to 12")
         end
+        place_lines(13, :note_1)
+        line[14] = line[3] - line[13]
+        place_lines('15a', '15b', '15c')
       else
         explain("      No Pub. 590-B Worksheet 1-1, so no IRA distributions")
         explain("      Setting line 14 to line 3")
@@ -203,6 +205,8 @@ class IraAnalysis < TaxForm
         compute_2_to_3
         line[14] = line[3]
       end
+
+      place_lines(16, 17, 18, :note_2)
 
       explain("Done computing Form #{name} contributions")
     end
@@ -221,7 +225,7 @@ class IraAnalysis < TaxForm
       line[5] = line[3] - line[4]
     end
 
-    def compute_6_to_15(p590b_w1_1)
+    def compute_6_to_12(p590b_w1_1)
       line[6] = p590b_w1_1.line[4]
       line[7] = @ira_analysis.line[:cash_distribution]
       line[8] = @ira_analysis.line[:roth_conversion]
@@ -229,11 +233,6 @@ class IraAnalysis < TaxForm
       line[10] = [ (1.0 * line[5] / line[9]).round(8), 1.0 ].min
       line[11] = (line[8] * line[10]).round
       line[12] = (line[7] * line[10]).round
-      # Not sure if I need to do line 13?
-      line[14] = line[3] - line[13]
-      # Same as line 13? line['15a'] = line[7] - line[12]
-      line['15b'] = 0 # No qualified disaster
-      line['15c'] = line['15a'] - line['15b']
     end
 
     def compute_part_iii
@@ -341,7 +340,7 @@ class IraAnalysis < TaxForm
       over50 = interview('Are you age 50 or older?')
       line[5] = form(1040).line[7] - form(1040).sum_lines(27, 28)
       with_form('1040 Schedule SE') do |f|
-        line[5] += [ f.line[6], 0 ].max
+        line[5, :overwrite] += [ f.line[6], 0 ].max
       end
       line[6] = [
         @ira_analysis.line[:this_year_contrib],

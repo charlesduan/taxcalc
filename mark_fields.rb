@@ -394,14 +394,28 @@ class LinePosData
   end
 
   def merge_lines(tax_form)
-    insert_pos = @line_order.count - 1
     lines = []
+
+    # Compute the set of line numbers that need to be added to this LinePosData,
+    # which are all the line numbers plus extra numbers for array-type values
     tax_form.line.each do |l, v|
       lines.push(l)
       if v.is_a?(Array) && v.count > 1
         lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
       end
     end
+
+    # Swap @line_order and lines, so that the tax form's line order takes
+    # precedence.
+    @line_order, lines = lines, @line_order
+
+    # Set a cursor insert_pos on array @line_order. For each value in lines, see
+    # if it is already in @line_order; if so, move the cursor to that position.
+    # Otherwise, advance the cursor and insert the line number from lines into
+    # @line_order at that position, such that it will be placed after whatever
+    # the last matching line number was. The cursor is initially set to -1 so
+    # that non-matching values are placed at the start of the list.
+    insert_pos = -1
     lines.each do |l|
       pos = @line_order.find_index(l)
       if pos
@@ -464,21 +478,44 @@ class LinePosData
 
   def start_fill
     @fill_data = []
+    @continuation_lines = []
+  end
+
+  def fill_multi(line, value)
+    multi_lines = (0...value.count).map { |x|
+      x.zero? ? line : "#{line}##{x + 1}"
+    }
+    if self[multi_lines.last]
+      multi_lines.zip(value).each do |l, v|
+        fill(l, v)
+      end
+      return
+    else
+      # Determine whether to suppress the continuation sheet message. It will
+      # be suppressed if (1) another continuation message was displayed at
+      # about the same height on the same page, (2) for which the line number
+      # of that continuation message had the same prefix (including at least
+      # one set of digits) as the current line number.
+      if line =~ /^\D*\d+/
+        start_num = $&
+        page, x, y, w, h = *self[line]
+        @continuation_lines.each do |c_start_num, c_page, c_y, c_lines|
+          if c_start_num == start_num && c_page == page && (c_y - y).abs < 10
+            c_lines.push([ line, value ])
+            return
+          end
+        end
+        @continuation_lines.push([ start_num, page, y, [ [ line, value ] ] ])
+      else
+        @continuation_lines.push([ nil, nil, nil, [ [ line, value ] ] ])
+      end
+      return fill(line, "See continuation sheet")
+    end
   end
 
   def fill(line, value)
     if value.is_a?(Array)
-      multi_lines = (0...value.count).map { |x|
-        x.zero? ? line : "#{line}##{x + 1}"
-      }
-      if self[multi_lines.last]
-        multi_lines.zip(value).each do |l, v|
-          fill(l, v)
-        end
-      else
-        warn("Insufficient space for line #{line}; use attached sheet")
-      end
-      return
+      return fill_multi(line, value)
     end
 
     page, x, y, w, h = *self[line]
@@ -507,6 +544,33 @@ class LinePosData
     @fill_data.push(res)
   end
 
+  def make_continuation(bio)
+    return nil if @continuation_lines.empty?
+
+    continuation_text = "Form #@form_name Continuation Sheet\n#{bio}\n\n"
+
+    @continuation_lines.each do |start, page, y, lines|
+      if lines.count == 1
+        l, v = *c_lines[0]
+        continuation_text << "Line #{l}: #{v}\n\n"
+      else
+        flat_lines = lines.map { |l, v| [ l, v ].flatten.map { |x| x.to_s } }
+        flat_lines[0][0] = "Line #{flat_lines[0][0]}"
+        widths = flat_lines.map { |col| col.map { |x| x.length }.max }
+        fmt_string = widths.map { |x| "%#{x}s" }.join("  ") + "\n"
+        max_rows = flat_lines.map { |col| col.length }.max
+
+        (0...max_rows).each do |row|
+          continuation_text << (
+            fmt_string % flat_lines.map { |col| col[row] || '' }
+          )
+        end
+        continuation_text << "\n"
+      end
+    end
+    return continuation_text
+  end
+
   def end_fill(filename)
     @parser.fill_form(@fill_data, filename)
   end
@@ -519,6 +583,8 @@ class MultiFormManager
     @form_data = {}
     import(filename)
   end
+
+  attr_accessor :continuation_bio
 
   def import(filename)
     @filename = filename
@@ -581,6 +647,10 @@ class MultiFormManager
         STDERR.puts("No position data for form #{form.name}, line #{l}")
       end
     end
+    ct = lpd.make_continuation(continuation_bio)
+    if ct
+      puts ct
+    end
     lpd.end_fill(filename)
   end
 
@@ -628,7 +698,7 @@ if __FILE__ == $0
   if ARGV.count == 0
     missing = {}
     @mgr.each do |form|
-      next unless form.name =~ /^\d/
+      next unless form.name =~ /^(?:D-)?\d/
       if @mfm.has_form?(form.name)
         form.line.each do |l, v|
           all_lines = [ l ]

@@ -57,7 +57,7 @@ class FormD65 < TaxForm
     copy_line(19, f1065)
     copy_line(20, f1065)
 
-    line[21] = sum_lines(*9:20)
+    line[21] = sum_lines(*9..20)
 
     line[22] = line[8] - line[21]
 
@@ -67,7 +67,7 @@ class FormD65 < TaxForm
     line['F2'] = (line['F1.2'] * 1.0 / line['F1.1']).round(6)
 
     if f1065.line[:E] =~ /^(\d+)\/(\d+)\/(\d+)$/
-      line[:A] = "%02d%02d" % [ $1, $3 % 100 ]
+      line[:A] = "%02d/%02d" % [ $1, $3.to_i % 100 ]
     else
       raise "Could not parse start date"
     end

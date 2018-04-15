@@ -58,6 +58,9 @@ class TaxForm
       when :add
         value = [ @lines_data[line] || [], value ].flatten
       else
+        unless type == :overwrite
+          warn("Overwriting value for #{line_name(line)}") if @lines_data[line]
+        end
         if value.is_a?(Enumerable)
           raise "#{line_name(line)}: not expecting an array"
         end
@@ -104,6 +107,16 @@ class TaxForm
       end
       io.puts()
 
+    end
+
+    def place_lines(*nums)
+      nums.each do |num|
+        num = num.to_s
+        if @lines_order.include?(num)
+          @lines_order.delete(num)
+          @lines_order.push(num)
+        end
+      end
     end
 
   end
@@ -194,6 +207,14 @@ class TaxForm
 
   def copy_line(l, form)
     line[l] = form.line[l] if form.line[l, :present]
+  end
+
+  def place_lines(*nums)
+    line.place_lines(*nums)
+  end
+
+  def format_lines(format, *nums)
+    format % nums.map { |l| line[l] }
   end
 
   def form_line_or(form_name, form_line, default)

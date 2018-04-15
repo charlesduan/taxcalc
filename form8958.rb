@@ -41,8 +41,10 @@ class Form8958 < TaxForm
     split_state_tax = split_forms('State Tax')
     split_charity = split_forms('Charity Gift')
     split_est_tax = split_forms('Estimated Tax')
-    split_dependents = split_forms('Dependent')
-    split_dependents = split_forms('Home Office')
+
+    # These get split but don't show up on the form
+    split_forms('Dependent')
+    split_forms('Home Office')
 
     bio = form('Biographical')
     copy_line(:first_name, bio)
@@ -69,9 +71,9 @@ class Form8958 < TaxForm
     line[4, :all] = forms('1099-G').lines('name')
     enter_split(4, '1099-G', split_1099g, 2)
 
-    line[5, :all] = forms('1065 Schedule K-1').lines('B').zip(
-      forms('1065 Schedule K-1').lines('F')
-    ).map { |x| x.join(", ") }
+    line[5, :all] = forms('1065 Schedule K-1').lines('B').map { |x|
+      x.split("\n")[0]
+    }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
     enter_split(5, '1065 Schedule K-1', split_k1, 14)
 
     my_se = my_manager.compute_form(Form1040SE)
@@ -89,9 +91,9 @@ class Form8958 < TaxForm
     line['6C', :all] = my_manager.forms(8949).map { |x| BlankZero } + \
       spouse_manager.forms(8949).lines('II.1h', :all)
 
-    line[8, :all] = forms('1065 Schedule K-1').lines('B').zip(
-      forms('1065 Schedule K-1').lines('F')
-    ).map { |x| x.join(", ") }
+    line[8, :all] = forms('1065 Schedule K-1').lines('B').map { |x|
+      x.split("\n")[0]
+    }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
     enter_split(8, '1065 Schedule K-1', split_k1, 1)
 
     if my_se && my_se.line[12] > 0
@@ -157,7 +159,8 @@ class Form8958 < TaxForm
       if l =~ /^spouse_/
         l_no_spouse = $'
         d_no_spouse = spouse_bio.line[l_no_spouse]
-        spouse_bio.line[l], spouse_bio.line[l_no_spouse] = d_no_spouse, d
+        spouse_bio.line[l, :overwrite] = d_no_spouse
+        spouse_bio.line[l_no_spouse, :overwrite] = d
       end
     end
   end
@@ -209,10 +212,10 @@ class Form8958 < TaxForm
       f.line.each do |l, v|
         next unless v.is_a?(Numeric)
         if split.include?(l.to_s)
-          my_form.line[l] /= 2
-          spouse_form.line[l] -= my_form.line[l]
+          my_form.line[l, :overwrite] /= 2
+          spouse_form.line[l, :overwrite] -= my_form.line[l]
         else
-          zero_form.line[l] = BlankZero
+          zero_form.line[l, :overwrite] = BlankZero
         end
       end
 
