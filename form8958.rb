@@ -150,6 +150,13 @@ class Form8958 < TaxForm
 
   end
 
+  def swap_bio
+    %w(first_name last_name ssn).each do |item|
+      line[item, :overwrite], line["spouse_#{item}", :overwrite] =
+        line["spouse_#{item}"], line[item]
+    end
+  end
+
   def split_biographical
     bio = form('Biographical')
     @my_manager.copy_form(bio).exportable = true

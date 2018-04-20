@@ -84,6 +84,7 @@ class PdfFileParser
     commands.each do |cmd|
       command.push("AND", *cmd)
     end
+    command.push("AND", "-pad-multiple", "2")
     command.push("-o", new_file)
     popen(*command) do |io|
       io.each do |line|
