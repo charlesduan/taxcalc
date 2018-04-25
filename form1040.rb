@@ -151,6 +151,8 @@ class Form1040 < TaxForm
     line[22] = sum_lines(7, '8a', '9a', 10, 11, 12, 13, 14, '15b', '16b', 17,
                          18, 19, '20b', 21)
 
+    assert_question("Did you have an HSA account?", false)
+
     sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
     line[27] = sched_se.line[13] if sched_se
 
