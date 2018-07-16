@@ -514,6 +514,13 @@ class LinePosData
     end
   end
 
+  def textify(value)
+    if value.is_a?(Float) && (value - value.round(2)).abs < 0.0000001
+      return "%.2f" % value
+    end
+    return value.to_s.gsub("\n", "\\n")
+  end
+
   def fill(line, value)
     if value.is_a?(Array)
       return fill_multi(line, value)
@@ -522,7 +529,7 @@ class LinePosData
     page, x, y, w, h = *self[line]
     ypos = [ 0, h - 9, 3 ].sort[1] + y
     res = [
-      "-add-text", value.to_s.gsub("\n", "\\n"),
+      "-add-text", textify(value),
       "-font", "Courier", "-font-size", "10",
       "-range", "#{page}"
     ]
@@ -644,7 +651,7 @@ class MultiFormManager
     form.line.each do |l, v|
       if lpd[l]
         lpd.fill(l, v)
-      else
+      elsif l !~ /^_/
         STDERR.puts("No position data for form #{form.name}, line #{l}")
       end
     end
@@ -670,6 +677,7 @@ if __FILE__ == $0
 
   @mgr = FormManager.new("Mark")
   @pos_data = "pos-data.txt"
+  @fill_dir = nil
 
   opt_parser = OptionParser.new do |opts|
     opts.banner = "Usage: #{File.basename $0} [options] [form] [file]"
@@ -682,6 +690,11 @@ if __FILE__ == $0
     opts.on('-p', '--pos-data FILE', 'Line position data file') do |f|
       @pos_data = f
     end
+    opts.on('-f', '--fill DIR', 'Fill in forms, place in DIR') do |d|
+      raise "#{d} must be a directory" unless File.directory?(d)
+      @fill_dir = d
+    end
+
     opts.on_tail('-h', '--help', 'Show this message') do
       puts opts
       exit
@@ -696,10 +709,49 @@ if __FILE__ == $0
   end
   @mfm = MultiFormManager.new(@pos_data)
 
+  def ignore_form?(name)
+    return true if name =~ /Worksheet/
+    return false if name =~ /^[A-Z0-9-]*\d[A-Z0-9-]*(?: |$)/
+    return true
+  end
+
+  def iterate_forms
+    if ARGV.count == 1
+      forms = @mgr.forms(ARGV[0])
+      raise "No Form #{ARGV[0]} found" if forms.empty?
+      forms.each do |form| yield(form) end
+    else
+      @mgr.each do |form|
+        next if ignore_form?(form.name)
+        yield(form)
+      end
+    end
+  end
+
+  if @fill_dir
+    forms = {}
+    iterate_forms do |form|
+      if @mfm.has_form?(form.name)
+        if forms.include?(form.name)
+          forms[form.name] += 1
+          filename = "#{form.name} ##{forms[form.name]}.pdf"
+        else
+          forms[form.name] = 1
+          filename = "#{form.name}.pdf"
+        end
+        @mfm.fill_form(form, File.join(@fill_dir, filename))
+      else
+        warn("No position data for Form #{form.name}")
+      end
+    end
+    exit
+  end
+
   if ARGV.count == 0
     missing = {}
     @mgr.each do |form|
-      next unless form.name =~ /^(?:D-)?\d/
+      next if ignore_form?(form.name)
+
       if @mfm.has_form?(form.name)
         form.line.each do |l, v|
           all_lines = [ l ]
@@ -726,11 +778,12 @@ if __FILE__ == $0
     puts "Unprocessed forms/lines:"
     missing.each do |form, lines|
       if lines.is_a?(Hash)
-        puts "Form #{form}, Lines #{lines.keys.join(", ")}"
+        puts "  #{form}, Lines #{lines.keys.join(", ")}"
       else
-        puts "Form #{form}"
+        puts "  #{form}"
       end
     end
+    puts "Enter a form name as an argument to this command to process it"
     exit
   end
 
