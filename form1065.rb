@@ -17,7 +17,14 @@ class Form1065 < TaxForm
     line['D'] = form('Partnership').line('ein')
     line['E'] = form('Partnership').line(:start)
 
-    assert_question("Is the answer to Schedule B, line 6 `yes'?", true)
+    assert_question(
+      "Does this partnership meet the 4 conditions in Schedule B, line 4?",
+      true
+    )
+
+    assert_question(
+      "Does any box in line G need to be checked?", false
+    )
 
     case form('Partnership').line('accounting')
     when 'Cash' then line['H.1'] = 'X'
@@ -61,7 +68,8 @@ class Form1065 < TaxForm
     end
 
     assert_question(
-      "Is the answer to any question on Schedule B `yes' (other than 3 and 6)?",
+      "Is the answer to any question on Schedule B `yes' " + \
+      "(other than 3, 4, and 24)?",
       false
     )
 
@@ -77,31 +85,58 @@ class Form1065 < TaxForm
     line[big_inst.empty? ? 'B3a.no' : 'B3a.yes'] = 'X'
     line[big_indiv.empty? ? 'B3b.no' : 'B3b.yes'] = 'X'
 
-    line['B4a.no'] = 'X'
-    line['B4b.no'] = 'X'
+    line['B4.yes'] = 'X'
     line['B5.no'] = 'X'
-    line['B6.yes'] = 'X'
+    line['B6.no'] = 'X'
     line['B7.no'] = 'X'
     line['B8.no'] = 'X'
     line['B9.no'] = 'X'
-    line['B10.no'] = 'X'
+    line['B10a.no'] = 'X'
+    line['B10b.no'] = 'X'
+    line['B10c.no'] = 'X'
     line['B11.no'] = 'X'
-    line['B12a.no'] = 'X'
-    line['B12b.no'] = 'X'
-    line['B12c.no'] = 'X'
-    line['B14.no'] = 'X'
+    line['B13.no'] = 'X'
 
     if forms('Partner').lines('nationality', :all).any? { |x| x != 'domestic' }
       raise "Foreign partners not currently handled"
     end
 
-    line['B16.no'] = 'X'
+    line['B14.no'] = 'X'
+    line['B15'] = 0
+    line['B16a.no'] = 'X'
     line['B17'] = 0
-    line['B18a.no'] = 'X'
-    line['B19'] = 0
-    line['B20'] = 0
+    line['B18'] = 0
+    line['B19.no'] = 'X'
+    line['B20.no'] = 'X'
     line['B21.no'] = 'X'
     line['B22.no'] = 'X'
+    line['B23.no'] = 'X'
+
+    # Line 24 is satisfied if line 4 was satisfied above.
+    line['B24.yes'] = 'X'
+
+    assert_question(
+      "Do you want to opt out of the centralized partnership audit regime?",
+      false
+    )
+    line['B25.no'] = 'X'
+
+    pr_name = interview("Enter the partnership representative's name:")
+    pr_form = forms('Partner').find { |x| x.line['name'] == pr_name }
+    unless pr_form
+      raise "No partner named #{pr_name} for the partnership representative"
+    end
+    line['PR.name'] = pr_name
+    if pr_form.line['type'] == 'Individual'
+      line['PR.tin'] = pr_form.line['ssn']
+      line['PR.address'] = pr_form.line['address']
+      line['PR.address2'] = pr_form.line['address2']
+      line['PR.phone'] = interview("Partnership representative phone:")
+    else
+      raise "No support for non-individual partnership representative"
+    end
+
+    line['B26.no'] = 'X'
 
     line['K1'] = line[22]
     line['K5'] = forms('1099-INT').lines(1, :sum)
@@ -120,12 +155,10 @@ class Form1065 < TaxForm
     # are less than $10 million and no M-3 is filed.
     raise "No state in address" unless (line[:address2] =~ / ([A-Z]{2}) \d{5}/)
     state = $1
-    if %w(GA IL KY MI TN WI).include?(state)
-      line['send'] = 'Kansas City MO 64999-0011'
-    elsif %w(
-      CT DE DC FL IN ME MD MA NH NJ NY NC OH PA RI SC VT VA WV
+    if %w(
+      CT DE DC GA IL IN KY ME MD MA MI NH NJ NY NC OH PA RI SC TN VT VA WV WI
     ).include?(state)
-      line['send'] = 'Cincinnati OH 45999-0011'
+      line['send'] = 'Kansas City MO 64999-0011'
     else
       line['send'] = 'Ogden UT 84201-0011'
     end

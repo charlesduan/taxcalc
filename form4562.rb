@@ -23,7 +23,7 @@ class Form4562 < TaxForm
       line['name'] = form(1065).line(:name)
       line['id'] = form(1065).line(:D)
 
-      line[1] = 510_000
+      line[1] = 1_000_000
       line[2] = forms('Asset').select { |x| x.line["179?"] }.map { |x|
         x.line['amount']
       }.inject(:+)
@@ -37,7 +37,7 @@ class Form4562 < TaxForm
       line['business'] = k1_form.line['B'].split("\n")[0]
       line[:id] = form(1040).ssn
 
-      line[1] = 510_000
+      line[1] = 1_000_000
       l2 = k1_form.line[12]
       if form(1040).status.is('mfs')
         l2 += interview('Cost of spouse\'s section 179 eligible property:')
@@ -45,7 +45,7 @@ class Form4562 < TaxForm
       line[2] = l2
     end
 
-    line[3] = 2_030_000
+    line[3] = 2_500_000
     line[4] = [ line[2] - line[3], 0 ].max
     l5_limit = [ line[1] - line[4], 0 ].max
     if has_form?(1040) && form(1040).status.is('mfs')

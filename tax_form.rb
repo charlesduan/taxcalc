@@ -279,24 +279,6 @@ class TaxForm
     end
   end
 
-  def import_tabular(io = STDIN)
-    lines = nil
-    io.each do |text|
-      break if (text =~ /^\s*$/)
-      unless lines
-        lines = text.strip.split(/\s+/)
-        next
-      end
-      elts = text.strip.split(/\s+/, lines.count).map { |x|
-        Interviewer.parse('', x)
-      }
-      raise "Invalid table line #{text}" unless lines.count == elts.count
-      lines.zip(elts).each do |l, e|
-        line[l, :add] = e
-      end
-    end
-  end
-
   def export(io = STDOUT)
     @lines.export(io)
   end

@@ -128,20 +128,41 @@ class FormManager
         end
         type = $1
         name = $'.strip
-        new_form = NamedForm.new(name, self)
         case type
         when 'Table'
-          new_form.import_tabular(io)
+          import_tabular(name, io)
         when 'No Form'
           @no_forms[name] = 1
           next
         when 'Form'
+          new_form = NamedForm.new(name, self)
           new_form.import(io)
+          add_form(new_form)
         else
           raise "Unknown form type #{type}"
         end
-        add_form(new_form)
       end
+    end
+  end
+
+  def import_tabular(name, io = STDIN)
+    lines = nil
+    io.each do |text|
+      break if (text =~ /^\s*$/)
+      unless lines
+        lines = text.strip.split(/\s+/)
+        next
+      end
+      elts = lines.zip(text.strip.split(/\s+/, lines.count)).map { |l, x|
+        Interviewer.parse(l, x)
+      }
+      raise "Invalid table line #{text}" unless lines.count == elts.count
+
+      new_form = NamedForm.new(name, self)
+      lines.zip(elts).each do |l, e|
+        new_form.line[l] = e
+      end
+      add_form(new_form)
     end
   end
 

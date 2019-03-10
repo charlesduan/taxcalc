@@ -1,7 +1,8 @@
 require 'tax_form'
 
 #
-# Computes deductions from a table of business expenses.
+# Computes deductions from a table of business expenses. This implements parts
+# of Publication 535, under Other Expenses.
 #
 
 class Deductions < TaxForm
@@ -10,11 +11,13 @@ class Deductions < TaxForm
   end
 
   def compute
-    exp = form('Business Expenses')
+    exps = forms('Business Expense')
 
     deds = {}
-    exp.line('category', :all).zip(exp.line('amount', :all)).each do |cat, amt|
-      deds[cat] = (deds[cat] || 0.0) + amt
+    exps.each do |exp|
+      cat = exp.line['category']
+      deds[cat] ||= 0.0
+      deds[cat] += exp.line['amount']
     end
 
     %w(Meals Utilities).each do |half_cat|
