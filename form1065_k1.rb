@@ -44,9 +44,12 @@ class Form1065K1 < TaxForm
     line['J.loss.ending'] = "#{share * 100}%"
     line['J.capital.beginning'] = "#{@partner_form.line['capital'] * 100}%"
     line['J.capital.ending'] = "#{@partner_form.line['capital'] * 100}%"
-    line['K.nonrecourse'] = "#{share * 100}%"
-    line['K.qualified'] = "#{share * 100}%"
-    line['K.recourse'] = "#{share * 100}%"
+    line['K.nonrecourse.beginning'] = "#{share * 100}%"
+    line['K.nonrecourse.ending'] = "#{share * 100}%"
+    line['K.qualified.beginning'] = "#{share * 100}%"
+    line['K.qualified.ending'] = "#{share * 100}%"
+    line['K.recourse.beginning'] = "#{share * 100}%"
+    line['K.recourse.ending'] = "#{share * 100}%"
     line['M.no'] = 'X'
 
     line[1] = (f1065.line['K1'] * share).round

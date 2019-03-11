@@ -69,11 +69,9 @@ class Form1065 < TaxForm
 
     assert_question(
       "Is the answer to any question on Schedule B `yes' " + \
-      "(other than 3, 4, and 24)?",
+      "(other than 2, 4, and 24)?",
       false
     )
-
-    line['B2.no'] = 'X'
 
     big_indiv, big_inst = forms('Partner').map { |f|
       if f.line[:share] >= 0.5 || f.line[:capital] >= 0.5
@@ -82,9 +80,11 @@ class Form1065 < TaxForm
         nil
       end
     }.compact.partition { |x| %w(Individual Estate).include?(x) }
-    line[big_inst.empty? ? 'B3a.no' : 'B3a.yes'] = 'X'
-    line[big_indiv.empty? ? 'B3b.no' : 'B3b.yes'] = 'X'
+    line[big_inst.empty? ? 'B2a.no' : 'B2a.yes'] = 'X'
+    line[big_indiv.empty? ? 'B2b.no' : 'B2b.yes'] = 'X'
 
+    line['B3a.no'] = 'X'
+    line['B3b.no'] = 'X'
     line['B4.yes'] = 'X'
     line['B5.no'] = 'X'
     line['B6.no'] = 'X'
@@ -94,8 +94,7 @@ class Form1065 < TaxForm
     line['B10a.no'] = 'X'
     line['B10b.no'] = 'X'
     line['B10c.no'] = 'X'
-    line['B11.no'] = 'X'
-    line['B13.no'] = 'X'
+    line['B12.no'] = 'X'
 
     if forms('Partner').lines('nationality', :all).any? { |x| x != 'domestic' }
       raise "Foreign partners not currently handled"
