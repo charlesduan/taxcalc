@@ -93,6 +93,19 @@ class PdfFileParser
     end
   end
 
+  def add_continuation(ct, filename)
+    IO.popen("groff -mom -t | ps2pdf - #{tempdir}/ct.pdf", 'w') do |io|
+      io.write(ct)
+    end
+    popen(
+      CPDF, '-merge', '-i', filename, '-i', "#{tempdir}/ct.pdf",
+      'AND', '-pad-multiple', '2',
+      '-o', filename
+    ) do |io|
+      puts io.read
+    end
+  end
+
 end
 
 class MarkingUI
@@ -482,11 +495,16 @@ class LinePosData
     @continuation_lines = []
   end
 
+  #
+  # Fill a multiple-entry line with an array of values.
+  #
   def fill_multi(line, value)
     multi_lines = (0...value.count).map { |x|
       x.zero? ? line : "#{line}##{x + 1}"
     }
     if self[multi_lines.last]
+      # If the form itself has enough spaces for the number of values given,
+      # then just fill them.
       multi_lines.zip(value).each do |l, v|
         fill(l, v)
       end
@@ -500,6 +518,12 @@ class LinePosData
       if line =~ /^\D*\d+/
         start_num = $&
         page, x, y, w, h = *self[line]
+
+        # @continuation_lines is a four-element array, the first three items of
+        # which are used to determine whether to suppress the continuation
+        # message. The fourth item is an array of lines to include on the
+        # continuation sheet; each item is a two-element array of the line
+        # number and values array.
         @continuation_lines.each do |c_start_num, c_page, c_y, c_lines|
           if c_start_num == start_num && c_page == page && (c_y - y).abs < 10
             c_lines.push([ line, value ])
@@ -555,25 +579,40 @@ class LinePosData
   def make_continuation(bio)
     return nil if @continuation_lines.empty?
 
-    continuation_text = "Form #@form_name Continuation Sheet\n#{bio}\n\n"
+    continuation_text = ""
+    continuation_text << ".T_MARGIN 1i\n.FAMILY H\n"
+    continuation_text << "\\f[B]Form #@form_name Continuation Sheet\n.PP\\f[]\n"
+    continuation_text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n\n"
 
     @continuation_lines.each do |start, page, y, lines|
       if lines.count == 1
-        l, v = *c_lines[0]
+        l, v = *lines[0]
         continuation_text << "Line #{l}: #{v}\n\n"
       else
+
         flat_lines = lines.map { |l, v| [ l, v ].flatten.map { |x| x.to_s } }
         flat_lines[0][0] = "Line #{flat_lines[0][0]}"
         widths = flat_lines.map { |col| col.map { |x| x.length }.max }
-        fmt_string = widths.map { |x| "%#{x}s" }.join("  ") + "\n"
+        big_cols = widths.map { |x| x > 8 }
+        big_col_width = (75 - 9 * widths.count) / big_cols.count { |x| x } + 9
+        tbl_string = big_cols.map { |x|
+          x ? "lw(#{big_col_width})" : "l"
+        }.join(" ") + ".\n"
+        fmt_string = big_cols.map { |x|
+          x ? "T{\n%s\nT}" : "%s"
+        }.join("\t") + "\n_\n"
         max_rows = flat_lines.map { |col| col.length }.max
+
+        continuation_text << ".TS\nexpand;\n"
+        continuation_text << "lfB " * widths.count + "\n"
+        continuation_text << tbl_string
 
         (0...max_rows).each do |row|
           continuation_text << (
             fmt_string % flat_lines.map { |col| col[row] || '' }
           )
         end
-        continuation_text << "\n"
+        continuation_text << ".TE\n"
       end
     end
     return continuation_text
@@ -583,6 +622,10 @@ class LinePosData
     @parser.fill_form(@fill_data, filename)
   end
 
+  def add_continuation(continuation_data, filename)
+    @parser.add_continuation(continuation_data, filename)
+  end
+
 end
 
 class MultiFormManager
@@ -590,9 +633,11 @@ class MultiFormManager
   def initialize(filename = '')
     @form_data = {}
     import(filename)
+    @continuation_display = :show
   end
 
   attr_accessor :continuation_bio
+  attr_accessor :continuation_display
 
   def import(filename)
     @filename = filename
@@ -656,10 +701,20 @@ class MultiFormManager
       end
     end
     ct = lpd.make_continuation(continuation_bio)
-    if ct
-      puts ct
-    end
     lpd.end_fill(filename)
+    if ct
+      case @continuation_display
+      when :raw then puts ct
+      when :show
+        IO.popen([ 'nroff', '-mom', '-t' ], 'w') do |io|
+          io.write(ct)
+        end
+      when :append
+        lpd.add_continuation(ct, filename)
+      else
+        raise "Unknown continuation display #@continuation_display"
+      end
+    end
   end
 
   def export(filename = @filename)
