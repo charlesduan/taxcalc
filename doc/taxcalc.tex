@@ -97,6 +97,19 @@ form.
 
 \appendix
 
+
+\section{Additions to Forms}
+
+\subsection{1098}
+
+\begin{description}
+\item[property] The name of the Real Estate form with which this 1098
+corresponds.
+\item[balance] The average mortgage balance on this loan. See Pub.\ 936.
+You can compute this by averaging the balances on January 1 and December 31, or
+you can multiply the interest paid by the lowest interest rate of the year.
+\end{description}
+
 \section{Forms}
 
 \subsection{Asset}
@@ -133,6 +146,34 @@ values are ``Supplies'', ``Travel'', and ``Membership''.
 \item[description] A description of the expense.
 \end{description}
 
+
+\subsection{Charity Gift}
+
+A charitable contribution.
+
+\begin{description}
+\item[amount] The dollar value of the contribution.
+\item[cash?] Whether the contribution was in cash (as opposed to in-kind).
+\item[name] The name of the charity.
+\item[documented?] Whether the donation was documented. See Pub.\ 526. This is
+checked if the contribution is over the \$250 threshold.
+\end{description}
+
+
+\subsection{Home Office}
+
+A portion of a home used as an office for a particular business.
+
+\begin{description}
+\item[type] The type of business associated with this home office. Currently the
+only supported type is ``partnership''.
+\item[ein] The EIN of the relevant business.
+\item[method] Either ``simplified'' or ``actual''.
+\item[sqft] Square footage of the home office area.
+\item[daycare?] Whether the relevant business was a daycare.
+\item[property] The name of the Real Estate form with which this home office is
+associated.
+\end{description}
 
 
 
@@ -179,6 +220,19 @@ Biographical information for a partnership.
 \item[accounting] ``Cash'', ``Accrual'', or other accounting method.
 \end{description}
 
+\subsection{Real Estate}
+
+A description of real property, used in a variety of contexts and to link other
+forms that deal with a particular property.
+
+\begin{description}
+\item[property] A name for the property that will uniquely identify the property
+across tax forms.
+\item[basis] The basis price for the property, i.e., the purchase value. See
+Pub.\ 551.
+\item[sqft] The square footage of the property.
+\item[purchase\_date] The date on which the property was purchased.
+\end{description}
 
 
 

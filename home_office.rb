@@ -40,64 +40,98 @@ class HomeOfficeManager < TaxForm
 
 end
 
-class Pub587SimplifiedWorksheet < TaxForm
+class Pub587Worksheet < TaxForm
 
   def name
-    'Publication 587 Simplified Method Worksheet'
+    'Publication 587 Worksheets'
   end
 
-  def initialize(manager, income_form)
+  def initialize(manager, ho_form, income_form)
     super(manager)
-    @income_form = income_form
+    @ho_form = ho_form
   end
 
   def compute
 
-    ho_form = form('Home Office')
+    case @ho_form.line[:type]
+    when 'partnership'
+      extend Pub587Partnership
+    else
+      raise "Unknown Home Office business type #{@ho_form.line[:type]}"
+    end
 
-    line[1] = compute_gross_income_limitation
+    case @ho_form.line[:method]
+    when 'simplified'
+      line[:method] = 'simplified'
+      compute_simplified
+    when 'actual'
+      line[:method] = 'actual'
+      compute_actual
+    else
+      raise "Unknown Home Office method #{@ho_form.line[:method]}"
+    end
 
-    line[2] = [ ho_form.line[:sqft], 300 ].min
+  end
 
+  def compute_simplified
+    line[1] = gross_income
+    line[2] = [ @ho_form.line[:sqft], 300 ].min
     line['3a'] = 5
-    if ho_form.line['daycare?']
+    if @ho_form.line['daycare?']
       raise 'Day care home office not implemented'
     else
       line['3b'] = 1.0
     end
     line['3c'] = (line['3b'] * line['3a']).round(2)
-
     line[4] = (line[2] * line['3c']).round
-
     line[5] = [ [ line[1], line[4] ].min, 0 ].max
-
     line[:fill] = line[5]
+  end
+
+  def compute_actual
+    raise "Home office actual expenses not implemented"
+
+    # Right now it's not worth implementing this because it would require also
+    # implementing the reduction in the Schedule A mortgage interest deduction,
+    # and as a practical matter the mortgage interest gets deducted either here
+    # or there.
 
   end
 
-  def compute_gross_income_limitation
+end
 
-    unless @income_form.name == '1065 Schedule K-1'
-      raise 'Home office deduction for non-partnerships not implemented'
+module Pub587Partnership
+
+  def income_form
+    return @income_form if @income_form
+    fs = forms('1065 Schedule K-1') { |f| f.line[:A] == @ho_form.line[:ein] }
+    unless fs.count == 1
+      raise "Zero or multiple matching 1065 Schedule K-1 forms found"
     end
+    @income_form = fs[0]
+    return @income_form
+  end
 
-    line['1A'] = @income_form.sum_lines(1, 2, 3, 4, 5, '6a', '6b', 7, 11)
-    line['1B'] = @income_form.sum_lines(8, '9a', '9b', '9c', 10)
-    line['1C'] = sum_lines('1A', '1B')
+  def confirm_all_from_home
+    assert_question(
+      "Is all income/loss for Partnership " + \
+      "#{@ho_form.line[:ein]} from business use of your home?",
+      true
+    )
+  end
+
+  def gross_income
+    confirm_all_from_home
+    return @income_form.sum_lines(
+      1, 2, 3, 4, 5, '6a', '6b', 7, 8, '9a', '9b', '9c', 10, 11
+    )
+  end
+
+  def nonhome_business_expenses
     assert_question(
       'Do you have unreimbursed partnership expenses (other than home office)?',
       false
     )
-    line['1D'] = 0
-    %w(8 9a 9b 9c 10).each do |l|
-      if @income_form.line[l, :present] && @income_form.line[l] < 0
-        raise 'Partnership losses for home office not implemented'
-      end
-    end
-    line['1E'] = 0
-    line['1F'] = sum_lines('1D', '1E')
-    line['1G'] = line['1C'] - line['1F']
-    return line['1G']
+    return @income_form.line[12]
   end
-
 end

@@ -2,6 +2,7 @@ require 'delegate'
 require 'form_manager'
 require 'interviewer'
 require 'blank_zero'
+require 'date'
 
 class TaxForm
   def initialize(manager)
@@ -66,8 +67,8 @@ class TaxForm
     @manager.form(num)
   end
 
-  def forms(num)
-    @manager.forms(num)
+  def forms(num, &block)
+    @manager.forms(num, &block)
   end
 
   def assert_no_forms(*args)
@@ -194,6 +195,29 @@ class TaxForm
     line[:ssn] = bio.line[:ssn]
   end
 
+  #
+  # This performs a database join-like operation that identifies all forms of a
+  # certain type that have a value in a line matching this form.
+  #
+  def match_forms(form_name, line_name, other_line_name = nil)
+    other_line_name ||= line_name
+    return forms(form_name) { |f|
+      line[line_name] == f[other_line_name]
+    }
+  end
+
+  def match_form(form_name, line_name, other_line_name = nil)
+    fs = match_forms(form_name, line_name, other_line_name)
+    if fs.count == 0
+      raise "No Form #{form_name} matching #{name} on line #{line_name}"
+    elsif fs.count > 1
+      raise "Multiple Forms #{form_name} match #{name} on line #{line_name}"
+    else
+      return fs[0]
+    end
+  end
+
+
 end
 
 class TaxForm; class Lines
@@ -267,6 +291,7 @@ class TaxForm; class Lines
       data = @lines_data[line]
       prefix = "\t#{line}\t"
       [ data ].flatten.each do |item|
+        item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
         item = item.to_s.gsub("\n", "\\n")
         io.puts("#{prefix}#{item}")
         prefix = "\t#{'"'.ljust(line.length)}\t"

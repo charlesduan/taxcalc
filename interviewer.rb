@@ -1,4 +1,5 @@
 require 'tax_form'
+require 'date'
 
 class Interviewer
 
@@ -74,6 +75,7 @@ class Interviewer
     when '-' then BlankZero
     when /^-?\d+$/ then data.to_i
     when /^-?\d*\.\d*$/ then data.to_f
+    when /^\d+\/\d+\/\d{4}$/ then Date.strptime(data, "%m/%d/%Y")
     when /^\[\s*(.*)\s*\]$/
       $1.split(/,\s*/).map { |x| parse(question, x.strip) }
     else
