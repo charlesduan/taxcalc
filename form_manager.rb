@@ -13,9 +13,11 @@ class FormManager
   end
 
   attr_reader :name
+  attr_reader :interviewer
 
   def export_all(io = STDOUT, all = false)
     @ordered_forms.each do |f|
+      warn("Form #{f.name} was not used") unless f.used
       f.export(io) if all || f.exportable
     end
   end
@@ -24,12 +26,26 @@ class FormManager
     @ordered_forms.each(&block)
   end
 
-  attr_reader :interviewer
-
-  def empty?
-    @forms.empty?
+  def list_forms
+    @forms.keys.sort.each do |name|
+      if @forms[name].is_a?(Enumerable)
+        puts "#{name} (#{@forms[name].count})"
+      else
+        puts "#{name}"
+      end
+    end
   end
 
+  ########################################################################
+  #
+  # ADDING AND REMOVING FORMS
+  #
+  ########################################################################
+
+  #
+  # Adds a form to this manager. Checks to ensure that there was no No Form flag
+  # for this form, and also that the form belongs to this manager.
+  #
   def add_form(form)
     name = form.name.to_s
     if @no_forms.include?(name)
@@ -46,6 +62,7 @@ class FormManager
     @ordered_forms.push(form)
   end
 
+  # Remove a form from this manager.
   def remove_form(form)
     if @forms[form.name] == form
       @forms.delete(form.name)
@@ -60,11 +77,13 @@ class FormManager
     @ordered_forms.delete(form)
   end
 
-
-  def no_form(form)
-    @no_forms[form.to_s] = 1
+  # Flag that no forms with this name will be provided to this manager. This is
+  # for error-checking to ensure that a form has not inadvertently been omitted.
+  def no_form(form_name)
+    @no_forms[form_name.to_s] = 1
   end
 
+  # Copy a form, perhaps from another manager.
   def copy_form(other_form)
     new_form = other_form.copy(self)
     new_form.exportable = false
@@ -72,6 +91,14 @@ class FormManager
     return new_form
   end
 
+  # Takes either a Form object or a Form class name. Adds it to this
+  # FormManager, and then computes it. Then queries whether the form is needed
+  # (using its needed? method), and removes it if not needed.
+  #
+  # The step of adding and then removing the form is necessary in case computing
+  # the form requires computing any subforms that expect the form under
+  # computation to be present.
+  #
   def compute_form(f)
     f = f.new(self) if f.is_a?(Class)
     add_form(f)
@@ -86,36 +113,64 @@ class FormManager
     return f
   end
 
+
+  ########################################################################
+  #
+  # RETRIEVAL OF FORMS
+  #
+  ########################################################################
+
+  def empty?
+    @forms.empty?
+  end
+
   def has_form?(name)
     @forms.include?(name.to_s)
   end
 
-  def list_forms
-    @forms.keys.sort.each do |name|
-      if @forms[name].is_a?(Enumerable)
-        puts "#{name} (#{@forms[name].count})"
-      else
-        puts "#{name}"
-      end
-    end
-  end
-
+  #
+  # Retrieves a single form with the given name. Produces an error if no form
+  # with that name is present or if multiple forms with that name are present.
+  #
   def form(name)
     name = name.to_s
     raise "No form #{name}" unless @forms[name]
     raise "Multiple forms #{name}" if @forms[name].is_a?(Enumerable)
-    @forms[name]
+    f = @forms[name]
+    f.used = true
+    return f
   end
 
+  #
+  # Retrieves all forms with the given name, as a MultiForm object. Produces a
+  # warning if there are no forms with that name and there is no "No Forms" flag
+  # for this form name.
+  #
   def forms(name)
     name = name.to_s
     unless @forms.include?(name) or @no_forms.include?(name)
       warn("Warning: No forms #{name} found for #{@name}.")
       @no_forms[name] = 1
     end
-    MultiForm.new(@forms[name] || [])
+    mf = MultiForm.new(@forms[name] || [])
+    if block_given?
+      mf = mf.select { |f| yield(f) }
+    end
+    return mf
   end
 
+
+  ########################################################################
+  #
+  # DATA INPUT
+  #
+  ########################################################################
+
+  #
+  # Import forms from a file into this FormManager. The specified file is opened
+  # and read to create NamedForm objects that are stored to this FormManager.
+  # Also, "No Form" directives can be provided.
+  #
   def import(file)
     open(file) do |io|
       until io.eof?
@@ -170,10 +225,23 @@ class FormManager
     @interviewer.ask(prompt, form)
   end
 
+  ########################################################################
+  #
+  # FORM EXPLAINING
+  #
+  ########################################################################
+
+  #
+  # Request that forms of a given name display explanations during computation.
+  # This affects the form's +explain+ method.
+  #
   def explain(form)
     @explain[form.to_s] = true
   end
 
+  #
+  # Test whether the given form should have explanations printed out.
+  #
   def explaining?(form)
     @explain.include?(form.name.to_s)
   end

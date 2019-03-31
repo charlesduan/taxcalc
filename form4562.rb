@@ -24,7 +24,7 @@ class Form4562 < TaxForm
       line['id'] = form(1065).line(:D)
 
       line[1] = 1_000_000
-      line[2] = forms('Asset').select { |x| x.line["179?"] }.map { |x|
+      line[2] = forms('Asset') { |x| x.line["179?"] }.map { |x|
         x.line['amount']
       }.inject(:+)
 
@@ -61,7 +61,7 @@ class Form4562 < TaxForm
         raise "No support for listed property"
       end
 
-      non_listed_179_assets = forms('Asset').select { |x|
+      non_listed_179_assets = forms('Asset') { |x|
         !x.line['listed?'] && x.line["179?"]
       }
 

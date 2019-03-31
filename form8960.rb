@@ -13,7 +13,7 @@ class Form8960 < TaxForm
     line[1] = form(1040).line['8a']
     line[2] = form(1040).line['9a']
 
-    annuities = forms('1099-R').select { |x| x.line[7] == 'D' }
+    annuities = forms('1099-R') { |x| x.line[7] == 'D' }
     if annuities.any? { |x| x.line['2b.not_determined?'] }
       raise "Annuity amounts taxable not determined"
     else

@@ -116,7 +116,7 @@ class IraAnalysis < TaxForm
 
       # Line 5 is the sum of line 1 of those 1099-R forms that are traditional
       # IRA distributions
-      line[5] = forms('1099-R').select { |f|
+      line[5] = forms('1099-R') { |f|
         [ 1, 2, 3, 4, 5, 7 ].include?(f.line[7]) && f.line['ira-sep-simple?']
       }.lines(1, :sum)
 
@@ -237,7 +237,7 @@ class IraAnalysis < TaxForm
 
     def compute_part_iii
       explain("      Confirming that no Roth IRA distributions were taken")
-      roth_forms = forms('1099-R').select { |f|
+      roth_forms = forms('1099-R') { |f|
         [ 'B', 'J', 'T' ].include?(f.line[7])
       }
       return if roth_forms.empty?

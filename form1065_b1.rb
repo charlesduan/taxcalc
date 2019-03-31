@@ -7,7 +7,7 @@ class Form1065B1 < TaxForm
   end
 
   def compute
-    reportables = forms('Partner').select { |f|
+    reportables = forms('Partner') { |f|
       f.line['share'] >= 0.5
     }
     entities = reportables.select { |f|

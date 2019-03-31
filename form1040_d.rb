@@ -13,7 +13,7 @@ class Form1040D < TaxForm
   def compute
     Form8949.generate(@manager) unless has_form?(8949)
 
-    forms_a = forms(8949).select { |f| f.has_line('A') }
+    forms_a = forms(8949) { |f| f.has_line('A') }
     if forms_a.empty?
       line['1b.h'] = BlankZero
     else
@@ -22,7 +22,7 @@ class Form1040D < TaxForm
       line['1b.h'] = forms_a.lines('I.2h', :sum)
     end
 
-    forms_b = forms(8949).select { |f| f.has_line('B') }
+    forms_b = forms(8949) { |f| f.has_line('B') }
     if forms_b.empty?
       line['2h'] = BlankZero
     else
@@ -38,7 +38,7 @@ class Form1040D < TaxForm
 
     line[7] = line['1b.h'] + line['2h']
 
-    forms_d = forms(8949).select { |f| f.has_line('D') }
+    forms_d = forms(8949) { |f| f.has_line('D') }
     if forms_d.empty?
       line['8b.h'] = BlankZero
     else
@@ -47,7 +47,7 @@ class Form1040D < TaxForm
       line['8b.h'] = forms_d.lines('II.2h', :sum)
     end
 
-    forms_e = forms(8949).select { |f| f.has_line('E') }
+    forms_e = forms(8949) { |f| f.has_line('E') }
     if forms_e.empty?
       line['9h'] = BlankZero
     else

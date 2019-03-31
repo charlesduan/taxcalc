@@ -1,131 +1,29 @@
 require 'delegate'
 require 'form_manager'
 require 'interviewer'
-
-class BlankNum < DelegateClass(Fixnum)
-  def to_s
-    self == 0 ? '-' : to_i.to_s
-  end
-
-  def -(num)
-    res = to_i - num
-    if num.is_a?(BlankNum) && res == 0
-      return BlankZero
-    else
-      return res
-    end
-  end
-
-  def +(num)
-    res = to_i + num
-    if num.is_a?(BlankNum) && res == 0
-      return BlankZero
-    else
-      return res
-    end
-  end
-end
-BlankZero = BlankNum.new(0)
-
+require 'blank_zero'
 
 class TaxForm
-
-  class Lines
-    def initialize(form)
-      @form = form
-      @lines_data = {}
-      @lines_order = []
-    end
-
-    attr_reader :form
-
-    def each
-      @lines_order.each do |l|
-        yield(l, @lines_data[l])
-      end
-    end
-
-    def line_name(line)
-      "Form #{@form.name}, line #{line}"
-    end
-
-    def []=(*args)
-      line, value = args.first.to_s, args.last
-      type = args.count == 3 ? args[1] : nil
-      case type
-      when :all
-        value = [ value ].flatten
-      when :add
-        value = [ @lines_data[line] || [], value ].flatten
-      else
-        unless type == :overwrite
-          warn("Overwriting value for #{line_name(line)}") if @lines_data[line]
-        end
-        if value.is_a?(Enumerable)
-          raise "#{line_name(line)}: not expecting an array"
-        end
-      end
-      @lines_order.push(line) unless @lines_data[line]
-      form.explain("    #{line}:  #{value.inspect}")
-      @lines_data[line] = value
-    end
-
-    def [](line, type = nil)
-      line = line.to_s
-      raise "Reached unimplemented value" if line == '-1'
-
-      unless @lines_data.include?(line)
-        return false if type == :present
-        return BlankZero if type == :opt or type == :sum
-        raise "#{line_name(line)} not defined"
-      end
-      data = @lines_data[line]
-      case type
-      when :present
-        true
-      when :all
-        [ data ].flatten
-      when :sum
-        [ data ].flatten.inject(:+) || BlankZero
-      else
-        raise "Line #{line} is an array" if data.is_a?(Enumerable)
-        data
-      end
-    end
-
-    def export(io = STDOUT)
-
-      io.puts("Form #{@form.name}")
-      @lines_order.each do |line|
-        data = @lines_data[line]
-        prefix = "\t#{line}\t"
-        [ data ].flatten.each do |item|
-          item = item.to_s.gsub("\n", "\\n")
-          io.puts("#{prefix}#{item}")
-          prefix = "\t#{'"'.ljust(line.length)}\t"
-        end
-      end
-      io.puts()
-
-    end
-
-    def place_lines(*nums)
-      nums.each do |num|
-        num = num.to_s
-        if @lines_order.include?(num)
-          @lines_order.delete(num)
-          @lines_order.push(num)
-        end
-      end
-    end
-
-  end
-
   def initialize(manager)
+
+    # The form lines in this form
     @lines = Lines.new(self)
+
+    # The FormManager associated with this form
     @manager = manager
+
+    # Whether this form should be exported (basically everything but a
+    # NamedForm)
     @exportable = true
+
+    # Whether this form has been used for any purpose. This is for
+    # error-checking to ensure that forms have not been unprocessed.
+    @used = false
   end
+
+  attr_accessor :used
+  attr_accessor :exportable
+  attr_accessor :manager
 
   def copy(new_manager_or_obj)
     if new_manager_or_obj.is_a?(FormManager)
@@ -143,9 +41,6 @@ class TaxForm
     end
     return new_copy
   end
-
-  attr_accessor :exportable
-  attr_accessor :manager
 
   def name
     raise "Abstract form class"
@@ -301,66 +196,98 @@ class TaxForm
 
 end
 
-class MultiForm < Array
-  def initialize(forms)
-    super([ forms ].flatten)
+class TaxForm; class Lines
+  def initialize(form)
+    @form = form
+    @lines_data = {}
+    @lines_order = []
   end
 
-  def lines(*args)
-    if args.empty?
-      Lines.new(self)
+  attr_reader :form
+
+  def each
+    @lines_order.each do |l|
+      yield(l, @lines_data[l])
+    end
+  end
+
+  def line_name(line)
+    "Form #{@form.name}, line #{line}"
+  end
+
+  def []=(*args)
+    @form.used = true
+    line, value = args.first.to_s, args.last
+    type = args.count == 3 ? args[1] : nil
+    case type
+    when :all
+      value = [ value ].flatten
+    when :add
+      value = [ @lines_data[line] || [], value ].flatten
     else
-      Lines.new(self)[*args]
+      unless type == :overwrite
+        warn("Overwriting value for #{line_name(line)}") if @lines_data[line]
+      end
+      if value.is_a?(Enumerable)
+        raise "#{line_name(line)}: not expecting an array"
+      end
+    end
+    @lines_order.push(line) unless @lines_data[line]
+    form.explain("    #{line}:  #{value.inspect}")
+    @lines_data[line] = value
+  end
+
+  def [](line, type = nil)
+    line = line.to_s
+    raise "Reached unimplemented value" if line == '-1'
+
+    unless @lines_data.include?(line)
+      return false if type == :present
+      return BlankZero if type == :opt or type == :sum
+      raise "#{line_name(line)} not defined"
+    end
+    data = @lines_data[line]
+    case type
+    when :present
+      true
+    when :all
+      [ data ].flatten
+    when :sum
+      [ data ].flatten.inject(:+) || BlankZero
+    else
+      raise "Line #{line} is an array" if data.is_a?(Enumerable)
+      data
     end
   end
 
-  def select(&block)
-    MultiForm.new(super(&block))
+  def export(io = STDOUT)
+
+    io.puts("Form #{@form.name}")
+    @lines_order.each do |line|
+      data = @lines_data[line]
+      prefix = "\t#{line}\t"
+      [ data ].flatten.each do |item|
+        item = item.to_s.gsub("\n", "\\n")
+        io.puts("#{prefix}#{item}")
+        prefix = "\t#{'"'.ljust(line.length)}\t"
+      end
+    end
+    io.puts()
+
   end
 
-  class Lines
-    def initialize(mf)
-      @mf = mf
-    end
-    def [](line, type = nil)
-      res = @mf.map { |f| f.line[line, type] }
-      case type
-      when :all then res.flatten
-      when :sum then
-        if res.empty?
-          BlankZero
-        else
-          res.inject(:+)
-        end
-      when :present then res.any? && !res.empty?
-      else
-        if res.any? { |x| x.is_a?(Enumerable) }
-          raise "Unexpected array in lines #{line}"
-        end
-        res
+  def place_lines(*nums)
+    nums.each do |num|
+      num = num.to_s
+      if @lines_order.include?(num)
+        @lines_order.delete(num)
+        @lines_order.push(num)
       end
     end
   end
 
-  def export
-    each { |f| f.export }
-  end
+end; end
 
-end
 
-class NamedForm < TaxForm
-  def initialize(name, data)
-    super(data)
-    @name = name.to_s
-    @exportable = false
-  end
-
-  def copy(new_manager)
-    super(self.class.new(name, new_manager))
-  end
-
-  def name
-    @name
-  end
-
-end
+require 'multi_form'
+require 'named_form'
