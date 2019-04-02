@@ -15,8 +15,9 @@ class Pub590AWorksheet1_1 < TaxForm
     # Because the IRS instructions somehow expect you to calculate Schedule 1,
     # line 36 before line 32, this computation below uses a different approach
     # that appears equivalent.
-    line[1] = form(1040).line[6] - sch1.sum_lines(23, 24, 25, 26, 27,
-                                                   28, 29, 30, '31a')
+    line[1] = form(1040).line[6] - form('1040 Schedule 1').sum_lines(
+      23, 24, 25, 26, 27, 28, 29, 30, '31a'
+    )
     # Line 2 adds back the student loan interest deduction that would have been
     # subtracted in the Schedule 1 computation above. Since it is omitted from
     # the above computation, it is not included here.

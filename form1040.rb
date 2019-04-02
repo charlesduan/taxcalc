@@ -158,30 +158,15 @@ class Form1040 < TaxForm
     line['4a'] = ira_analysis.sum_lines('15a', '16a')
     line['4b'] = ira_analysis.sum_lines('15b', '16b')
 
-
-
-    assert_no_forms('1099-G')
-
-    alimony = interview("Enter any amount you received as alimony:")
-    line[11] = alimony if alimony > 0
-
-    assert_no_forms('1099-MISC')
-    #line[12] = forms('1040 Schedule C').lines(31, :sum)
-
-    sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
-
-    if sched_d
-      line[13] = sched_d.line['fill']
-    else
-      line[13] = BlankZero
-    end
-
-    assert_no_forms(4797)
-
-    sched_e = @manager.compute_form(Form1040E)
-    line[17] = sched_e.line[41]
-
     assert_no_forms('SSA-1099', 'RRB-1099')
+
+    sched_1 = compute_form(Form1040_1)
+
+    line['6.add'] = sched_1.line[22]
+    line[6] = sum_lines(*%w(1 2b 3b 4b 5b 6.add))
+
+
+    #### STOP WORK XXX ###
 
     line[22] = sum_lines(7, '8a', '9a', 10, 11, 12, 13, 14, '15b', '16b', 17,
                          18, 19, '20b', 21)
