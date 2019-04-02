@@ -68,7 +68,6 @@ class FilingStatus
 
 end
 
-FilingStatus.set_param('checkbox_1040', 1, 2, 3, 4, 5)
 
 class FilingStatusVisitor
 end

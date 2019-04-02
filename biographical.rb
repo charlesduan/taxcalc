@@ -28,6 +28,7 @@ class Biographical < TaxForm
     foreign_country: 'Foreign country name:',
     foreign_state: 'Foreign province/state/county:',
     foreign_zip: 'Foreign postal code:',
+    birthday: 'Birthday:'
   }
 
   def compute

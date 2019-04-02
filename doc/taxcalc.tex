@@ -56,6 +56,16 @@ essence is simply a named table mapping line numbers to values.
 
 
 
+\subsection{Form Submanagers}
+
+The main FormManager for an entity may contain ``submanagers,'' namely
+references to other FormManager objects for different entities or tax years.
+This is a convenient way to draw information from a related filing.
+
+Submanagers are added using the add\_submanager method, which requires a name
+for identifying the submanager. Common names are :last\_year and :spouse. The
+add\_submanager\_from\_file method creates a new FormManager, imports data from
+the file, and adds a new submanager.
 
 
 \section{Phase Two: Form Field Marking}
@@ -110,6 +120,26 @@ You can compute this by averaging the balances on January 1 and December 31, or
 you can multiply the interest paid by the lowest interest rate of the year.
 \end{description}
 
+\subsection{1099-DIV}
+
+\begin{description}
+\item[qualified\_exception] If this form shows qualified dividends, this flag
+must be set to indicate whether an exception applies. See 1040 instructions.
+\end{description}
+
+
+\subsection{1099-R}
+
+\begin{description}
+\item[2b.not\_determined?] The relevant checkbox under line 2b.
+\item[2b.total\_distribution?] The relevant checkbox under line 2b.
+\item[ira-sep-simple?] Whether the checkbox on the form with this name is
+checked.
+\item[destination] Where this distribution went. It can be ``Roth conversion''
+(currently the only one supported).
+\end{description}
+
+
 \section{Forms}
 
 \subsection{Asset}
@@ -160,6 +190,20 @@ checked if the contribution is over the \$250 threshold.
 \end{description}
 
 
+
+\subsection{Dependent}
+
+A dependent.
+
+\begin{description}
+\item[name] The dependent's name.
+\item[ssn] The dependent's social security number.
+\item[relationship] The dependent's relationship with the form provider.
+\item[qualifying] Whether the dependent qualifies for a tax credit. Options are
+``child'' for the child tax credit, ``other'' for the credit for other
+dependents, and ``none'' where the dependent is not qualifying.
+\end{description}
+
 \subsection{Home Office}
 
 A portion of a home used as an office for a particular business.
@@ -175,6 +219,15 @@ only supported type is ``partnership''.
 associated.
 \end{description}
 
+\subsection{Traditional IRA Contribution}
+
+A contribution to a traditional IRA.
+
+\begin{description}
+\item[amount] The amount contributed.
+\item[tax\_year] The tax year of the contribution.
+\item[date] The date of the contribution.
+\end{description}
 
 
 \subsection{Partner}

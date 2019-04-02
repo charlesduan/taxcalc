@@ -10,6 +10,7 @@ class FormManager
     @ordered_forms = []
     @interviewer = Interviewer.new
     @explain = {}
+    @submanagers = {}
   end
 
   attr_reader :name
@@ -245,6 +246,40 @@ class FormManager
   def explaining?(form)
     @explain.include?(form.name.to_s)
   end
+
+  ########################################################################
+  #
+  # SUBMANAGERS
+  #
+  ########################################################################
+
+  #
+  # Add a submanager.
+  # 
+  def add_submanager(name, manager)
+    unless [ :last_year, :spouse ].include?(name)
+      warn("Unexpected submanager name #{name}")
+    end
+    @submanagers[name] = manager
+  end
+
+  #
+  # Add a submanager and read a file.
+  #
+  def add_submanager_from_file(name, file, sub_name = nil)
+    sub_name = "#@name, submanager #{name}" unless sub_name
+    manager = FormManager.new(sub_name)
+    manager.import(file)
+    add_submanager(name, manager)
+  end
+
+  #
+  # Use a submanager.
+  #
+  def submanager(name)
+    @submanagers[name]
+  end
+
 
 end
 

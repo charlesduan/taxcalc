@@ -139,14 +139,53 @@ class TaxForm
     end
   end
 
+  def compute_form(form_class)
+    @manager.compute_form(form_class)
+  end
+
   def find_or_compute_form(name, form_class)
     if has_form?(name)
       return form(name)
     else
-      @manager.compute_form(form_class)
+      compute_form(form_class)
     end
   end
 
+  #
+  # Given a hash where the keys represent line names, treats each of those lines
+  # as a table where each line is a column, and adds the values of the hash as
+  # the next row of that table. This is done by first ensuring that each line's
+  # value is an array of an equal number of elements, and then appending the
+  # values of the hash to each of those arrays. Consider, for example:
+  #
+  #   Line 1a: 3, 4, 5
+  #   Line 1b: x, y
+  #   Line 1c: 6
+  #   Line 1d: a, b
+  #
+  # Calling add_table_row('1a' => 8, '1c' => 9, '1d' => 'c') would yield:
+  #
+  #   Line 1a: 3, 4, 5, 8
+  #   Line 1b: x, y
+  #   Line 1c: 6, -, -, 9
+  #   Line 1d: a, b, -, c
+  #
+  # where a dash is BlankZero. (Lines are described above as "columns" of a
+  # table because on IRS forms, usually that is how the lines are presented.)
+  #
+  # In using this method, it is important for one column of the table always to
+  # contain data for every row. Otherwise, there is a possibility that the new
+  # row will be packed in with another one. For example, if the above call were
+  # changed to add_table_row('1c' => 9, '1d' => c), it would yield:
+  # 
+  #   Line 1a: 3, 4, 5
+  #   Line 1b: x, y
+  #   Line 1c: 6, -, 9
+  #   Line 1d: a, b, c
+  #
+  # so now there appears to be a row of "5, -, 9, c" whereas the table should
+  # have had "5, -, -, -" as a row of its own.
+  #
   def add_table_row(hash)
     max_rows = hash.keys.map { |x|
       line[x, :present] ? line[x, :all].count : 0

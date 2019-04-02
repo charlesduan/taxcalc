@@ -10,7 +10,7 @@ require 'form6251'
 require 'form8959'
 require 'form8960'
 require 'ira_analysis'
-require 'home_office'
+require 'date'
 
 class Form1040 < TaxForm
 
@@ -24,9 +24,7 @@ class Form1040 < TaxForm
 
   attr_reader :force_itemize
 
-  def status
-    @status
-  end
+  attr_reader :status, :bio, :sbio
 
   def full_name
     line[:first_name] + ' ' + line[:last_name]
@@ -38,33 +36,67 @@ class Form1040 < TaxForm
 
   def compute
 
-    assert_no_forms(2555, '2555-EZ')
-
-    @manager.compute_form(HomeOfficeManager)
-
-    bio = form('Biographical')
-    copy_line(:first_name, bio)
-    copy_line(:last_name, bio)
-
-    line[:ssn_1], line[:ssn_2], line[:ssn_3] = bio.line[:ssn].split(/-/)
+    @bio = forms('Biographical').find { |x| x.line[:who] == 'me' }
+    @sbio = forms('Biographical').find { |x| x.line[:who] == 'spouse' }
 
     @status = FilingStatus.for(interview("Enter your filing status:"))
+    line["status.#{status.name}"] = 'X'
+
+    if @status.is('mfs')
+      line["status.name"] = @sbio.line[:first_name] + ' ' + \
+        @sbio.line['last_name']
+    elsif status.is('hoh')
+      line['status.name'] = interview(
+        'Name of head-of-household qualifying child, if not a dependent:'
+      )
+    end
+
+    copy_line(:first_name, @bio)
+    copy_line(:last_name, @bio)
+
+    line[:ssn_1], line[:ssn_2], line[:ssn_3] = @bio.line[:ssn].split(/-/)
+
+    unless interview("Can someone claim you as a dependent?")
+      line['ysd.dependent'] = 'X'
+    end
+    if @bio.line[:birthday] < Date.new(Date.today.year, 1, 2)
+      line['ysd.65yo'] = 'X'
+    end
+    line['ysd.blind?'] = 'X' if @bio.line[:blind?]
 
     if @status.is('mfj')
-      copy_line(:spouse_first_name, bio)
-      copy_line(:spouse_last_name, bio)
+      copy_line(:first_name, @sbio)
+      copy_line(:last_name, @sbio)
     end
     if @status.is(%w(mfj mfs))
       line[:spouse_ssn_1], line[:spouse_ssn_2], line[:spouse_ssn_3] = \
-        bio.line[:spouse_ssn].split(/-/)
+        @sbio.line[:ssn].split(/-/)
     end
 
-    copy_line('home_address', bio)
-    copy_line('apt_no', bio)
-    copy_line('city_zip', bio)
-    copy_line('foreign_country', bio)
-    copy_line('foreign_state', bio)
-    copy_line('foreign_zip', bio)
+    unless interview("Can someone claim your spouse as a dependent?")
+      line['ssd.dependent'] = 'X'
+    end
+    line['ssd.65yo'] = 'X' if @sbio.line[:birthday] < Date.new(1954, 1, 2)
+    line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
+
+    @force_itemize = false
+    if status.is('mfs')
+      itemize = interview('Do you want to itemize deductions?')
+      @force_itemize = true if itemize
+      line['ssd.isrdsa'] = 'X' if itemize || interview(
+        'Are you a dual-status alien?'
+      )
+    end
+
+    assert_question('Did you have health insurance the whole year?', true)
+    line['fyhcc'] = 'X'
+
+    copy_line('home_address', @bio)
+    copy_line('apt_no', @bio)
+    copy_line('city_zip', @bio)
+    copy_line('foreign_country', @bio)
+    copy_line('foreign_state', @bio)
+    copy_line('foreign_zip', @bio)
 
     line['campaign.you'] = 'X' if interview(
       'Do you want to donate to the Presidential Election Campaign?'
@@ -73,51 +105,60 @@ class Form1040 < TaxForm
       'Does your spouse want to donate to the Presidential Election Campaign?'
     )
 
-    line[status.checkbox_1040] = 'X'
-    if status.is('mfs')
-      line['3.spouse_name'] = bio.line[:spouse_first_name] + ' ' + \
-        bio.line['spouse_last_name']
-    elsif status.is('hoh')
-      line['4.child'] = interview(
-        'Name of head-of-household qualifying child, if not a dependent:'
-      )
+    #
+    # Dependents
+    #
+
+    line['more_than_4_deps'] => 'X' if forms('Dependent').count > 4
+    forms('Dependent').each do |dep|
+      ssn_parts = dep.line[:ssn].split(/-/)
+      row = {
+        :dep_1 => dep.line[:name],
+        :dep_2_1 => ssn_parts[0],
+        :dep_2_2 => ssn_parts[1],
+        :dep_2_3 => ssn_parts[2],
+        :dep_3 => dep.line[:relationship],
+      }
+      case dep.line[:qualifying]
+      when 'child' then row[:dep_4_ctc] => 'X'
+      when 'other' then row[:dep_4_other] => 'X'
+      when 'none'
+      else raise "Unknown dependent qualifying type #{dep.line[:qualifying]}"
+      end
+      add_table_row(row)
     end
 
-    unless interview("Can someone claim you as a dependent?")
-      line['6a'] = 'X'
-    end
 
-    status.visit(SpouseExemption.new, line)
+    #
+    # PAGE 2
+    #
 
-    line['6c1', :all] = forms('Dependent').lines['name']
-    line['6c2', :all] = forms('Dependent').lines['ssn']
-    line['6c3', :all] = forms('Dependent').lines['relationship']
-    line['6c4', :all] = forms('Dependent').lines['qualifying'].map { |x|
-      x == 'yes' ? 'X' : ''
-    }
-    line['6a6b'] = (line['6a', :present] ? 1 : 0) + \
-      (line['6b', :present] ? 1 : 0)
-    line['6c.lived'] = forms('Dependent').lines['where'].select { |x|
-      x == 'with'
-    }.count
-    line['6c.divorced'] = forms('Dependent').lines['where'].select { |x|
-      x == 'divorced'
-    }.count
-    line['6c.other'] = forms('Dependent').count - line['6c.lived'] - \
-      line['6c.divorced']
+    line[1] = forms('W-2').lines(1, :sum)
 
-    line['6d'] = sum_lines('6a6b', '6c.lived', '6c.divorced', '6c.other')
+    sched_b = compute_form(Form1040B)
 
-    line[7] = forms('W-2').lines(1, :sum)
-
-    sched_b = @manager.compute_form(Form1040B)
-
-    line['8a'] = sched_b.line[4]
-    line['8b'] = forms('1099-INT').lines[8, :sum] + \
+    # Interest
+    assert_no_forms('1099-OID')
+    line['2a'] = forms('1099-INT').lines[8, :sum] + \
       forms('1099-DIV').lines[10, :sum]
+    line['2b'] = sched_b.line[4]
 
-    line['9a'] = sched_b.line[6]
-    line['9b'] = forms('1099-DIV').lines['1b', :sum]
+    # Dividends
+    line['3a'] = forms('1099-DIV') { |f| f.line['1b', :present }.map { |f|
+      unless line[:qualified_exception?, :present]
+        raise "Indicate that no exception applies to 1099-DIV\n" + \
+          "with qualified dividends, using the qualified_exception? line"
+      end
+      line[:qualified_exception?] ? 0 : line['1b']
+    }.sum
+    line['3b'] = sched_b.line[6]
+
+    # IRAs, pensions, and annuities
+    ira_analysis = compute_form(IraAnalysis)
+    line['4a'] = ira_analysis.sum_lines('15a', '16a')
+    line['4b'] = ira_analysis.sum_lines('15b', '16b')
+
+
 
     assert_no_forms('1099-G')
 
@@ -136,12 +177,6 @@ class Form1040 < TaxForm
     end
 
     assert_no_forms(4797)
-
-    ira_analysis = @manager.compute_form(IraAnalysis)
-    copy_line('15a', ira_analysis)
-    copy_line('15b', ira_analysis)
-    copy_line('16a', ira_analysis)
-    copy_line('16b', ira_analysis)
 
     sched_e = @manager.compute_form(Form1040E)
     line[17] = sched_e.line[41]
@@ -169,14 +204,8 @@ class Form1040 < TaxForm
     assert_question('Can someone claim you as a dependent?', false)
     line['39a'] = 0
 
-    @force_itemize = false
     choose_itemize = false
-    if status.is('mfs')
-      itemize = interview('Do you want to itemize deductions?')
-      @force_itemize = true if itemize
-      line['39b'] = 'X' if itemize || interview('Are you a dual-status alien?')
-
-    else
+    unless @force_itemize
       if interview('Do you want the computer to choose whether to itemize?')
         choose_itemize = true
       else
@@ -254,9 +283,6 @@ class Form1040 < TaxForm
     if has_form?('1040 Schedule SE')
       line[57] = form('1040 Schedule SE').line[12]
     end
-
-    assert_question('Did you have health insurance the whole year?', true)
-    line['61box'] = 'X'
 
     l62 = BlankZero
     f8959 = @manager.compute_form(Form8959)
