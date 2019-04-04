@@ -19,6 +19,10 @@ class IraAnalysis < TaxForm
     'IRA Analysis'
   end
 
+  def year
+    2018
+  end
+
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
 
   def compute

@@ -11,11 +11,16 @@ require 'form8959'
 require 'form8960'
 require 'ira_analysis'
 require 'date'
+require 'qbi_simplified_worksheet'
 
 class Form1040 < TaxForm
 
   def name
     '1040'
+  end
+
+  def year
+    2018
   end
 
   def initialize(manager)
@@ -36,8 +41,8 @@ class Form1040 < TaxForm
 
   def compute
 
-    @bio = forms('Biographical').find { |x| x.line[:who] == 'me' }
-    @sbio = forms('Biographical').find { |x| x.line[:who] == 'spouse' }
+    @bio = forms('Biographical').find { |x| x.line[:whose] == 'mine' }
+    @sbio = forms('Biographical').find { |x| x.line[:whose] == 'spouse' }
 
     @status = FilingStatus.for(interview("Enter your filing status:"))
     line["status.#{status.name}"] = 'X'
@@ -162,33 +167,15 @@ class Form1040 < TaxForm
 
     sched_1 = compute_form(Form1040_1)
 
+    # Total income
     line['6.add'] = sched_1.line[22]
     line[6] = sum_lines(*%w(1 2b 3b 4b 5b 6.add))
 
+    # AGI
+    sched_1.compute_adjustments
+    line[7] = line6 - sched_1.line36
 
-    #### STOP WORK XXX ###
-
-    line[22] = sum_lines(7, '8a', '9a', 10, 11, 12, 13, 14, '15b', '16b', 17,
-                         18, 19, '20b', 21)
-
-    assert_question("Did you have an HSA account?", false)
-
-    sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
-    line[27] = sched_se.line[13] if sched_se
-
-    ira_analysis.compute_contributions
-    line[32] = ira_analysis.line[32]
-
-    line[36] = sum_lines(23, 24, 25, 26, 27, 28, 29, 30, '31a', 32, 33, 34, 35)
-    line[37] = line[22] - line[36]
-
-    line[38] = line[37]
-
-    assert_question('Were you or your spouse born before 1952 or blind?',
-                    false)
-    assert_question('Can someone claim you as a dependent?', false)
-    line['39a'] = 0
-
+    # Standard or itemized deduction
     choose_itemize = false
     unless @force_itemize
       if interview('Do you want the computer to choose whether to itemize?')
@@ -199,22 +186,34 @@ class Form1040 < TaxForm
       end
     end
 
+    if %w(
+      ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
+    ).any? { |l| line[l, :present] }
+      raise "Cannot handle special standard deductions"
+    end
     sd = status.standard_deduction
     if itemize || choose_itemize
+      sched_a = compute_form(Form1040A)
 
-
-      sched_a = @manager.compute_form(Form1040A)
-
-      if itemize || sched_a.line[29] > sd
-        line[40] = sched_a.line[29]
+      if itemize || sched_a.line[17] > sd
+        line[8] = sched_a.line[17]
       else
         @manager.remove_form(sched_a)
-        line[40] = sd
+        line[8] = sd
       end
 
     else
-      line[40] = sd
+      line[8] = sd
     end
+
+    # Qualified business income deduction
+    taxable_income = line[7] - line[8]
+    if taxable_income <= status.double_mfj(157_500)
+      line[9] = compute_form(QBISimplifiedWorksheet).line[15]
+    end
+    line[10] = line[7] - sum_lines(8, 9)
+
+    ### STOP WORK ###
 
     line[41] = line[38] - line[40]
 
@@ -561,7 +560,9 @@ class ExemptionsDeductionsWorksheet < TaxForm
 end
 
 
-FilingStatus.set_param('standard_deduction', 6350, 12700, 6350, 9350, 12700)
+FilingStatus.set_param('standard_deduction', 12000, 24000, :single, 18000, :mfj)
+
+# Not updated for 2018:
 FilingStatus.set_param('exemption_threshold', 261500, 313800, 156900, 287650,
                        313800)
 FilingStatus.set_param('qdcgt_exemption', 37950, 75900, 37950, 50800, 75900)

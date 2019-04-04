@@ -47,11 +47,35 @@ class TaxForm
     raise "Abstract form class"
   end
 
+  def year
+    raise "Form's year not set"
+  end
+
+  def check_year
+    if @manager.year && @manager.year != year
+      warn("Form #{name} is for #{year}, but manager is #{@manager.year}")
+    end
+  end
+
   def line(*args)
     if args.count == 0
       @lines
     else
       @lines[*args]
+    end
+  end
+
+  def method_missing(sym, *args)
+    if sym.to_s =~ /^line_?/
+      l = $'
+      if l =~ /=$/
+        l = $`
+        line[l] = *args
+      else
+        line[l]
+      end
+    else
+      super(sym, *args)
     end
   end
 
@@ -75,6 +99,8 @@ class TaxForm
     args.each do |num|
       if has_form?(num)
         raise "Form #{num} present but not implemented for #{name}"
+      else
+        @manager.ensure_no_forms(num)
       end
     end
   end
@@ -229,9 +255,17 @@ class TaxForm
   end
 
   def set_name_ssn
-    bio = form("Biographical")
-    line[:name] = bio.line[:first_name] + ' ' + bio.line[:last_name]
-    line[:ssn] = bio.line[:ssn]
+    set_name
+    line[:ssn] = form(1040).bio.line[:ssn]
+  end
+
+  def set_name
+    f = form(1040)
+    names = f.bio.line[:first_name] + ' ' + f.bio.line[:last_name]
+    if f.sbio && f.status.is('mfj')
+      names += ' & ' + f.sbio.line[:first_name] + ' ' + f.sbio.line[:last_name]
+    end
+    line[:name] = names
   end
 
   #
@@ -256,7 +290,11 @@ class TaxForm
     end
   end
 
-
+  # Computes a person's age as of the end of the relevant tax year.
+  def age(bio = nil)
+    bio ||= form(1040).bio
+    return year - bio.birthday.year
+  end
 end
 
 class TaxForm; class Lines

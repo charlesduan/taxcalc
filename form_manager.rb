@@ -11,10 +11,12 @@ class FormManager
     @interviewer = Interviewer.new
     @explain = {}
     @submanagers = {}
+    @year = nil
   end
 
   attr_reader :name
   attr_reader :interviewer
+  attr_accessor :year
 
   def export_all(io = STDOUT, all = false)
     @ordered_forms.each do |f|
@@ -55,6 +57,8 @@ class FormManager
     if form.manager != self
       raise 'Adding form, but wrong manager'
     end
+    form.check_year
+
     if @forms[name]
       @forms[name] = [ @forms[name], form ].flatten
     else
@@ -149,15 +153,21 @@ class FormManager
   #
   def forms(name)
     name = name.to_s
-    unless @forms.include?(name) or @no_forms.include?(name)
-      warn("Warning: No forms #{name} found for #{@name}.")
-      @no_forms[name] = 1
+    unless @forms.include?(name)
+      ensure_no_forms(name)
     end
     mf = MultiForm.new(@forms[name] || [])
     if block_given?
       mf = mf.select { |f| yield(f) }
     end
     return mf
+  end
+
+  def ensure_no_forms(name)
+    unless @no_forms.include?(name)
+      warn("Warning: No forms #{name} found for #{@name}.")
+      @no_forms[name] = 1
+    end
   end
 
 

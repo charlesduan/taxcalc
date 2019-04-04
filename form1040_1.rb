@@ -1,4 +1,7 @@
 require 'tax_form'
+require 'form8889'
+require 'form1040_d'
+require 'form1040_e'
 
 # Because the adjustments computation can depend on the income computation, this
 # form must be computed in two parts.
@@ -6,6 +9,10 @@ class Form1040_1 < TaxForm
 
   def name
     '1040 Schedule 1'
+  end
+
+  def year
+    2018
   end
 
   def compute
@@ -35,5 +42,17 @@ class Form1040_1 < TaxForm
   end
 
   def compute_adjustments
+
+    line[25] = forms('HSA').map { |f|
+      compute_form(8889, f).line[13]
+    }.sum
+
+    sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
+    line[27] = sched_se.line[13] if sched_se
+
+    ira_analysis.compute_contributions
+    line[32] = ira_analysis.line[32]
+
+    line[36] = sum_lines(23, 24, 25, 26, 27, 28, 29, 30, '31a', 32, 33, 34, 35)
   end
 end

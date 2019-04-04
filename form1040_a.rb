@@ -6,6 +6,10 @@ class Form1040A < TaxForm
     '1040 Schedule A'
   end
 
+  def year
+    2018
+  end
+
   def compute
     line[:name] = form(1040).full_name
     line[:ssn] = form(1040).ssn
@@ -80,6 +84,10 @@ end
 class Pub936Worksheet
   def name
     'Pub. 936 Home Mortgage Interest Worksheet'
+  end
+
+  def year
+    2018
   end
 
   def compute

@@ -11,6 +11,10 @@ class Pub590BWorksheet1_1 < TaxForm
     "Pub. 590-B Worksheet 1-1"
   end
 
+  def year
+    2018
+  end
+
   def compute
     analysis = @ira_analysis
     line[1] = @manager.submanager(:last_year).form(8606).line[14]

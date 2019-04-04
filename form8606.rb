@@ -12,6 +12,10 @@ class Form8606 < TaxForm
     '8606'
   end
 
+  def year
+    2018
+  end
+
   def compute
 
     set_name_ssn

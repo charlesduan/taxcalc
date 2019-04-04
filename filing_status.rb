@@ -53,6 +53,14 @@ class FilingStatus
     end
   end
 
+  def double_mfj(amt)
+    if is('mfj')
+      return amt * 2
+    else
+      return amt
+    end
+  end
+
   def self.for(name)
     raise "Invalid filing status #{name}" unless All[name]
     All[name]

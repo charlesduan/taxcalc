@@ -13,5 +13,9 @@ class NamedForm < TaxForm
     @name
   end
 
+  def check_year
+    return true
+  end
+
 end
 

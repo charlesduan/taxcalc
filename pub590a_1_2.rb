@@ -3,6 +3,10 @@ class Pub590AWorksheet1_2 < TaxForm
     "Pub. 590-A Worksheet 1-2"
   end
 
+  def year
+    2018
+  end
+
   def initialize(manager, ira_analysis)
     super(manager)
     @ira_analysis = ira_analysis

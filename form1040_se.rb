@@ -4,11 +4,18 @@ class Form1040SE < TaxForm
     '1040 Schedule SE'
   end
 
+  def year
+    2018
+  end
+
   def compute
 
-    line[:name] = form('Biographical').line[:first_name] + ' ' + \
-      form('Biographical').line[:last_name]
-    line[:ssn] = form('Biographical').line[:ssn]
+    set_name_ssn
+
+    #
+    # This always uses the long form Schedule SE, because the short-form one
+    # doesn't deduct W-2 wages from the extra social security wages tax.
+    #
 
     line[2] = forms('1040 Schedule C').lines(31, :sum) + \
       forms('1065 Schedule K-1').lines(14, :sum)
@@ -25,7 +32,7 @@ class Form1040SE < TaxForm
     end
 
     line[6] = sum_lines('4c', '5b')
-    line[7] = 127200
+    line[7] = 128400 # Maximum social security wages
 
     line['8a'] = forms('W-2').lines(3, :sum) + forms('W-2').lines(7, :sum)
     line['8d'] = sum_lines('8a', '8b', '8c')
