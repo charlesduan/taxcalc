@@ -2,10 +2,21 @@ require 'tax_form'
 require 'form1040_d'
 require 'form1040_se'
 
+########################################################################
+#
+# ALLOCATION OF TAX AMOUNTS BETWEEN CERTAIN INDIVIDUALS IN COMMUNITY PROPERTY
+# STATES
+#
+########################################################################
+
 class Form8958 < TaxForm
 
   def name
     '8958'
+  end
+
+  def year
+    2018
   end
 
   attr_accessor :my_manager, :spouse_manager
@@ -21,15 +32,7 @@ class Form8958 < TaxForm
 
     split_biographical
 
-    itemize = interview('Do you want to itemize deductions?')
-
-    @my_manager.interviewer.answer('Enter your filing status:', 'mfs')
-    @my_manager.interviewer.answer('Do you want to itemize deductions?',
-                                   itemize ? 'yes' : 'no')
-
-    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs')
-    @spouse_manager.interviewer.answer('Do you want to itemize deductions?',
-                                       itemize ? 'yes' : 'no')
+    @itemize = interview('Do you want to itemize deductions?')
 
     split_w2 = split_forms('W-2')
     split_1099int = split_forms('1099-INT')
@@ -37,7 +40,7 @@ class Form8958 < TaxForm
     split_1099g = split_forms('1099-G')
     split_1099b = split_forms('1099-B')
     split_k1 = split_forms('1065 Schedule K-1')
-    split_1098int = split_forms('1098-INT')
+    split_1098 = split_forms('1098')
     split_state_tax = split_forms('State Tax')
     split_charity = split_forms('Charity Gift')
     split_est_tax = split_forms('Estimated Tax')
@@ -46,13 +49,12 @@ class Form8958 < TaxForm
     split_forms('Dependent')
     split_forms('Home Office')
 
-    bio = form('Biographical')
-    copy_line(:first_name, bio)
-    copy_line(:last_name, bio)
-    copy_line(:ssn, bio)
-    copy_line(:spouse_first_name, bio)
-    copy_line(:spouse_last_name, bio)
-    copy_line(:spouse_ssn, bio)
+    copy_line(:first_name, @my_bio)
+    copy_line(:last_name, @my_bio)
+    copy_line(:ssn, @my_bio)
+    line[:spouse_first_name] = @spouse_bio.line[:first_name]
+    line[:spouse_last_name] = @spouse_bio.line[:last_name]
+    line[:spouse_ssn] = @spouse_bio.line[:ssn]
 
     my_name = "#{line[:first_name]} #{line[:last_name]}"
     spouse_name = "#{line[:spouse_first_name]} #{line[:spouse_last_name]}"
@@ -128,15 +130,15 @@ class Form8958 < TaxForm
     }
     enter_split(12, 'State Tax', split_state_tax, 'amount')
 
-    line[12, :add] = forms('1098-INT').lines('lender').map { |x|
+    line[12, :add] = forms('1098').lines('lender').map { |x|
       "Home mortgage interest: #{x}"
     }
-    enter_split(12, '1098-INT', split_1098int, 1)
+    enter_split(12, '1098', split_1098, 1)
 
-    line[12, :add] = forms('1098-INT').lines('lender').map { |x|
+    line[12, :add] = forms('1098').lines('lender').map { |x|
       "Real estate taxes: #{x}"
     }
-    enter_split(12, '1098-INT', split_1098int, 11)
+    enter_split(12, '1098', split_1098, 10)
 
     line[12, :add] = forms('Charity Gift').lines('name').map { |x|
       "Gifts to charity: #{x}"
@@ -148,28 +150,43 @@ class Form8958 < TaxForm
     }
     enter_split(12, 'Estimated Tax', split_est_tax, 'amount')
 
+    update_managers
+
   end
 
-  def swap_bio
+  #
+  # Updates the individual's FormManager objects with relevant information,
+  # including copies of this Form 8958 itself.
+  def update_managers
+    @my_manager.interviewer.answer('Enter your filing status:', 'mfs')
+    @my_manager.interviewer.answer('Do you want to itemize deductions?',
+                                   @itemize ? 'yes' : 'no')
+
+    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs')
+    @spouse_manager.interviewer.answer('Do you want to itemize deductions?',
+                                       @itemize ? 'yes' : 'no')
+
+    @my_manager.copy_form(self).exportable = true
+    sf = @spouse_manager.copy_form(self)
+    sf.exportable = true
     %w(first_name last_name ssn).each do |item|
-      line[item, :overwrite], line["spouse_#{item}", :overwrite] =
-        line["spouse_#{item}"], line[item]
+      sf.line[item, :overwrite] = line["spouse_#{item}"]
+      sf.line["spouse_#{item}", :overwrite] = line[item]
     end
   end
+
 
   def split_biographical
-    bio = form('Biographical')
-    @my_manager.copy_form(bio).exportable = true
-    spouse_bio = @spouse_manager.copy_form(bio)
-    spouse_bio.exportable = true
-    spouse_bio.line.each do |l, d|
-      if l =~ /^spouse_/
-        l_no_spouse = $'
-        d_no_spouse = spouse_bio.line[l_no_spouse]
-        spouse_bio.line[l, :overwrite] = d_no_spouse
-        spouse_bio.line[l_no_spouse, :overwrite] = d
-      end
-    end
+    bios = forms('Biographical')
+    @my_bio = bios.find { |x| x.line[:whose] == 'mine' }
+    @spouse_bio = bios.find { |x| x.line[:whose] == 'spouse' }
+    raise "Did not find both Biographical forms" unless @my_bio && @spouse_bio
+
+    @my_manager.copy_form(@my_bio)
+    @my_manager.copy_form(@spouse_bio)
+
+    @spouse_manager.copy_form(@my_bio).line[:whose, :overwrite] = 'spouse'
+    @spouse_manager.copy_form(@spouse_bio).line[:whose, :overwrite] = 'mine'
   end
 
   def split_forms(form_name)

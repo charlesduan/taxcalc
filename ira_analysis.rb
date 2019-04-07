@@ -57,7 +57,7 @@ class IraAnalysis < TaxForm
 
     # The next line is not confirmed to be correct yet; currently it should
     # always be zero
-    line[:cash_distribution] = all_10994s.select { |x|
+    line[:cash_distribution] = all_1099rs.select { |x|
       x.line[:destination] == 'cash'
     }.lines(1, :sum)
 

@@ -1,6 +1,8 @@
 require 'tax_table'
 require 'tax_form'
 require 'filing_status'
+require 'form1040_1'
+require 'form1040_2'
 require 'form1040_a'
 require 'form1040_b'
 require 'form1040_d'
@@ -12,6 +14,7 @@ require 'form8960'
 require 'ira_analysis'
 require 'date'
 require 'qbi_simplified_worksheet'
+require 'amt_test_worksheet'
 
 class Form1040 < TaxForm
 
@@ -22,6 +25,8 @@ class Form1040 < TaxForm
   def year
     2018
   end
+
+  MONTHS = %w(jan feb mar apr may jun jul aug sep oct nov dec)
 
   def initialize(manager)
     super(manager)
@@ -61,10 +66,10 @@ class Form1040 < TaxForm
 
     line[:ssn_1], line[:ssn_2], line[:ssn_3] = @bio.line[:ssn].split(/-/)
 
-    unless interview("Can someone claim you as a dependent?")
+    if interview("Can someone claim you as a dependent?")
       line['ysd.dependent'] = 'X'
     end
-    if @bio.line[:birthday] < Date.new(Date.today.year, 1, 2)
+    if @bio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
       line['ysd.65yo'] = 'X'
     end
     line['ysd.blind?'] = 'X' if @bio.line[:blind?]
@@ -78,10 +83,12 @@ class Form1040 < TaxForm
         @sbio.line[:ssn].split(/-/)
     end
 
-    unless interview("Can someone claim your spouse as a dependent?")
+    if interview("Can someone claim your spouse as a dependent?")
       line['ssd.dependent'] = 'X'
     end
-    line['ssd.65yo'] = 'X' if @sbio.line[:birthday] < Date.new(1954, 1, 2)
+    if @sbio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
+      line['ssd.65yo'] = 'X'
+    end
     line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
 
     @force_itemize = false
@@ -92,8 +99,9 @@ class Form1040 < TaxForm
         'Are you a dual-status alien?'
       )
     end
-
-    assert_question('Did you have health insurance the whole year?', true)
+    unless (MONTHS - forms('1095-B').lines[:months, :all]).empty?
+      assert_question('Did you have health insurance the whole year?', true)
+    end
     line['fyhcc'] = 'X'
 
     copy_line('home_address', @bio)
@@ -114,7 +122,7 @@ class Form1040 < TaxForm
     # Dependents
     #
 
-    line['more_than_4_deps'] => 'X' if forms('Dependent').count > 4
+    line['more_than_4_deps'] = 'X' if forms('Dependent').count > 4
     forms('Dependent').each do |dep|
       ssn_parts = dep.line[:ssn].split(/-/)
       row = {
@@ -125,8 +133,8 @@ class Form1040 < TaxForm
         :dep_3 => dep.line[:relationship],
       }
       case dep.line[:qualifying]
-      when 'child' then row[:dep_4_ctc] => 'X'
-      when 'other' then row[:dep_4_other] => 'X'
+      when 'child' then row[:dep_4_ctc] = 'X'
+      when 'other' then row[:dep_4_other] = 'X'
       when 'none'
       else raise "Unknown dependent qualifying type #{dep.line[:qualifying]}"
       end
@@ -149,13 +157,13 @@ class Form1040 < TaxForm
     line['2b'] = sched_b.line[4]
 
     # Dividends
-    line['3a'] = forms('1099-DIV') { |f| f.line['1b', :present }.map { |f|
-      unless line[:qualified_exception?, :present]
-        raise "Indicate that no exception applies to 1099-DIV\n" + \
-          "with qualified dividends, using the qualified_exception? line"
+    line['3a'] = forms('1099-DIV') { |f| f.line['1b', :present] }.map { |f|
+      unless f.line[:qexception?, :present]
+        raise "Indicate that no exception applies to 1099-DIV " + \
+          "with qualified dividends, using the qexception? line"
       end
-      line[:qualified_exception?] ? 0 : line['1b']
-    }.sum
+      f.line[:qexception?] ? 0 : f.line['1b']
+    }.inject(:+)
     line['3b'] = sched_b.line[6]
 
     # IRAs, pensions, and annuities
@@ -186,10 +194,12 @@ class Form1040 < TaxForm
       end
     end
 
-    if %w(
+    %w(
       ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
-    ).any? { |l| line[l, :present] }
-      raise "Cannot handle special standard deductions"
+    ).each do |l|
+      if line[l, :present]
+        raise "Cannot handle special standard deduction for #{l}"
+      end
     end
     sd = status.standard_deduction
     if itemize || choose_itemize
@@ -213,29 +223,11 @@ class Form1040 < TaxForm
     end
     line[10] = line[7] - sum_lines(8, 9)
 
+    # Tax
+    line['11a'] = compute_tax
+
+    return
     ### STOP WORK ###
-
-    line[41] = line[38] - line[40]
-
-    if line[38] <= status.exemption_threshold
-      line[42] = 4050 * line['6d']
-    else
-      edw = @manager.compute_form(ExemptionsDeductionsWorksheet)
-      line[42] = edw.line['fill']
-    end
-
-    line[43] = [ line[41] - line[42], 0 ].max
-
-    line[44] = compute_tax
-
-    amt_test = @manager.compute_form(AMTTestWorksheet)
-    if amt_test.line['fillform'] == 'yes'
-      line[45] = @manager.compute_form(Form6251).line[35]
-    end
-
-    assert_no_forms('1095-A') # Line 46
-
-    line[47] = sum_lines(44, 45, 46)
 
     # Line 48
     assert_question("Did you pay any foreign taxes?", false)
@@ -264,12 +256,13 @@ class Form1040 < TaxForm
     line[55] = sum_lines(*48..54)
     line[56] = [ 0, line[47] - line[55] ].max
 
+    sched_se = compute_form(Form1040SE) unless has_form?('1040 Schedule SE')
     if has_form?('1040 Schedule SE')
       line[57] = form('1040 Schedule SE').line[12]
     end
 
     l62 = BlankZero
-    f8959 = @manager.compute_form(Form8959)
+    f8959 = compute_form(Form8959)
     if f8959 && f8959.needed?
       line['62a'] = 'X'
       l62 += f8959.line[18]
@@ -341,20 +334,36 @@ class Form1040 < TaxForm
 
 
   def compute_tax
+    if unearned_income > 2100
+      raise "Form 8615 is not implemented"
+    end
+
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       if sched_d.line['20no', :present]
         line[:tax_method] = 'Sch D'
-        return compute_tax_schedule_d
+        return compute_tax_schedule_d # Not implemented; raises error
       elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
         line[:tax_method] = 'QDCGTW'
         return compute_tax_qdcgt
       end
-    elsif line['9b', :present] or line[13, :present]
+    elsif line['3a', :present] or form('1040 Schedule 1').line[13, :present]
       return compute_tax_qdcgt
-    else
-      return compute_tax_standard(line[43])
     end
+
+    # Default computation method
+    return compute_tax_standard(line[10])
+  end
+
+  def unearned_income
+    total = sum_lines(*%w(2b 3b))
+    with_form('1040 Schedule 1') do |f|
+      total += f.sum_lines(13, 14)
+    end
+    with_form('1040 Schedule E') do |f|
+      total += f.sum_lines(26, '29a.h', '34a.d')
+    end
+    return total
   end
 
   def compute_tax_standard(income)
@@ -367,7 +376,7 @@ class Form1040 < TaxForm
     end
   end
 
-  include TaxTable
+  include TaxTable # This adds compute_tax_table
 
   def compute_tax_worksheet(income)
     raise 'Worksheet not applicable for less than $100,000' if income < 100000
@@ -394,15 +403,16 @@ class QdcgtWorksheet < TaxForm
 
   def compute
     f1040 = form(1040)
-    line[1] = f1040.line[43]
-    line[2] = f1040.line['9b']
+    assert_no_forms(2555, '2555-EZ')
+    line[1] = f1040.line[10]
+    line[2] = f1040.line['3a']
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       line['3yes'] = 'X'
       line[3] = [ 0, [ sched_d.line[15], sched_d.line[16] ].min ].max
     else
       line['3no'] = 'X'
-      line[3] = f1040.line[13]
+      line[3] = form('1040 Schedule 1').line[13]
     end
 
     line[4] = line[2] + line[3]
@@ -436,68 +446,6 @@ class QdcgtWorksheet < TaxForm
     line[25] = sum_lines(20, 23, 24)
     line[26] = form(1040).compute_tax_standard(line[1])
     line[27] = [ line[25], line[26] ].min
-  end
-end
-
-class AMTTestWorksheet < TaxForm
-  def name
-    "Worksheet to See If You Should Fill In Form 6251"
-  end
-
-  def compute
-    f1040 = form(1040)
-    with_or_without_form('1040 Schedule A') do |sched_a|
-      if sched_a
-        line['1yes'] = 'X'
-        line[1] = f1040.line[41]
-        line[2] = sched_a.sum_lines(9, 27)
-        line[3] = sum_lines(1, 2)
-      else
-        line['1no'] = 'X'
-        line[3] = form(1040).line(38)
-      end
-    end
-
-    line[4] = f1040.sum_lines(10, 21)
-    if has_form?('Itemized Deduction Worksheet')
-      line[5] = form('Itemized Deduction Worksheet').line[9]
-    end
-    line[6] = sum_lines(4, 5)
-    line[7] = line[3] - line[6]
-    line[8] = f1040.status.amt_exemption
-    if line[7] <= line[8]
-      line['9no'] = 'X'
-      line['fillform'] = 'no'
-      return
-    end
-    line['9yes'] = 'X'
-    line[9] = line[7] - line[8]
-    line[10] = f1040.status.amt_exemption_2
-    if line[7] <= line[10]
-      line['11no'] = 'X'
-      line[11] = 0
-      line[13] = line[9]
-    else
-      line['11yes'] = 'X'
-      line[11] = line[7] - line[10]
-      line[12] = [ line[8], (line[11] * 0.25).round ].min
-      line[13] = line[9] + line[12]
-    end
-    if line[13] > f1040.status.halve_mfs(187800)
-      line['14yes'] = 'X'
-      line['fillform'] = 'yes'
-      return
-    else
-      line['14no'] = 'X'
-      line[14] = (line[13] * 0.26).round
-    end
-    assert_no_forms('1040 Schedule J')
-    line[15] = f1040.sum_lines(44, 46)
-    if line[14] > line[15]
-      line['fillform'] = 'yes'
-    else
-      line['fillform'] = 'no'
-    end
   end
 end
 
@@ -536,54 +484,31 @@ class ChildTaxCreditWorksheet < TaxForm
   end
 end
 
-class ExemptionsDeductionsWorksheet < TaxForm
-  def name
-    'Deduction for Exemptions Worksheet'
-  end
-
-  def compute
-    line[2] = form(1040).line['6d'] * 4050
-    line[3] = form(1040).line(38)
-    line[4] = form(1040).status.exemption_threshold
-    line[5] = line[3] - line[4]
-
-    if line[5] > form(1040).status.halve_mfs(122500)
-      line['fill'] = 0
-      return
-    end
-
-    line[6] = (line[5] / form(1040).status.halve_mfs(2500.0)).ceil
-    line[7] = (line[6] * 0.02).round(3)
-    line[8] = (line[2] * line[7]).round
-    line['fill'] = line[9] = line[2] - line[8]
-  end
-end
-
-
 FilingStatus.set_param('standard_deduction', 12000, 24000, :single, 18000, :mfj)
+FilingStatus.set_param('qdcgt_exemption', 38600, 77200, :single, 51700, :mfj)
+FilingStatus.set_param('qdcgt_cap', 425800, 479000, 239500, 452400, :mfj)
 
 # Not updated for 2018:
-FilingStatus.set_param('exemption_threshold', 261500, 313800, 156900, 287650,
-                       313800)
-FilingStatus.set_param('qdcgt_exemption', 37950, 75900, 37950, 50800, 75900)
-FilingStatus.set_param('qdcgt_cap', 418400, 470700, 235350, 444550, 470700)
-FilingStatus.set_param('amt_exemption', 54300, 84500, 42250, 54300, 84500)
-FilingStatus.set_param('amt_exemption_2', 120700, 160900, 80450, 120700, 160900)
 FilingStatus.set_param('line_51_credit', 31000, 62000, 31000, 64500, 31000)
 
 # Not inflation-adjusted
 FilingStatus.set_param('child_tax_limit', 75000, 110000, 55000, 75000, 75000)
 FilingStatus.set_param('niit_threshold', 200000, 250000, 125000, 200000, 250000)
 
+# A one-liner that will convert the tables of the tax brackets worksheet into
+# the appropriate forms below:
+#
+# perl -ne 's/,//g; /(?:not over \$(\d+).*)? \((0\.\d+)\).*\$ *([\d.]+)/; $a = $1 || 'nil'; print "[ $a, $2, $3 ],\n"'
+#
 FilingStatus.set_param(
   'tax_brackets',
   nil,
   nil,
   [
-    [ 116675, 0.28, 6557.75 ],
-    [ 208350, 0.33, 12391.50 ],
-    [ 235350, 0.35, 16558.50 ],
-    [ nil, 0.396, 27384.60 ]
+    [ 157500, 0.24, 5710.50 ],
+    [ 200000, 0.32, 18310.50 ],
+    [ 300000, 0.35, 24310.50 ],
+    [ nil, 0.37, 30310.50 ],
   ],
   nil,
   nil

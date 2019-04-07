@@ -11,11 +11,11 @@ class Form8889 < TaxForm
   end
 
   def initialize(manager, hsa_form)
+    super(manager)
     @hsa_form = hsa_form
-    @bio = forms(:Biographical).find { |f|
+    @bio = forms('Biographical').find { |f|
       f.line[:ssn] == @hsa_form.line[:ssn]
     }
-    super(manager)
   end
 
   def compute
@@ -25,7 +25,7 @@ class Form8889 < TaxForm
     line["1_#{compute_family_or_self}"] = 'X'
     line[2] = @hsa_form.line[:contributions]
     hdhp_last_month_forms = forms('1095-B') { |f|
-      f.line[:hdhp?] == true && f.line[:months].include?('dec')
+      f.line[:hdhp?] == true && f.line[:months, :all].include?('dec')
     }
     if hdhp_last_month_forms.any? { |f| f.line[:coverage] == 'family' }
       line[3] = 6900
@@ -36,7 +36,8 @@ class Form8889 < TaxForm
     end
 
     assert_question('Do you or your spouse have an Archer MSA?', false)
-    line[5] = line4 - line3
+    line[4] = 0
+    line[5] = line3 - line4
 
     allocate_hsa_limit # Line 6
 
@@ -44,7 +45,7 @@ class Form8889 < TaxForm
       raise "Over-55 HSA contribution increase not implemented"
     end
 
-    line[8] = line6 + line7
+    line[8] = sum_lines(6, 7)
 
     line[9] = employer_contributions
     assert_question(
@@ -70,7 +71,7 @@ class Form8889 < TaxForm
 
     forms('1095-B').each do |f|
       next unless f.line[:hdhp?]
-      case line[:coverage]
+      case f.line[:coverage]
       when 'family'
         return 'family' if f.line[:months, :all].include?('dec')
         family_months &= f.line[:months, :all]
@@ -95,12 +96,12 @@ class Form8889 < TaxForm
     # HSA forms, or if the status is married filing separately and the spouse's
     # manager contains a form HSA or 8889.
     #
-    if forms('HSA') > 1
+    if forms('HSA Contribution').count > 1
       other_8889_form = forms(8889).find { |f| f != self }
     elsif form(1040).status.is('mfs')
-      if submanager(:spouse).has_form?(8889)
-        other_8889_form = submanager(:spouse).form(8889)
-      elsif submanager(:spouse).has_form?(:HSA)
+      if @manager.submanager(:spouse).has_form?(8889)
+        other_8889_form = @manager.submanager(:spouse).form(8889)
+      elsif @manager.submanager(:spouse).has_form?('HSA Contribution')
         other_8889_form = nil
       end
     else
@@ -111,8 +112,8 @@ class Form8889 < TaxForm
       line[6] = line[5] - other_8889_form.line[6]
     else
       line[6] = interview(
-        "How much of the HSA limit #{line[5]} do you want to allocate to "
-        + @bio.line[:first_name] + ":"
+        "How much of the HSA limit #{line[5]} do you want to allocate to " + \
+        @bio.line[:first_name] + ":"
       )
       raise "Invalid HSA limit allocation" if line[6] > line[5]
     end
@@ -123,7 +124,7 @@ class Form8889 < TaxForm
     total = BlankZero
     forms('W-2').each do |f|
       next unless f.line[:a] == @bio.line[:ssn]
-      l12w = line['12.code', :all].index('W')
+      l12w = f.line['12.code', :all].index('W')
       next unless l12w
       total += f.line[12, :all][l12w]
     end

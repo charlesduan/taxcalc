@@ -48,7 +48,8 @@ class TaxForm
   end
 
   def year
-    raise "Form's year not set"
+    warn "Form #{name} has no year set"
+    return 0
   end
 
   def check_year
@@ -165,8 +166,8 @@ class TaxForm
     end
   end
 
-  def compute_form(form_class)
-    @manager.compute_form(form_class)
+  def compute_form(form_class, *args)
+    @manager.compute_form(form_class, *args)
   end
 
   def find_or_compute_form(name, form_class)
@@ -254,16 +255,23 @@ class TaxForm
     end
   end
 
-  def set_name_ssn
+  def set_name_ssn(lname = :ssn)
     set_name
-    line[:ssn] = form(1040).bio.line[:ssn]
+    line[lname] = forms('Biographical').find { |x|
+      x.line[:whose] == 'mine'
+    }.line[:ssn]
   end
 
   def set_name
-    f = form(1040)
-    names = f.bio.line[:first_name] + ' ' + f.bio.line[:last_name]
-    if f.sbio && f.status.is('mfj')
-      names += ' & ' + f.sbio.line[:first_name] + ' ' + f.sbio.line[:last_name]
+    bio = forms('Biographical').find { |x|
+      x.line[:whose] == 'mine'
+    }
+    names = bio.line[:first_name] + ' ' + bio.line[:last_name]
+    with_form(1040) do |f|
+      if f.sbio && f.status.is('mfj')
+        names += ' & ' + f.sbio.line[:first_name] + ' ' + \
+          f.sbio.line[:last_name]
+      end
     end
     line[:name] = names
   end
@@ -275,7 +283,7 @@ class TaxForm
   def match_forms(form_name, line_name, other_line_name = nil)
     other_line_name ||= line_name
     return forms(form_name) { |f|
-      line[line_name] == f[other_line_name]
+      line[line_name] == f.line[other_line_name]
     }
   end
 
@@ -293,7 +301,7 @@ class TaxForm
   # Computes a person's age as of the end of the relevant tax year.
   def age(bio = nil)
     bio ||= form(1040).bio
-    return year - bio.birthday.year
+    return year - bio.line[:birthday].year
   end
 end
 

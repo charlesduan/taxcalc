@@ -90,7 +90,7 @@ class Form8606 < TaxForm
   def compute_4_to_5
     line[4] = [
       forms('Traditional IRA Contribution') { |f|
-        f.date >= Date.new(Date.today.year, 1, 1)
+        f.line[:date].year > @manager.year
       }.lines(:amount, :sum),
       line[1]
     ].min

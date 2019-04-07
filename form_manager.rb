@@ -104,8 +104,8 @@ class FormManager
   # the form requires computing any subforms that expect the form under
   # computation to be present.
   #
-  def compute_form(f)
-    f = f.new(self) if f.is_a?(Class)
+  def compute_form(f, *args)
+    f = f.new(self, *args) if f.is_a?(Class)
     add_form(f)
     f.explain("Computing Form #{f.name} for #{name}")
     f.compute

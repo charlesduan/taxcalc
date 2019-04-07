@@ -6,6 +6,10 @@ class Form1040D < TaxForm
     '1040 Schedule D'
   end
 
+  def year
+    2017
+  end
+
   def needed?
     has_form?(8949) or line[7] != 0 or line[15] != 0 or line[16] != 0
   end

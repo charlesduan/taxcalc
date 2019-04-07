@@ -18,7 +18,7 @@ class Form1040A < TaxForm
       forms('W-2').lines(17, :sum)
     line['5b'] = forms('1098').lines(10, :sum)
     line['5d'] = sum_lines(*%w(5a 5b 5c))
-    line['5e'] = [ form(1040).status.halve_mfs(10_000), line['5d'] ]
+    line['5e'] = [ form(1040).status.halve_mfs(10_000), line['5d'] ].min
 
     line[7] = sum_lines('5e', 6)
 
@@ -68,7 +68,7 @@ class Form1040A < TaxForm
 
     f1098s = forms(1098) { |f| f.line[:property, :present] }
     f1098s.each do |f|
-      ho_forms = f.match_forms('Home Office')
+      ho_forms = f.match_forms('Home Office', :property)
       ho_forms.each do |ho|
         next if ho.line[:method] == 'simplified'
         raise "Cannot yet handle adjustment of Schedule A for home offices"
@@ -81,7 +81,7 @@ class Form1040A < TaxForm
   end
 end
 
-class Pub936Worksheet
+class Pub936Worksheet < TaxForm
   def name
     'Pub. 936 Home Mortgage Interest Worksheet'
   end
@@ -94,15 +94,17 @@ class Pub936Worksheet
     f1098s = forms(1098) { |f| f.line[:property, :present] }
     return if f1098s.empty?
 
+    # TODO: This uses line 2 for the mortgage principal, although a smaller
+    # number could correctly be used per the instructions.
     grandfathered, pre_tcja, post_tcja = 0, 0, 0
     f1098s.each do |f1098|
       p = f1098.match_form('Real Estate', :property)
-      if p.purchase_date <= Date.new(1987, 10, 13)
-        grandfathered += f1098.line[:balance]
-      elsif p.purchase_date < Date.new(2017, 12, 16)
-        pre_tcja += f1098.line[:balance]
+      if p.line[:purchase_date] <= Date.new(1987, 10, 13)
+        grandfathered += f1098.line[2]
+      elsif p.line[:purchase_date] < Date.new(2017, 12, 16)
+        pre_tcja += f1098.line[2]
       else
-        post_tcja += f1098.line[:balance]
+        post_tcja += f1098.line[2]
       end
     end
     line[1] = grandfathered

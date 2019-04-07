@@ -1,10 +1,13 @@
 require 'form4562'
+require 'home_office'
 
 class Form1040E < TaxForm
 
   def name
     '1040 Schedule E'
   end
+
+  include HomeOfficeManager
 
   def compute
     line[:name] = form(1040).full_name
@@ -19,10 +22,14 @@ class Form1040E < TaxForm
       false
     )
 
-    if form('Home Office Manager').line[:upe, :present]
-      line['27.yes'] = 'X'
-    else
+    ho_upes = {}
+    home_office_partnership do |ho_form, entry|
+      ho_upes[ho_form.line[:ein]] = entry
+    end
+    if ho_upes.empty?
       line['27.no'] = 'X'
+    else
+      line['27.yes'] = 'X'
     end
 
     assert_question('Are any of your partnerships foreign?', false)
@@ -44,10 +51,10 @@ class Form1040E < TaxForm
       )
     end
 
-    if form('Home Office Manager').line[:upe, :present]
+    ho_upes.each do |ein, deduction|
       add_table_row(
-        '28a' => 'UPE',
-        '28h' => form('Home Office Manager').line[:upe, :sum]
+        '28a' => "UPE (#{ein})",
+        '28h' => deduction
       )
     end
 

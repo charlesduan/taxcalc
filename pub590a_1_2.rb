@@ -75,12 +75,13 @@ class Pub590AWorksheet1_2 < TaxForm
     # Compensation minus self-employment tax and SEP/SIMPLE/qualified plans
     line5 = form(1040).line[1]
     with_form('1040 Schedule 1') do |f|
-      line5 -= f.line[27] + f.line[28]
+      line5 -= f.sum_lines(27, 28)
     end
     if form(1040).status.is('mfj')
       # TODO: If spouse's income is greater, then add it minus spouse's IRA
-      # conributions
+      # contributions
     end
+    line[5] = line5
 
     # IRA contributions for this year
     line[6] = [

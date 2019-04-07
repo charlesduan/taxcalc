@@ -1,41 +1,18 @@
-#!/usr/bin/ruby
+module HomeOfficeManager
 
-if __FILE__ == $0
-  $LOAD_PATH.push(File.dirname(__FILE__))
-  require 'form_manager'
-end
-
-class HomeOfficeManager < TaxForm
-
-  def name
-    'Home Office Manager'
-  end
-
-  def compute
-    forms('Home Office').each do |ho_form|
-      case ho_form.line['type'].downcase
-      when 'partnership', 'partner'
-        compute_partnership(ho_form)
-      else
-        raise "Cannot handle home office for #{ho_form.line['type']}"
+  def home_office_partnership
+    forms('Home Office') { |f| f.line['type'] == 'partnership' }.each do |f|
+      unless f.line['method'] == 'simplified'
+        raise 'Actual home office expense method not implemented'
       end
-    end
-  end
 
-  def compute_partnership(ho_form)
-    unless ho_form.line['method'] == 'simplified'
-      raise 'Actual home office expense method not implemented'
-    end
-
-    forms('1065 Schedule K-1').each do |k1_form|
-      next unless k1_form.line['A'] == ho_form.line['ein']
-      f = @manager.compute_form(
-        Pub587SimplifiedWorksheet.new(@manager, k1_form)
+      k1 = forms('1065 Schedule K-1').find { |k| k.line['A'] == f.line['ein'] }
+      raise "No matching 1065 Schedule K-1 for Home Office form" unless k1
+      ws = @manager.compute_form(
+        Pub587Worksheet.new(@manager, f, k1)
       )
-      line[:upe, :add] = f.line[:fill] if f.line[:fill] != 0
-      return
+      yield(f, ws.line[:fill]) if ws.line[:fill] != 0
     end
-    raise "No matching 1065 Schedule K-1 for Home Office form"
   end
 
 end
@@ -49,6 +26,7 @@ class Pub587Worksheet < TaxForm
   def initialize(manager, ho_form, income_form)
     super(manager)
     @ho_form = ho_form
+    @income_form = income_form
   end
 
   def compute

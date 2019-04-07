@@ -7,6 +7,8 @@
 
 \maketitle
 
+\tableofcontents
+
 This is a software system for automating the computation and filling of tax
 forms. Much like commercial software for tax preparation, the object of the
 system is to allow a user to enter data from received tax forms and other
@@ -184,8 +186,24 @@ the asset for DC Form FP-31, lines 1--3.
 \end{description}
 
 
+\subsection{Biographical}
 
+Biographical information for an individual tax filer. Spouses should have a
+separate Biographical form.
 
+\begin{description}
+\item[whose] The individual to whom this form pertains. May be ``mine'' or
+``spouse''.
+\item[first\_name] The first name and middle initial.
+\item[last\_name] The last name.
+\item[phone] Telephone number.
+\item[ssn] Social Security number, with dashes.
+\item[home\_address] The first line of the home address.
+\item[apt\_no] The apartment number for the address.
+\item[city\_zip] The city, state, and ZIP code.
+\item[birthday] The person's birthday.
+\item[blind?] Whether the person is blind.
+\end{description}
 
 \subsection{Business Expense}
 
@@ -229,7 +247,7 @@ A dependent.
 dependents, and ``none'' where the dependent is not qualifying.
 \end{description}
 
-\subsection{HSA}
+\subsection{HSA Contribution}
 
 Records of contributions to an HSA account.
 
@@ -252,6 +270,16 @@ only supported type is ``partnership''.
 \item[daycare?] Whether the relevant business was a daycare.
 \item[property] The name of the Real Estate form with which this home office is
 associated.
+\end{description}
+
+\subsection{State Tax}
+
+A record of state taxes paid in the relevant tax year (usually for the previous
+year).
+
+\begin{description}
+\item[amount] The amount of tax paid.
+\item[name] A description (not used for computation).
 \end{description}
 
 \subsection{Traditional IRA Contribution}

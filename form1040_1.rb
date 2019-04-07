@@ -43,13 +43,14 @@ class Form1040_1 < TaxForm
 
   def compute_adjustments
 
-    line[25] = forms('HSA').map { |f|
-      compute_form(8889, f).line[13]
-    }.sum
+    line[25] = forms('HSA Contribution').map { |f|
+      compute_form(Form8889, f).line[13]
+    }.inject(:+)
 
     sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
     line[27] = sched_se.line[13] if sched_se
 
+    ira_analysis = form('IRA Analysis')
     ira_analysis.compute_contributions
     line[32] = ira_analysis.line[32]
 
