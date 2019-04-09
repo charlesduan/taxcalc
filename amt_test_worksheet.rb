@@ -5,6 +5,10 @@ class AMTTestWorksheet < TaxForm
     "Worksheet to See If You Should Fill In Form 6251"
   end
 
+  def year
+    2018
+  end
+
   def compute
     f1040 = form(1040)
     with_or_without_form('1040 Schedule A') do |sched_a|

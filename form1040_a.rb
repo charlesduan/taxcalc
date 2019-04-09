@@ -62,7 +62,7 @@ class Form1040A < TaxForm
   def compute_mortgage_interest
     assert_question("Did you receive non-1098 mortgage interest?", false)
     p936w = compute_form(Pub936Worksheet)
-    if p936w.line[16] != 0
+    if p936w && p936w.line[16] != 0
       raise "Not able to handle mortgage interest deduction limit"
     end
 
@@ -75,7 +75,7 @@ class Form1040A < TaxForm
       end
     end
 
-    line['8a'] = p936w.line[15]
+    line['8a'] = p936w.line[15] if p936w
     line['8e'] = sum_lines(*%w(8a 8b 8c))
 
   end
@@ -132,6 +132,10 @@ class Pub936Worksheet < TaxForm
       line[15] = (line[13] * line[14]).round
       line[16] = line[13] - line[15]
     end
+  end
+
+  def needed?
+    line[16, :present]
   end
 end
 

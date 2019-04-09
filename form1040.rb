@@ -3,6 +3,9 @@ require 'tax_form'
 require 'filing_status'
 require 'form1040_1'
 require 'form1040_2'
+require 'form1040_3'
+require 'form1040_4'
+require 'form1040_5'
 require 'form1040_a'
 require 'form1040_b'
 require 'form1040_d'
@@ -226,107 +229,69 @@ class Form1040 < TaxForm
     # Tax
     line['11a'] = compute_tax
 
-    return
-    ### STOP WORK ###
-
-    # Line 48
-    assert_question("Did you pay any foreign taxes?", false)
-    assert_no_lines('1099-DIV', 6)
-    assert_no_lines('1099-INT', 6)
-
-    unless status.is('mfs')
-      # Line 49
-      assert_question('Did you pay child care expenses?', false)
-
-      # Line 50
-      assert_question("Did you pay education expenses?", false)
+    sched_2 = compute_form(Form1040_2)
+    if sched_2
+      line['11b'] = 'X'
+      line[11] = line['11a'] + sched_2.line[47]
+    else
+      line[11] = line['11a']
     end
 
-    # Line 51
-    if line[38] <= status.line_51_credit
-      raise 'Retirement Savings Contributions Credit not implemented'
+    compute_form(Form1040_3)
+
+    # Child tax credit and other credits
+    line['12a'] = @manager.compute_form(ChildTaxCreditWorksheet).line['fill']
+    with_or_without_form('1040 Schedule 3') do |f|
+      if f
+        line['12b'] = 'X'
+        line[12] = line['12a'] + f.line[55]
+      else
+        line[12] = line['12a']
+      end
     end
 
-    # Line 52
-    line[52] = @manager.compute_form(ChildTaxCreditWorksheet).line['fill']
+    line[13] = line[11] - line[12]
 
-    # Line 53
-    assert_question("Did you install energy-efficient home equipment?", false)
+    line[14] = compute_form(Form1040_4).line[64]
 
-    line[55] = sum_lines(*48..54)
-    line[56] = [ 0, line[47] - line[55] ].max
+    line[15] = sum_lines(13, 14)
+    line[16] = forms('W-2').lines(2, :sum)
 
-    sched_se = compute_form(Form1040SE) unless has_form?('1040 Schedule SE')
-    if has_form?('1040 Schedule SE')
-      line[57] = form('1040 Schedule SE').line[12]
+    # 17a: earned income credit. Inapplicable for mfs status.
+    # 17b: child credit.
+    with_form('Child Tax Credit Worksheet') do |f|
+      if f.line['11.yes', :present] || f.line['12.yes', :present]
+        raise "Refundable child tax credit not implemented"
+      end
     end
+    # 17c: American Opportunity (education) credit. Inapplicable for mfs status.
 
-    l62 = BlankZero
-    f8959 = compute_form(Form8959)
-    if f8959 && f8959.needed?
-      line['62a'] = 'X'
-      l62 += f8959.line[18]
-    end
+    line['17_sch5'] = compute_form(Form1040_5).line[75]
 
-    if line[38] > status.niit_threshold
-      f8960 = @manager.compute_form(Form8960)
-      line['62b'] = 'X'
-      l62 += f8960.line[17]
-    end
-    line[62] = l62
+    line[17] = sum_lines(*%w(17a 17b 17c 17_sch5))
 
-    line[63] = sum_lines(56, 57, 58, 59, '60a', '60b', 61, 62)
+    # Total payments
+    line[18] = sum_lines(16, 17)
 
-    line[64] = forms('W-2').lines(2, :sum)
-    line[65] = forms('Estimated Tax').lines('amount', :sum)
+    if line[18] > line[15]
 
-    ss_threshold = 7886
-    ss_tax_paid = forms('W-2').lines[4].map { |x|
-      warn "Employer withheld too much social security tax" if x > ss_threshold
-      [ x, ss_threshold ].min
-     }.inject(:+)
-     # The next line isn't exactly correct for mfj filers
-     ss_threshold *= 2 if @status.is('mfj')
-     if ss_tax_paid > ss_threshold
-       line[71] = ss_tax_paid - ss_threshold
-     end
-
-    line[74] = sum_lines(64, 65, '66a', 67, 68, 69, 70, 71, 72, 73)
-
-    if line[74] > line[63]
-      line[75] = line[74] - line[63]
-      line['76a'] = line[75]
+      # Refund
+      line[19] = line[18] - line[15]
+      line['20a'] = line[19]
       if interview("Do you want your refund direct deposited?")
-        line['76b'] = interview("Direct deposit routing number:")
+        line['20b'] = interview("Direct deposit routing number:")
         if interview("Direct deposit is to checking?")
-          line['76c.checking'] = 'X'
+          line['20c.checking'] = 'X'
         else
-          line['76c.savings'] = 'X'
+          line['20c.savings'] = 'X'
         end
-        line['76d'] = interview("Direct deposit account number:")
+        line['20d'] = interview("Direct deposit account number:")
       end
     else
-      line[78] = line[63] - line[74]
 
-      assert_no_forms(8828, 4137, 5329, 8885, 8919)
-      tax_shown = line[63] - sum_lines(61, '66a', 67, 68, 69, 72)
-
-      if line[78] > 1000 && line[78] > 0.1 * tax_shown
-
-        last_year_tax = interview('Enter your last year\'s tax shown:')
-        unless last_year_tax == 0
-          penalty_threshold = last_year_tax
-          last_year_agi = interview('Enter your last year\'s AGI:')
-          if last_year_agi > status.halve_mfs(150000)
-            penalty_threshold = (1.1 * last_year_tax)
-          end
-
-          unless sum_lines(64, 65, 71) >= penalty_threshold
-            warn "Penalty computation not implemented"
-          end
-
-        end
-      end
+      # Amount owed
+      line[22] = line[15] - line[18]
+      compute_penalty
     end
 
 
@@ -394,6 +359,36 @@ class Form1040 < TaxForm
     return f.line[27]
   end
 
+  def compute_penalty
+    assert_no_forms(8828, 4137, 5329, 8885, 8919)
+    tax_shown = line[15] - sum_lines(*%w(17a 17b 17c))
+    with_form('1040 Schedule 4') do |f| tax_shown -= f.line[61, :opt] end
+    with_form('1040 Schedule 5') do |f| tax_shown -= f.sum_lines(70, 73) end
+
+    # Test if a penalty is owed. First check if the amount owed is over $1000
+    # and also over 10% of tax shown.
+    if line[22] > 1000 && line[22] > 0.1 * tax_shown
+
+      ly1040 = @manager.submanager(:last_year).form(1040)
+      # Last year's tax shown
+      last_year_tax = ly1040.line[63] - \
+        ly1040.sum_lines(*%w(61 66a 67 68 69 72))
+
+      unless last_year_tax == 0
+        penalty_threshold = last_year_tax
+        last_year_agi = ly1040.line[37]
+        if last_year_agi > status.halve_mfs(150000)
+          penalty_threshold = (1.1 * last_year_tax)
+        end
+
+        unless sum_lines(64, 65, 71) >= penalty_threshold
+          warn "Penalty computation not implemented"
+        end
+
+      end
+    end
+  end
+
 end
 
 class QdcgtWorksheet < TaxForm
@@ -454,33 +449,96 @@ class ChildTaxCreditWorksheet < TaxForm
     'Child Tax Credit Worksheet'
   end
 
+  def year
+    2018
+  end
+
   def compute
-    line['1num'] = form(1040).line['6c4', :all].select { |x| x == 'X' }.count
-    if line['1num'] == 0
-      line['fill'] = BlankZero
+    f1040 = form(1040)
+    if f1040.line[:dep_4_ctc, :present]
+      line['1num'] = f1040.line[:dep_4_ctc, :all].count { |x| x == 'X' }
+      line[1] = line['1num'] * 2000
+    end
+
+    if f1040.line[:dep_4_other, :present]
+      line['2num'] = f1040.line[:dep_4_other, :all].count { |x| x == 'X' }
+      line[2] = line['2num'] * 500
+    end
+
+    line[3] = sum_lines(1, 2)
+    if line[3] == 0
+      line[:fill] = 0
       return
     end
 
-    line[1] = line['1num'] * 1000
-    line[2] = form(1040).line[38]
-    line[3] = form(1040).status.child_tax_limit
-    if line[2] > line[3]
-      line[5] = 0
-    else
-      l4 = line[2] - line[3]
-      if l4 % 1000 == 0
-        line[4] = l4
+    # Income limits
+    line[4] = f1040.line[7]
+    line[5] = f1040.status.double_mfj(200_000)
+    if line[4] > line[5]
+      line['6.yes'] = 'X'
+      l6 = line[4] - line[5]
+      if l6 % 1000 == 0
+        line[6] = l6
       else
-        line[4] = l4.round(-3) + 1000
+        line[6] = l6.round(-3) + 1000
       end
-      line[5] = line[4] / 20
-    end
-    if line[1] <= line[5]
-      raise 'Child tax credit not implemented'
+      line[7] = (line[6] * 0.05).round
     else
-      line['fill'] = BlankZero
+      line['6.no'] = 'X'
+      line[7] = 0
+    end
+
+    if line[3] > line[7]
+      line['8.yes'] = 'X'
+      line[8] = line[3] - line[7]
+    else
+      line['8.no'] = 'X'
+      line[:fill] = BlankZero
       return
     end
+
+    line[9] = f1040.line[11]
+
+    with_form('1040 Schedule 3') do |f|
+      line['10_3_48'] = f.line[48, :opt]
+      line['10_3_49'] = f.line[49, :opt]
+      line['10_3_50'] = f.line[50, :opt]
+      line['10_3_51'] = f.line[51, :opt]
+    end
+    with_form(5695) do |f|
+      line['10_5695_30'] = f.line[30, :opt]
+    end
+    with_form(8910) do |f|
+      line['10_8910_15'] = f.line[15, :opt]
+    end
+    with_form(8936) do |f|
+      line['10_8936_23'] = f.line[23, :opt]
+    end
+    with_form('1040 Schedule R') do |f|
+      line['10_r_22'] = f.line[22, :opt]
+    end
+    line[10] = sum_lines(*%w(
+      10_3_48 10_3_49 10_3_50 10_3_51 10_5695_30 10_8910_15 10_8936_23 10_r_22
+    ))
+
+    if line[10] >= line[9]
+      line['11.yes'] = 'X'
+      line[:fill] = 0
+      return
+    end
+    line['11.no'] = 'X'
+    line[11] = line[9] - line[10]
+
+    if line[8] > line[11]
+      line['12.yes'] = 'X'
+      line[12] = line[11]
+    else
+      line['12.no'] = 'X'
+      line[12] = line[8]
+    end
+
+    line[:fill] = line[12]
+
   end
 end
 
@@ -490,10 +548,6 @@ FilingStatus.set_param('qdcgt_cap', 425800, 479000, 239500, 452400, :mfj)
 
 # Not updated for 2018:
 FilingStatus.set_param('line_51_credit', 31000, 62000, 31000, 64500, 31000)
-
-# Not inflation-adjusted
-FilingStatus.set_param('child_tax_limit', 75000, 110000, 55000, 75000, 75000)
-FilingStatus.set_param('niit_threshold', 200000, 250000, 125000, 200000, 250000)
 
 # A one-liner that will convert the tables of the tax brackets worksheet into
 # the appropriate forms below:

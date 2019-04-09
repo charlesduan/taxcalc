@@ -1,17 +1,21 @@
 require 'tax_form'
 
+# Net Investment Income Tax
 class Form8960 < TaxForm
 
   def name
     '8960'
   end
 
-  def compute
-    line[:name] = form(1040).full_name
-    line[:ssn] = form(1040).ssn
+  def year
+    2018
+  end
 
-    line[1] = form(1040).line['8a']
-    line[2] = form(1040).line['9a']
+  def compute
+    set_name_ssn
+
+    line[1] = form(1040).line['2b']
+    line[2] = form(1040).line['3b']
 
     annuities = forms('1099-R') { |x| x.line[7] == 'D' }
     if annuities.any? { |x| x.line['2b.not_determined?'] }
@@ -20,7 +24,8 @@ class Form8960 < TaxForm
       line[3] = annuities.lines('2a', :sum)
     end
 
-    line['4a'] = form(1040).line[17]
+    # Rental real estate, partnerships, trusts
+    line['4a'] = form('1040 Schedule 1').line[17]
     with_form('1040 Schedule E') do |f|
       line4b = f.line('29a.j', :opt)
       if line4b != 0
@@ -32,22 +37,30 @@ class Form8960 < TaxForm
     end
     line['4c'] = line['4a'] + line['4b']
 
-    line['5a'] = form(1040).sum_lines(13, 14)
+    line['5a'] = form('1040 Schedule 1').sum_lines(13, 14)
     line['5d'] = sum_lines('5a', '5b', '5c')
 
+    # Total investment income
     line[8] = sum_lines(1, 2, 3, '4c', '5d', 6, 7)
 
     with_form('1040 Schedule A') do |f|
-      line['9a'] = f.line[14, :opt]
-      line['9b'] = (f.line[5] * line[8] / form(1040).line[38]).round
-      assert_no_forms(4952)
-      line['9d'] = sum_lines('9a', '9b', '9c')
+      line['9a'] = f.line[9, :opt]
+
+      # The view appears to be that the excludable expense is calculated first
+      # based on the full tax, and then the $10,000 limit is applied to that.
+      l9b = f.line['5d'] - (f.line['5a.sales', :present] ? f.line['5a'] : 0)
+      l9b *= 1.0 * line[8] / form(1040).line[7]
+      line['9b'] = [ l9b.round, f.line['5e'] ].min
     end
+    with_form(4954) do |f|
+      line['9c'] = f.line[5]
+    end
+    line['9d'] = sum_lines('9a', '9b', '9c')
 
     line[11] = sum_lines('9d', 10)
 
     line[12] = [ 0, line[8] - line[11] ].max
-    line[13] = form(1040).line[38]
+    line[13] = form(1040).line[7]
 
     line[14] = form(1040).status.niit_threshold
 

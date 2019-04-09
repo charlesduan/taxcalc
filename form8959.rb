@@ -1,19 +1,20 @@
 require 'tax_form'
 
+# Additional Medicare Tax
 class Form8959 < TaxForm
   def name
     '8959'
   end
 
   def compute
-    line[:name] = form(1040).full_name
-    line[:ssn] = form(1040).ssn
+    set_name_ssn
 
+    # Wages
     line[1] = forms('W-2').lines(5, :sum)
-
-    assert_no_forms(4137, 8919)
-
+    with_form(4317) do |f| line[2] = f.line[6] end
+    with_form(8919) do |f| line[3] = f.line[6] end
     line[4] = sum_lines(*1..3)
+
     line[5] = form(1040).status.form_8959_limit
     line[6] = [ 0, line[4] - line[5] ].max
     line[7] = (line[6] * 0.009).round
@@ -43,11 +44,11 @@ class Form8959 < TaxForm
   end
 
   def needed?
-    return line[18] > 0 && line[24] > 0
+    return line[18] > 0 || line[24] > 0
   end
 end
 
 
-FilingStatus.set_param('form_8959_limit', 200000, 250000, 125000, 200000,
-                       200000)
+FilingStatus.set_param('form_8959_limit', 200000, 250000, 125000, :single,
+                       :single)
 

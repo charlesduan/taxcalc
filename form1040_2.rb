@@ -11,17 +11,24 @@ class Form1040_2 < TaxForm
   end
 
   def compute
+    # Bizarrely, Form 6251 requires Schedule 2, Line 46. So it is computed
+    # first.
+    assert_no_forms('1095-A') # Line 46
+    line[46] = BlankZero
+
     amt_test = @manager.compute_form(AMTTestWorksheet)
     if amt_test.line['fillform'] == 'yes'
-      line[45] = @manager.compute_form(Form6251).line[35]
+      line[45] = @manager.compute_form(Form6251).line[11]
     end
 
-    assert_no_forms('1095-A') # Line 46
+    place_lines(46)
 
     line[47] = sum_lines(45, 46)
   end
 
   def needed?
-    line[47] > 0
+    # Schedule 2 is needed, even if it reports zero, if the AMT computation is
+    # performed.
+    line[47] > 0 || has_form?(6251)
   end
 end

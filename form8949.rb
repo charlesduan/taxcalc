@@ -19,8 +19,17 @@ class Form8949 < TaxForm
   attr_accessor :term, :reported
 
   def compute
+
+    # values is set to a three-element list:
+    # - values[0]: Check this box for transactions with basis shown on 1099-B.
+    # - values[1]: Check this box for transactions with basis not shown.
+    # - values[2]: Number of part.
     values = (@term == 'short') ? %w(A B I) : %w(D E II)
-    line[values[@reported == 'yes' ? 0 : 1]] = 'checked'
+
+    # Check the box depending on whether basis was reported.
+    line[values[@reported == 'yes' ? 0 : 1]] = 'X'
+
+    # Set each line [part].1[column] (e.g., line II.1a)
     p = values[2]
     %w(1a 1b 1c 1d 1e).each do |l|
       pl = "#{p}.#{l}"

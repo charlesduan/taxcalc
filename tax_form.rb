@@ -158,6 +158,14 @@ class TaxForm
     end
   end
 
+  def with_forms(name)
+    if @manager.has_form?(name)
+      @manager.forms(name).each do |f|
+        yield(f)
+      end
+    end
+  end
+
   def with_or_without_form(name)
     if @manager.has_form?(name)
       yield(form(name))

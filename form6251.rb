@@ -1,5 +1,6 @@
 require 'tax_form'
 require 'date'
+require 'foreign_tax_credit'
 
 class Form6251 < TaxForm
 
@@ -7,148 +8,307 @@ class Form6251 < TaxForm
     '6251'
   end
 
+  def year
+    2018
+  end
+
   def compute
-    line[:name] = form(1040).full_name
-    line[:ssn] = form(1040).ssn
+    set_name_ssn
 
-    if has_form?('1040 Schedule A')
-      sched_a = form('1040 Schedule A')
-      line[1] = form(1040).line(41)
-      # Line 2 removed by legislation
-      line[3] = sched_a.line[9]
-      line[4] = @manager.compute_form(MortgageInterestWorksheet).line[6]
-      line[5] = sched_a.line[27, :opt]
-
-      # The worksheet will be present if Form 1040 line 38 is greater than the
-      # itemized deduction limit.
-      if has_form?('Itemized Deductions Worksheet')
-        line[6] = -1 * form('Itemized Deductions Worksheet').line[9]
-      else
-        line[6] = 0
+    # If there are 1065 K-1 forms, ensure that they contain no AMT adjustments.
+    with_forms('1065 Schedule K-1') do |f|
+      if f.line[17, :present]
+        raise "Partnership adjustments for AMT not implemented."
       end
-    else
-      line[1] = form(1040).line(38)
     end
 
-    line[7] = form(1040).line[10, :opt]
+    line[1] = form(1040).line[10]
 
-    l28 = sum_lines(*1..27)
-    # Special adjustment for mfs status; inflation adjusted
-    if form(1040).status.is('mfs') && l28 > 249450
-      if l28 > 418450
-        line[28] = l28 + 42250
+    # Schedule A tax deduction, or 1040 standard deduction.
+    with_or_without_form('1040 Schedule A') do |f|
+      if f
+        line['2a'] = f.line[7]
       else
-        line[28] = l28 + (0.25 * (l28 - 249450)).round
+        line['2a'] = form(1040).line[8]
       end
-    else
-      line[28] = l28
     end
 
-    if line[28] > form(1040).status.amt_exempt_max
-      line[29] = @manager.compute_form(Line29ExemptionWorksheet).line['fill']
-    else
-      line[29] = form(1040).status.amt_exemption
+    with_form('1040 Schedule 1') do |f|
+      if f.line[10, :present]
+        assert_question(
+          "Are all the amounts on Schedule 1, line 10 for state/local taxes?",
+          true
+        )
+        if f.line[21, :present]
+          raise "AMT adjustment for Schedule 1, line 21 not implemented"
+          # This is also relevant to line 2e below
+        end
+        line['2b'] = -f.line[10]
+      end
     end
 
-    line[30] = [ 0, line[28] - line[29] ].max
-    if line[30] == 0
-      line[31] = line[33] = 0
-      line[34] = form(1040).sum_lines(44, 46) - form(1040).line[48]
-      line[35] = 0
+    with_form(4952) do |f|
+      raise "Form 6251, line 2c (Form 4952 Investment Interest) not implemented"
+    end
+
+    # 2d: Depletion not implemented; only for mining, timber, etc.
+    # 2e: NOL deduction not implemented; we assumed Schedule 1 line 21 is blank.
+    #     (Net operating loss refers to situations where deductions exceed
+    #     income.)
+    # 2f: ATNOL not implemented so no deduction can be taken.
+
+    # 2g: Private activity bonds
+    line['2g'] = forms('1099-INT').lines(9, :sum) + \
+      forms('1099-DIV').lines(12, :sum)
+    if has_form?(8814)
+      raise "Form 6251, line 2g inclusion of From 8814 not implemented"
+    end
+
+    # 2h: qualified small business stock
+    l2h = BlankZero
+    with_forms(8949) do |f|
+      %w(I II).each do |part|
+        f_line, g_line = "#{part}.1f", "#{part}.1g"
+        next unless f.line[f_part, :present]
+        f.line[f_part, :all].zip(f.line[g_part, :all]).each do |x|
+          l2h += x[1] if x[0] == 'Q' # line 1f flag for QSBS exclusion
+        end
+      end
+    end
+    line['2h'] = l2h
+
+    # 2i: incentive stock options.
+    if has_form?(3921)
+      raise "Incentive stock options not implemented"
+    end
+
+    # 2j: estates/trusts
+    l2j = BlankZero
+    with_forms('1041 Schedule K-1') do |f|
+      if f.line[12, :present]
+        f.line['12.code', :all].zip(f.line[12, :all]).each do |x|
+          l2j += x[1] if x[1] == 'A'
+        end
+      end
+    end
+    line['2j'] = l2j
+
+    # 2l: depreciation adjustments.
+    with_form(4562) do |f|
+      %w(
+        14 15 16 17 19a.g 19b.g 19c.g 19d.g 19e.g 19f.g 19h.g 19i.g 20a.g 20b.g
+        20c.g 20d.g 21
+      ).each do |l|
+        if f.line[l, :present]
+          raise "AMT depreciation adjustment not implemented"
+        end
+      end
+    end
+    line['2l'] = BlankZero
+
+    # 2k: adjustments for disposition of property. I think that this should be
+    # zero if lines 2i and 2l are zero.
+    #
+    raise "Line 2k not implemented" if %w(2i 2l).any? { |l|
+      line[l, :present] && line[l] != 0
+    }
+    line['2k'] = BlankZero
+
+    place_lines('2l')
+
+    # 2m: passive activity loss. It is assumed that there aren't any passive
+    # activities.
+    # 2n: loss limitations. It is assumed that no losses were posted; if they
+    # were, then any limitations on losses need to be recalculated.
+    # 2o: circulation costs. It is assumed that the individual owns no
+    # periodicals.
+    # 2p: long-term contracts. These are contracts for the construction of
+    # property that will take more than a year. It is assumed there are none.
+    # 2q: mining costs. Assumed there are none.
+    # 2r: research/experimental costs. Assumed there are none.
+    # 2s: installment sales in 1986. Assumed there are none.
+    # 2t: intangible drilling costs. Assumed there are none.
+    #
+    # 3: Other adjustments. Assumed there aren't any. The Related Adjustments
+    # might be affected but this is unlikely.
+    %w(2c 2d 2h 2i 2k 2l 2m 2n 2o 2p 2q 2r 2s 2t).each do |l|
+      if line[l, :present] && line[l] != 0
+        raise "Line 3 Related Adjustments may need to be computed"
+      end
+    end
+
+    line[4] = sum_lines(*%w(
+      1 2a 2b 2c 2d 2e 2f 2g 2h 2i 2j 2k 2l 2m 2n 2o 2p 2q 2r 2s 2t 3
+    ))
+    if form(1040).status.is('mfs') && line[4] > 718800
+      raise "Form 6251 Line 4 adjustment not implemented"
+    end
+    with_form('1040 Schedule E') do |f|
+      if f.line['38c', :present]
+        raise "Form 6251 Line 4 REMIC adjustment not implemented"
+      end
+    end
+
+    # AMT computation
+
+    # Several things depend on the foreign tax credit computation.
+    @ftc_form = compute_form(ForeignTaxCredit)
+
+    # Compute the exemption.
+    if line[4] > form(1040).status.amt_exempt_max
+      line[5] = @manager.compute_form(Line5ExemptionWorksheet).line['fill']
+    else
+      line[5] = form(1040).status.amt_exemption
+    end
+
+    # Compute the balance over the exemption.
+    line[6] = [ 0, line[4] - line[5] ].max
+    if line[6] == 0
+      line[9] = line[7] = 0
+      compute_line_10
+      line[11] = 0
       return
     end
 
-    l31test = false
-    l31test = true if form(1040).line[13] > 0 or form(1040).line('9b') > 0
-    if !l31test and has_form?('1040 Schedule D')
-      sched_d = form('1040 Schedule D')
-      l31test = true if sched_d.line[15] > 0 and sched_d.line[16] > 0
+    # Line 7
+    if has_form?(2555)
+      raise "Form 6251 does not implement Form 2555 computation"
     end
-    if l31test
-      compute_part_iii
-      line[31] = line[64]
+    l7test = false
+    if form(1040).line['3a'] > 0
+      l7test = true
     else
-      line[31] = amt_tax(line[30])
+      with_form('1040 Schedule 1') do |f|
+        l7test = true if f.line[13] > 0
+      end
+      with_form('1040 Schedule D') do |f|
+        l7test = true if f.line[15] > 0 and f.line[16] > 0
+      end
     end
 
-    assert_question("Did you pay any foreign taxes?", false)
-    assert_no_lines('1099-DIV', 6)
-    assert_no_lines('1099-INT', 6)
+    if l7test
+      compute_part_iii
+      line[7] = line[40]
+    else
+      line[7] = amt_tax(line[6])
+    end
 
-    line[32] = 0
-    line[33] = line[31] - line[32]
+    # AMT foreign tax credit
+    if @ftc_form
+      if has_form?(1116)
+        raise "AMT foreign tax credit with Form 1116 not implemented"
+      else
+        line[8] = @ftc_form.line[:send]
+      end
+    end
 
-    assert_no_forms(4972, '1040 Schedule J')
-    line[34] = form(1040).sum_lines(44, 46) - form(1040).line[48, :opt]
-    line[35] = [ 0, line[33] - line[34] ].max
+    # AMT
+    line[9] = line[7] - line[8, :opt]
 
+    compute_line_10
+
+    # AMT additional tax
+    line[11] = [ 0, line[9] - line[10] ].max
+
+    place_lines(*12..40) if line[12, :present]
+
+  end
+
+  def compute_line_10
+    l10 = form(1040).line['11a']
+    with_form(4972) do |f|
+      if f.line[30, :present]
+        l10 -= f.line[30]
+      elsif f.line[7, :present]
+        l10 -= f.line[7]
+      end
+    end
+    with_form('1040 Schedule 2') do |f|
+      l10 += f.line[46]
+    end
+    l10 -= @ftc_form.send if @ftc_form
+    if has_form?('1040 Schedule J')
+      raise 'Form 6251, Line 10 does not implement Schedule J computation'
+    end
+    line[10] = l10
   end
 
   def compute_part_iii
-    line[36] = line[30]
+    line[12] = line[6]
 
-    line[37] = compute_from_worksheets(6, 13) { BlankZero }
-
+    check_line_13_conds
+    line[13] = compute_from_worksheets(6, 13) { BlankZero }
     with_or_without_form('1040 Schedule D') do |sd|
-      line[38] = sd ? sd.line[19, :opt] : BlankZero
+      line[14] = sd ? sd.line[19, :opt] : BlankZero
     end
-
     with_or_without_form('Schedule D Tax Worksheet') do |sdtw|
       if sdtw
-        line[39] = [ sum_lines(37, 38), sdtw.line[10] ].min
+        line[15] = [ sum_lines(13, 14), sdtw.line[10] ].min
       else
-        line[39] = line[37]
+        line[15] = line[13]
       end
     end
 
-    line[40] = [ line[36], line[39] ].min
-    line[41] = line[36] - line[40]
+    line[16] = [ line[12], line[15] ].min
+    line[17] = line[12] - line[16]
 
-    line[42] = amt_tax(line[41])
+    line[18] = amt_tax(line[17])
 
-    line[43] = form(1040).status.amt_cg_exempt
-    line[44] = compute_from_worksheets(7, 14) {
-      [ 0, form(1040).line(43) ].max
+    line[19] = form(1040).status.amt_cg_exempt
+    line[20] = compute_from_worksheets(7, 14) {
+      [ 0, form(1040).line(10) ].max
     }
 
-    line[45] = [ 0, line[43] - line[44] ].max
-    line[46] = [ line[36], line[37] ].min
-    line[47] = [ line[45], line[46] ].min
-    line[48] = line[46] - line[47]
+    line[21] = [ 0, line[19] - line[20] ].max
+    line[22] = [ line[12], line[13] ].min
+    line[23] = [ line[21], line[22] ].min
+    line[24] = line[22] - line[23]
 
-    line[49] = form(1040).status.amt_cg_upper
+    line[25] = form(1040).status.amt_cg_upper
 
-    line[50] = line[45]
-    line[51] = compute_from_worksheets(7, 19) {
-      [ 0, form(1040).line(43) ].max
+    line[26] = line[21]
+    line[27] = compute_from_worksheets(7, 19) {
+      [ 0, form(1040).line(10) ].max
     }
 
-    line[52] = sum_lines(50, 51)
-    line[53] = [ 0, line[49] - line[52] ].max
-    line[54] = [ line[48], line[53] ].min
-    line[55] = (line[54] * 0.15).round
-    line[56] = sum_lines(47, 54)
+    line[28] = sum_lines(26, 27)
+    line[29] = [ 0, line[25] - line[28] ].max
+    line[30] = [ line[24], line[29] ].min
+    line[31] = (line[30] * 0.15).round
+    line[32] = sum_lines(23, 30)
 
-    if line[56] != line[36]
-      line[57] = line[46] - line[56]
-      line[58] = (line[57] * 0.2).round
-      if line[38] != 0
-        line[59] = sum_lines(41, 56, 57)
-        line[60] = line[36] - line[59]
-        line[61] = (line[60] * 0.25).round
+    if line[32] != line[12]
+      line[33] = line[22] - line[32]
+      line[34] = (line[33] * 0.2).round
+      if line[14] != 0
+        line[35] = sum_lines(17, 32, 33)
+        line[36] = line[12] - line[35]
+        line[37] = (line[36] * 0.25).round
       end
     end
 
-    line[62] = sum_lines(42, 55, 58, 61)
-    line[63] = amt_tax(line[36])
-    line[64] = [ line[62], line[63] ].min
+    line[38] = sum_lines(18, 31, 34, 37)
+    line[39] = amt_tax(line[12])
+    line[40] = [ line[38], line[39] ].min
+  end
+
+  def check_line_13_conds
+    cond1 = (line['2l', :opt] != 0 || line['2i', :opt] != 0)
+    cond2 = (form(1040).line[10] == 0)
+    cond3 = false
+    with_form('1041 Schedule K-1') do |f|
+      cond3 = true if !(line['12.code', :all] & %w(B C D E F)).empty?
+    end
+    if cond1 or cond2 or cond3
+      raise "Nonstandard Form 6251, Line 13 not implemented"
+    end
   end
 
   def amt_tax(amount)
-    if amount <= form(1040).status.amt_bracket_max
+    if amount <= form(1040).status.halve_mfs(191100)
       return (amount * 0.26).round
     else
-      return (amount * 0.28).round - form(1040).status.amt_bracket_sub
+      return (amount * 0.28).round - form(1040).status.halve_mfs(3822)
     end
   end
 
@@ -174,27 +334,13 @@ end
 
 
 
-class MortgageInterestWorksheet < TaxForm
+class Line5ExemptionWorksheet < TaxForm
   def name
-    'Home Mortgage Interest Adjustment Worksheet'
+    'Line 5 Exemption Worksheet'
   end
 
-  def compute
-    sched_a = form('1040 Schedule A')
-    line[1] = sched_a.sum_lines(10, 11, 12, 13)
-    if line[1] > 0
-      assert_question('Were all of your Schedule A mortgage deductions ' + \
-                       'for eligible mortages (per form 6251)?', true)
-      line[2] = line[1]
-    end
-    line[5] = sum_lines(2, 3, 4)
-    line[6] = line[1] - line[5]
-  end
-end
-
-class Line29ExemptionWorksheet < TaxForm
-  def name
-    'Line 29 Exemption Worksheet'
+  def year
+    2018
   end
 
   def compute
@@ -203,26 +349,23 @@ class Line29ExemptionWorksheet < TaxForm
       return
     end
     line[1] = form(1040).status.amt_exemption
-    line[2] = form(6251).line[28]
+    line[2] = form(6251).line[4]
     line[3] = form(1040).status.amt_exempt_max
     line[4] = [ 0, line[2] - line[3] ].max
     line[5] = (line[4] * 0.25).round
     line[6] = [ 0, line[1] - line[5] ].max
 
-    if interview('Are you under 24?')
+    if age < 24
       raise 'Special AMT exemption for children under 24 not implemented'
     end
     line['fill'] = line[6]
   end
 end
 
-FilingStatus.set_param('amt_exempt_max', 120700, 160900, :half_mfj, :single,
+FilingStatus.set_param('amt_exempt_max', 500000, 1000000, :half_mfj, :single,
                        :mfj)
-FilingStatus.set_param('amt_exemption', 54300, 84500, :half_mfj, :single, :mfj)
-FilingStatus.set_param('amt_exempt_zero', 337900, 498900, :half_mfj, :single,
+FilingStatus.set_param('amt_exemption', 70300, 109400, :half_mfj, :single, :mfj)
+FilingStatus.set_param('amt_exempt_zero', 781200, 1437600, :half_mfj, :single,
                        :mfj)
-FilingStatus.set_param('amt_bracket_max', :mfj, 187800, :half_mfj, :mfj, :mfj)
-FilingStatus.set_param('amt_bracket_sub', :mfj, 3756, :half_mfj, :mfj, :mfj)
-FilingStatus.set_param('amt_cg_exempt', 37950, 75900, :single, 50800, :mfj)
-FilingStatus.set_param('amt_cg_upper', 418400, 470700, :half_mfj, 444550, :mfj)
-
+FilingStatus.set_param('amt_cg_exempt', 38600, 77200, :single, 51700, :mfj)
+FilingStatus.set_param('amt_cg_upper', 425800, 479000, :half_mfj, 452400, :mfj)

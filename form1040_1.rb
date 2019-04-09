@@ -45,7 +45,7 @@ class Form1040_1 < TaxForm
 
     line[25] = forms('HSA Contribution').map { |f|
       compute_form(Form8889, f).line[13]
-    }.inject(:+)
+    }.inject(BlankZero, :+)
 
     sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
     line[27] = sched_se.line[13] if sched_se
