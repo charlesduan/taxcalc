@@ -7,11 +7,14 @@ class Form1040E < TaxForm
     '1040 Schedule E'
   end
 
+  def year
+    2018
+  end
+
   include HomeOfficeManager
 
   def compute
-    line[:name] = form(1040).full_name
-    line[:ssn] = form(1040).ssn
+    set_name_ssn
 
     k1s = forms('1065 Schedule K-1')
     assert_question(
@@ -35,20 +38,30 @@ class Form1040E < TaxForm
     assert_question('Are any of your partnerships foreign?', false)
     assert_question('Were you active in all your partnerships?', true)
 
-    @manager.compute_form(Form4562)
+    compute_form(Form4562)
 
     k1s.each do |k1|
       raise 'Partnership losses not implemented' if k1.line[1] < 0
       pship_name = k1.line[:B].split("\n")[0]
       f4562 = forms(4562).find { |x| x.line[:business] == pship_name }
 
-      add_table_row(
-        '28a' => pship_name,
-        '28b' => 'P',
-        '28d' => k1.line[:A],
-        '28i' => f4562.line[12],
-        '28j' => k1.line[1]
-      )
+      if k1.line[1] > 0
+        add_table_row(
+          '28a' => pship_name,
+          '28b' => 'P',
+          '28d' => k1.line[:A],
+          '28k' => k1.line[1],
+          '28j' => f4562.line[12],
+        )
+      else
+        add_table_row(
+          '28a' => pship_name,
+          '28b' => 'P',
+          '28d' => k1.line[:A],
+          '28i' => -k1.line[1],
+          '28j' => f4562.line[12],
+        )
+      end
     end
 
     ho_upes.each do |ein, deduction|
@@ -58,14 +71,14 @@ class Form1040E < TaxForm
       )
     end
 
-    line['29a.g'] = line['28g', :sum]
-    line['29a.j'] = line['28j', :sum]
-    line['29b.f'] = line['28f', :sum]
-    line['29b.h'] = line['28h', :sum]
+    line['29a.h'] = line['28h', :sum]
+    line['29a.k'] = line['28k', :sum]
+    line['29b.g'] = line['28g', :sum]
     line['29b.i'] = line['28i', :sum]
+    line['29b.j'] = line['28j', :sum]
 
-    line[30] = sum_lines('29a.g', '29a.j')
-    line[31] = sum_lines('29b.f', '29b.h', '29b.i')
+    line[30] = sum_lines('29a.h', '29a.k')
+    line[31] = sum_lines('29b.g', '29b.i', '29b.j')
     line[32] = line[30] - line[31]
 
     line[41] = sum_lines(26, 32, 37, 39, 40)

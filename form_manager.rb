@@ -184,29 +184,34 @@ class FormManager
   #
   def import(file)
     open(file) do |io|
-      until io.eof?
-        line = io.gets
-        next unless (line && line =~ /\w/)
-        next if line =~ /^\s*#/
+      begin
+        until io.eof?
+          line = io.gets
+          next unless (line && line =~ /\w/)
+          next if line =~ /^\s*#/
 
-        unless (line =~ /^((No )?Form|Table) /)
-          raise "Invalid start of form"
+          unless (line =~ /^((No )?Form|Table) /)
+            raise "Invalid start of form"
+          end
+          type = $1
+          name = $'.strip
+          case type
+          when 'Table'
+            import_tabular(name, io)
+          when 'No Form'
+            @no_forms[name] = 1
+            next
+          when 'Form'
+            new_form = NamedForm.new(name, self)
+            new_form.import(io)
+            add_form(new_form)
+          else
+            raise "Unknown form type #{type}"
+          end
         end
-        type = $1
-        name = $'.strip
-        case type
-        when 'Table'
-          import_tabular(name, io)
-        when 'No Form'
-          @no_forms[name] = 1
-          next
-        when 'Form'
-          new_form = NamedForm.new(name, self)
-          new_form.import(io)
-          add_form(new_form)
-        else
-          raise "Unknown form type #{type}"
-        end
+      rescue
+        warn "Error during import: #{file}, line #{io.lineno}: #$!"
+        exit 1
       end
     end
   end

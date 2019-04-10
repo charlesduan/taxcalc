@@ -691,6 +691,10 @@ class MultiFormManager
 
   def fill_form(form, filename)
     lpd = @form_data[form.name]
+    unless lpd
+      warn("No form data for filling in #{form.name}")
+      return
+    end
     lpd.start_fill
 
     form.line.each do |l, v|
@@ -733,6 +737,7 @@ if __FILE__ == $0
   @mgr = FormManager.new("Mark")
   @pos_data = "pos-data.txt"
   @fill_dir = nil
+  @all = false
 
   opt_parser = OptionParser.new do |opts|
     opts.banner = "Usage: #{File.basename $0} [options] [form] [file]"
@@ -748,6 +753,9 @@ if __FILE__ == $0
     opts.on('-f', '--fill DIR', 'Fill in forms, place in DIR') do |d|
       raise "#{d} must be a directory" unless File.directory?(d)
       @fill_dir = d
+    end
+    opts.on('-a', '--all', 'Fill worksheets') do
+      @all = true
     end
 
     opts.on_tail('-h', '--help', 'Show this message') do
@@ -765,6 +773,7 @@ if __FILE__ == $0
   @mfm = MultiFormManager.new(@pos_data)
 
   def ignore_form?(name)
+    return false if @all
     return true if name =~ /Worksheet/
     return false if name =~ /^[A-Z0-9-]*\d[A-Z0-9-]*(?: |$)/
     return true

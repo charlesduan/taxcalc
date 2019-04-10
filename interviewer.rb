@@ -66,8 +66,8 @@ class Interviewer
 
   def self.parse(question, data)
     if question =~ /\?$/
-      return true if data =~ /^y(es)?/i
-      return false if data =~ /^no?/i
+      return true if data =~ /^y(es)?|true/i
+      return false if data =~ /^no?|false/i
       raise "Invalid answer to yes-no question"
     end
 

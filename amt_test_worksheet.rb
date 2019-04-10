@@ -19,7 +19,7 @@ class AMTTestWorksheet < TaxForm
         line[3] = sum_lines(1, 2)
       else
         line['1no'] = 'X'
-        line[3] = f1040.line[7] - f1040.line[9]
+        line[3] = f1040.line[7] - f1040.line[9, :opt]
       end
     end
 

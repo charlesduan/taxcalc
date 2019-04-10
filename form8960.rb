@@ -27,7 +27,7 @@ class Form8960 < TaxForm
     # Rental real estate, partnerships, trusts
     line['4a'] = form('1040 Schedule 1').line[17]
     with_form('1040 Schedule E') do |f|
-      line4b = f.line('29a.j', :opt)
+      line4b = f.line('29b.j', :opt)
       if line4b != 0
         assert_question('Were your partnership activities a section 162 ' + \
                         'trade or business but not trading financial ' + \

@@ -1,5 +1,6 @@
 require 'tax_form'
 
+# Depreciation and amortization (and section 179 deduction)
 class Form4562 < TaxForm
 
   def name
@@ -55,13 +56,20 @@ class Form4562 < TaxForm
     line[4] = [ line[2] - line[3], 0 ].max
     l5_limit = [ line[1] - line[4], 0 ].max
     if has_form?(1040) && form(1040).status.is('mfs')
-      l5_split = interview(
-        "Fraction for section 179 deduction split with spouse:"
-      )
-      if l5_split > 1
-        raise "Fraction must be a decimal value"
+      if @manager.submanager(:spouse).has_form?(4562)
+        l5_limit = l5_limit - @manager.submanager(:spouse).form(4562).line[5]
+        if l5_limit < 0
+          raise "Form 4562, line 5 limit irreconcilable with spouse's"
+        end
+      else
+        l5_split = interview(
+          "Fraction for section 179 deduction split with spouse:"
+        )
+        if l5_split > 1
+          raise "Fraction must be a decimal value"
+        end
+        l5_limit = (l5_limit * l5_split.to_f).round
       end
-      l5_limit = (l5_limit * l5_split.to_f).round
     end
     line[5] = l5_limit
 

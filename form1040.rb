@@ -166,7 +166,7 @@ class Form1040 < TaxForm
           "with qualified dividends, using the qexception? line"
       end
       f.line[:qexception?] ? 0 : f.line['1b']
-    }.inject(:+)
+    }.inject(:+) + forms('1065 Schedule K-1').lines('6b', :sum)
     line['3b'] = sched_b.line[6]
 
     # IRAs, pensions, and annuities
@@ -394,6 +394,10 @@ end
 class QdcgtWorksheet < TaxForm
   def name
     'Qualified Dividends and Capital Gains Tax Worksheet'
+  end
+
+  def year
+    2018
   end
 
   def compute
