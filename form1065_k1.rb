@@ -25,7 +25,7 @@ class Form1065K1 < TaxForm
       f1065.line[:address],
       f1065.line[:address2]
     ].join("\n")
-    line['C'] = f1065.line('send')
+    line['C'] = f1065.line(:send_to!)
     line['D'] = 'X' if f1065.line('B7.yes', :present)
     line['E'] = @partner_form.line['ssn']
     line['F'] = @partner_form.line['name']

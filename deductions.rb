@@ -31,7 +31,7 @@ class Deductions < TaxForm
       total += deds[cat]
     end
 
-    line['fill'] = total.round
+    line[:fill!] = total.round
   end
 end
 

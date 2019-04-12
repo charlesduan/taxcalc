@@ -15,8 +15,10 @@ class Form1040_3 < TaxForm
   end
 
   def compute
+    set_name_ssn
+
     ftc_form = find_or_compute_form('Foreign Tax Credit', ForeignTaxCredit)
-    line[48] = ftc_form.line[:send] if ftc_form
+    line[48] = ftc_form.line[:fill!] if ftc_form
 
     compute_form(Form2441)
     with_form(2441) do |f|
@@ -43,6 +45,10 @@ class Form1040_3 < TaxForm
     # None of the other credits seem relevant.
 
     line[55] = sum_lines(48, 49, 50, 51, 53, 54)
+  end
+
+  def needed?
+    line[55] != 0
   end
 
 end

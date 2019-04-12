@@ -70,7 +70,7 @@ class Form1040D < TaxForm
     line[16] = line[7] + line[15]
 
     if line[16] > 0
-      line['fill'] = line[16]
+      line[:fill!] = line[16]
       if line[15] > 0
         line['17yes'] = 'X'
         assert_form_unnecessary('Schedule D 28% Rate Gain Worksheet')
@@ -86,7 +86,7 @@ class Form1040D < TaxForm
       raise 'Not implemented'
 
     else # line[16] == 0
-      line['fill'] = 0
+      line[:fill!] = 0
 
     end
 

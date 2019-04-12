@@ -156,7 +156,7 @@ class Form6251 < TaxForm
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
-      line[5] = @manager.compute_form(Line5ExemptionWorksheet).line['fill']
+      line[5] = @manager.compute_form(Line5ExemptionWorksheet).line[:fill!]
     else
       line[5] = form(1040).status.amt_exemption
     end
@@ -198,7 +198,7 @@ class Form6251 < TaxForm
       if has_form?(1116)
         raise "AMT foreign tax credit with Form 1116 not implemented"
       else
-        line[8] = @ftc_form.line[:send]
+        line[8] = @ftc_form.line[:fill!]
       end
     end
 
@@ -226,7 +226,7 @@ class Form6251 < TaxForm
     with_form('1040 Schedule 2') do |f|
       l10 += f.line[46]
     end
-    l10 -= @ftc_form.send if @ftc_form
+    l10 -= @ftc_form.line[:fill!] if @ftc_form
     if has_form?('1040 Schedule J')
       raise 'Form 6251, Line 10 does not implement Schedule J computation'
     end
@@ -345,7 +345,7 @@ class Line5ExemptionWorksheet < TaxForm
 
   def compute
     if form(6251).line[28] > form(1040).status.amt_exempt_zero
-      line['fill'] = 0
+      line[:fill!] = 0
       return
     end
     line[1] = form(1040).status.amt_exemption
@@ -358,7 +358,7 @@ class Line5ExemptionWorksheet < TaxForm
     if age < 24
       raise 'Special AMT exemption for children under 24 not implemented'
     end
-    line['fill'] = line[6]
+    line[:fill!] = line[6]
   end
 end
 

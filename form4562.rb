@@ -34,7 +34,6 @@ class Form4562 < TaxForm
       }.inject(:+)
 
     else
-      set_name
       line[:name] = form(1040).full_name
       unless forms('1065 Schedule K-1').count == 1
         raise "Cannot handle multiple businesses"

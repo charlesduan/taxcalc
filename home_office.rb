@@ -11,7 +11,7 @@ module HomeOfficeManager
       ws = @manager.compute_form(
         Pub587Worksheet.new(@manager, f, k1)
       )
-      yield(f, ws.line[:fill]) if ws.line[:fill] != 0
+      yield(f, ws.line[:fill!]) if ws.line[:fill!] != 0
     end
   end
 
@@ -40,10 +40,10 @@ class Pub587Worksheet < TaxForm
 
     case @ho_form.line[:method]
     when 'simplified'
-      line[:method] = 'simplified'
+      line[:method!] = 'simplified'
       compute_simplified
     when 'actual'
-      line[:method] = 'actual'
+      line[:method!] = 'actual'
       compute_actual
     else
       raise "Unknown Home Office method #{@ho_form.line[:method]}"
@@ -63,7 +63,7 @@ class Pub587Worksheet < TaxForm
     line['3c'] = (line['3b'] * line['3a']).round(2)
     line[4] = (line[2] * line['3c']).round
     line[5] = [ [ line[1], line[4] ].min, 0 ].max
-    line[:fill] = line[5]
+    line[:fill!] = line[5]
   end
 
   def compute_actual

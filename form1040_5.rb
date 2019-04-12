@@ -11,6 +11,7 @@ class Form1040_5 < TaxForm
   end
 
   def compute
+    set_name_ssn
 
     # Estimated tax payments
     line[66] = forms('Estimated Tax').lines('amount', :sum)

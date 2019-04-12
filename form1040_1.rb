@@ -16,6 +16,8 @@ class Form1040_1 < TaxForm
   end
 
   def compute
+    set_name_ssn
+
     # Line 10
     assert_no_forms('1099-G')
 
@@ -27,7 +29,7 @@ class Form1040_1 < TaxForm
     sched_d = compute_form(Form1040D)
 
     if sched_d
-      line[13] = sched_d.line['fill']
+      line[13] = sched_d.line[:fill!]
     else
       line[13] = BlankZero
     end

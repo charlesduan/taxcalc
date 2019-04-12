@@ -67,7 +67,7 @@ class Form1040E < TaxForm
     ho_upes.each do |ein, deduction|
       add_table_row(
         '28a' => "UPE (#{ein})",
-        '28h' => deduction
+        '28i' => deduction
       )
     end
 

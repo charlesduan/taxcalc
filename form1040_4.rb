@@ -11,6 +11,8 @@ class Form1040_4 < TaxForm
   end
 
   def compute
+    set_name_ssn
+
     sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
     if sched_se
       line[57] = sched_se.line[12]

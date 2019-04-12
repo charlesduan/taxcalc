@@ -17,13 +17,13 @@ class ForeignTaxCredit < TaxForm
     ftc += forms('1099-INT').lines(6, :sum)
     ftc += forms('1099-DIV').lines(7, :sum)
     if ftc == 0
-      line[:send] = 0
+      line[:fill!] = 0
       return
     elsif ftc < form(1040).status.is('mfj') ? 600 : 300
       if interview(
         'Do your foreign taxes satisfy Form 1040 Schedule 3, Line 48?'
       )
-        line[:send] = ftc
+        line[:fill!] = ftc
         return
       end
     end
@@ -31,7 +31,7 @@ class ForeignTaxCredit < TaxForm
   end
 
   def needed?
-    line[:send] != 0
+    line[:fill!] != 0
   end
 
 end

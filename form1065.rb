@@ -45,7 +45,7 @@ class Form1065 < TaxForm
       @manager.compute_form(Form4562)
     end
 
-    line[20] = form('Deductions').line[:fill]
+    line[20] = form('Deductions').line[:fill!]
     line[21] = sum_lines(9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20)
     line[22] = line[8] - line[21]
 
@@ -157,9 +157,9 @@ class Form1065 < TaxForm
     if %w(
       CT DE DC GA IL IN KY ME MD MA MI NH NJ NY NC OH PA RI SC TN VT VA WV WI
     ).include?(state)
-      line['send'] = 'Kansas City MO 64999-0011'
+      line[:send_to!] = 'Kansas City MO 64999-0011'
     else
-      line['send'] = 'Ogden UT 84201-0011'
+      line[:send_to!] = 'Ogden UT 84201-0011'
     end
   end
 end

@@ -144,6 +144,11 @@ class Form1040 < TaxForm
       add_table_row(row)
     end
 
+    line[:occupation] = @bio.line[:occupation]
+    if @status.is('mfj')
+      line[:spouse_occupation] = @sbio.line[:occupation]
+    end
+
 
     #
     # PAGE 2
@@ -240,7 +245,7 @@ class Form1040 < TaxForm
     compute_form(Form1040_3)
 
     # Child tax credit and other credits
-    line['12a'] = @manager.compute_form(ChildTaxCreditWorksheet).line['fill']
+    line['12a'] = @manager.compute_form(ChildTaxCreditWorksheet).line[:fill!]
     with_or_without_form('1040 Schedule 3') do |f|
       if f
         line['12b'] = 'X'
@@ -294,7 +299,6 @@ class Form1040 < TaxForm
       compute_penalty
     end
 
-
   end
 
 
@@ -306,10 +310,10 @@ class Form1040 < TaxForm
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       if sched_d.line['20no', :present]
-        line[:tax_method] = 'Sch D'
+        line[:tax_method!] = 'Sch D'
         return compute_tax_schedule_d # Not implemented; raises error
       elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
-        line[:tax_method] = 'QDCGTW'
+        line[:tax_method!] = 'QDCGTW'
         return compute_tax_qdcgt
       end
     elsif line['3a', :present] or form('1040 Schedule 1').line[13, :present]
@@ -333,10 +337,10 @@ class Form1040 < TaxForm
 
   def compute_tax_standard(income)
     if income < 100000
-      line[:tax_method] = 'Table' unless line[:tax_method, :present]
+      line[:tax_method!] = 'Table' unless line[:tax_method!, :present]
       return compute_tax_table(income, status)
     else
-      line[:tax_method] = 'TCW' unless line[:tax_method, :present]
+      line[:tax_method!] = 'TCW' unless line[:tax_method!, :present]
       return compute_tax_worksheet(income)
     end
   end
@@ -471,7 +475,7 @@ class ChildTaxCreditWorksheet < TaxForm
 
     line[3] = sum_lines(1, 2)
     if line[3] == 0
-      line[:fill] = 0
+      line[:fill!] = 0
       return
     end
 
@@ -497,7 +501,7 @@ class ChildTaxCreditWorksheet < TaxForm
       line[8] = line[3] - line[7]
     else
       line['8.no'] = 'X'
-      line[:fill] = BlankZero
+      line[:fill!] = BlankZero
       return
     end
 
@@ -527,7 +531,7 @@ class ChildTaxCreditWorksheet < TaxForm
 
     if line[10] >= line[9]
       line['11.yes'] = 'X'
-      line[:fill] = 0
+      line[:fill!] = 0
       return
     end
     line['11.no'] = 'X'
@@ -541,7 +545,7 @@ class ChildTaxCreditWorksheet < TaxForm
       line[12] = line[8]
     end
 
-    line[:fill] = line[12]
+    line[:fill!] = line[12]
 
   end
 end

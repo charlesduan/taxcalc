@@ -32,9 +32,11 @@ class PdfFileParser
     @file = file
     @resolutions = {}
     @tempdir = nil
+    @even_pages = true
   end
 
   attr_accessor :file
+  attr_accessor :even_pages
 
   def tempdir
     return @tempdir if @tempdir
@@ -65,7 +67,7 @@ class PdfFileParser
   def page_image(num, resolution)
     unless @resolutions[resolution]
       popen(
-        GS, '-NODISPLAY', '-dSAFER', '-dBATCH', '-dNOPAUSE', '-sDEVICE=pngmono',
+        GS, '-NODISPLAY', '-dSAFER', '-dBATCH', '-dNOPAUSE', '-sDEVICE=pnggray',
         "-r#{resolution}", "-sOutputFile=#{tempdir}/img-#{resolution}-%03d.png",
         @file
       ) do |io|
@@ -84,7 +86,7 @@ class PdfFileParser
     commands.each do |cmd|
       command.push("AND", *cmd)
     end
-    command.push("AND", "-pad-multiple", "2")
+    command.push("AND", "-pad-multiple", "2") if @even_pages
     command.push("-o", new_file)
     popen(*command) do |io|
       io.each do |line|
@@ -399,6 +401,10 @@ class LinePosData
     end
   end
 
+  def no_even_pages
+    @parser.even_pages = false
+  end
+
   def add_line_data(line, params)
     unless params.is_a?(Array) and params.count == 5
       raise "Invalid parameter #{params}"
@@ -413,6 +419,7 @@ class LinePosData
     # Compute the set of line numbers that need to be added to this LinePosData,
     # which are all the line numbers plus extra numbers for array-type values
     tax_form.line.each do |l, v|
+      next if l.end_with?('!')
       lines.push(l)
       if v.is_a?(Array) && v.count > 1
         lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
@@ -689,12 +696,13 @@ class MultiFormManager
     lpd.show_ui
   end
 
-  def fill_form(form, filename)
+  def fill_form(form, filename, no_even_pages = false)
     lpd = @form_data[form.name]
     unless lpd
       warn("No form data for filling in #{form.name}")
       return
     end
+    lpd.no_even_pages if no_even_pages
     lpd.start_fill
 
     form.line.each do |l, v|
@@ -818,6 +826,7 @@ if __FILE__ == $0
 
       if @mfm.has_form?(form.name)
         form.line.each do |l, v|
+          next if l.end_with?('!')
           all_lines = [ l ]
           if v.is_a?(Array) && v.count > 1
             all_lines.push(*(2..v.count).map { |x| "#{l}##{x}" })

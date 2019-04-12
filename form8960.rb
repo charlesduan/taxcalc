@@ -27,13 +27,12 @@ class Form8960 < TaxForm
     # Rental real estate, partnerships, trusts
     line['4a'] = form('1040 Schedule 1').line[17]
     with_form('1040 Schedule E') do |f|
-      line4b = f.line('29b.j', :opt)
-      if line4b != 0
-        assert_question('Were your partnership activities a section 162 ' + \
-                        'trade or business but not trading financial ' + \
-                        'instruments or commodities?', true)
-        line['4b'] = -line4b
-      end
+      # We assume that any partnerships listed on 1040 Schedule E, part II that
+      # involve nonpassive income/losses are section 162 businesses (i.e.,
+      # businesses for which business expense deductions may be taken), and are
+      # also not in the business of trading financial instruments or
+      # commodities.
+      line['4b'] = -(f.line['29a.k', :opt] - f.sum_lines(*%w(29b.i 29b.j)))
     end
     line['4c'] = line['4a'] + line['4b']
 

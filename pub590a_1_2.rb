@@ -18,9 +18,9 @@ class Pub590AWorksheet1_2 < TaxForm
 
     # Compute whether over 50 years old
     if form(1040).bio.line[:birthday] < Date.new(Date.today.year - 50, 1, 1)
-      line[:over50?] = true
+      @over50 = true
     else
-      line[:over50?] = false
+      @over50 = false
     end
 
     ret_limits = nil
@@ -61,9 +61,9 @@ class Pub590AWorksheet1_2 < TaxForm
     end
 
     line[3] = line[1] - line[2]
-    line4frac = line[:over50?] ? 0.65 : 0.55
+    line4frac = @over50 ? 0.65 : 0.55
     if covered && (status.is('mfj') || status.is('qw'))
-      line4frac = line[:over50?] ? 0.325 : 0.275
+      line4frac = @over50 ? 0.325 : 0.275
     end
     line[4] = [ 200, (line[3] * line4frac / 10).ceil * 10 ].max
 
@@ -86,7 +86,7 @@ class Pub590AWorksheet1_2 < TaxForm
     # IRA contributions for this year
     line[6] = [
       @ira_analysis.line[:this_year_contrib],
-      line[:over50?] ? 6500 : 5500
+      @over50 ? 6500 : 5500
     ].min
   end
 

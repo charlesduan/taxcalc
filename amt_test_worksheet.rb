@@ -35,7 +35,7 @@ class AMTTestWorksheet < TaxForm
       line[7] = line[5] - line[6]
     else
       line['7no'] = 'X'
-      line['fillform'] = 'no'
+      line[:fill_no] = 'X'
       return
     end
 
@@ -53,7 +53,7 @@ class AMTTestWorksheet < TaxForm
 
     if line[11] > f1040.status.halve_mfs(191100)
       line['12yes'] = 'X'
-      line['fillform'] = 'yes'
+      line[:fill_yes] = 'X'
       return
     else
       line['12no'] = 'X'
@@ -64,9 +64,9 @@ class AMTTestWorksheet < TaxForm
     # 46.
     line[13] = f1040.line['11a']
     if line[12] > line[13]
-      line['fillform'] = 'yes'
+      line[:fill_yes] = 'X'
     else
-      line['fillform'] = 'no'
+      line[:fill_no] = 'X'
     end
   end
 end
