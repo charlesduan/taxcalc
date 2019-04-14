@@ -54,8 +54,71 @@ line items.
 \subsection{Structure of Tax Form Data}
 
 The basic data structure used throughout the system is the TaxForm, which in
-essence is simply a named table mapping line numbers to values.
+essence is simply a named table mapping line numbers to values. Values may be of
+several types:
+\begin{description}
+\item[blank zero] A single dash, representing a zero value.
+\item[number] A number, possibly with a decimal point and possibly led with a
+minus sign.
+\item[date] Formatted as mm/dd/yyyy.
+\item[array] A list of values, each of which is one of the above types. Arrays
+may be specified in two forms: A comma-separated list surrounded by square
+brackets, or another way described below.
+\item[text string] Anything else.
+\end{description}
+Another data type is ``boxed data,'' described below; it is represented in a
+format surrounded with angle brackets and is essentially a text string or
+number.
 
+A plain text file may store one or more forms according to the following format.
+A form begins with a line starting with the word ``Form'', a space, and the
+name of the form. Lines of the form follow; they must be indented with
+whitespace, and the line number should be separated from the value with
+whitespace. For example:
+\begin{quote}
+\ttfamily\obeylines\obeyspaces
+Form W-2
+\     first\_name         John
+\     last\_name          Doe
+\     a                   123-45-6789
+\     b                   98-7654321
+\     c                   Acme Widgets Co.
+\     1                   50000
+\     2                   15000
+\end{quote}
+Further forms may be included in the same file, delineated with the start word
+``Form'' at the beginning of a line.
+
+An array may be constructed by placing each array element on a separate line in
+the file, replacing the line number with a double quote mark. For example:
+\begin{quote}
+\ttfamily\obeylines\obeyspaces
+A   15
+"   18
+"   20
+\end{quote}
+is identical to ``\texttt{A [15, 18, 20]}''.
+
+
+
+\subsection{Special Line Names}
+
+Generally line names in a form may be any text that has no spaces. But several
+line names will receive special treatment.
+
+\paragraph{Lines ending with an exclamation mark.} Such lines are meant for
+storing metadata or informative data for a form, when there is no space for
+entering the data. A common use is to create a line for transferring data to
+another form. Consider, for example, a worksheet that instructs to copy line 7
+to a schedule if line 7 is greater than zero, but to copy line 15 otherwise.
+Instead of having to put logic into the schedule to choose between copying line
+7 and line 15, the worksheet can designate a line ``fill!\@'' and the schedule
+can take the value from that line.
+
+\paragraph{Lines ending with the text ``\_explanation''.} This is for
+explanations that should appear on a continuation sheet. The value should be an
+array where the first item is the title of the explanation and the subsequent
+items are the text of the explanation, in troff format.
 
 
 \subsection{Form Submanagers}
@@ -84,6 +147,30 @@ of the PDF file for the form as a second command line argument.
 The program will automatically save the location of the PDF file and the
 coordinates of the marked fields to a file, which by default is named
 ``pos-data.txt''. This file name may be changed using the ``-p'' argument.
+
+
+
+
+\subsection{Boxed Data}
+
+In some cases, the PDF form will have individual boxes for each character or
+portion of text, rather than a single field for all the text. The ``boxed data''
+feature enables filling in these form fields correctly.
+
+To use this feature, the relevant TaxForm should call the method
+``boxed\_line(line, count, split)'' where line is the line number to be placed
+in boxes, count is the number of boxes available, and split is how to separate
+the line's data into segments (the default is an empty string, which means each
+character is separated individually). All this does is mark the relevant line in
+the form as a boxed-data line; computation proceeds unchanged.
+
+When the form field marking program is invoked, it will detect boxed-data lines
+and treat them like arrays. Thus, each box will need to be marked individually.
+However, if there are more letters than boxes available, the program will
+truncate data values to fit.
+
+
+
 
 
 
@@ -248,6 +335,15 @@ A dependent.
 dependents, and ``none'' where the dependent is not qualifying.
 \end{description}
 
+
+\subsection{Estimated Tax}
+
+Estimated tax payment made to the IRS.
+
+\begin{description}
+\item[amount] The amount of estimated tax paid.
+\end{description}
+
 \subsection{HSA Contribution}
 
 Records of contributions to an HSA account.
@@ -273,10 +369,23 @@ only supported type is ``partnership''.
 associated.
 \end{description}
 
+\subsection{State Estimated Tax}
+
+Estimated tax payment made to a state.
+
+\begin{description}
+\item[amount] The amount of estimated tax paid.
+\item[state] The two-letter code for the state.
+\end{description}
+
+
+
+
 \subsection{State Tax}
 
 A record of state taxes paid in the relevant tax year (usually for the previous
-year).
+year). This is the amount actually paid to the state tax office, (i.e., the
+amount due), not the total tax including what was already paid via withholdings.
 
 \begin{description}
 \item[amount] The amount of tax paid.

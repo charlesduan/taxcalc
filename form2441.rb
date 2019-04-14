@@ -19,7 +19,7 @@ class Form2441 < TaxForm
       if mfs_except
         line[:mfs_except] = 'X'
       else
-        line[:na] = 'X'
+        line[:na!] = 'X'
         return
       end
     end
@@ -27,7 +27,7 @@ class Form2441 < TaxForm
   end
 
   def needed?
-    !line[:na, :present]
+    !line[:na!, :present]
   end
 
 end

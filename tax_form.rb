@@ -3,6 +3,7 @@ require 'form_manager'
 require 'interviewer'
 require 'blank_zero'
 require 'date'
+require 'boxed_data'
 
 class TaxForm
   def initialize(manager)
@@ -39,6 +40,8 @@ class TaxForm
       else
         new_copy.line[lnum] = val
       end
+      puts "HERE!!! #{lnum}" if line.boxed?(lnum)
+      new_copy.box_line(lnum, *line.box_data(lnum)) if line.boxed?(lnum)
     end
     return new_copy
   end
@@ -138,6 +141,13 @@ class TaxForm
 
   def format_lines(format, *nums)
     format % nums.map { |l| line[l] }
+  end
+
+  #
+  # Use when a line is presented as a series of character-width boxes.
+  #
+  def box_line(line, box, split = "")
+    self.line.box(line, box, split)
   end
 
   def form_line_or(form_name, form_line, default)
@@ -242,6 +252,9 @@ class TaxForm
         line[last_line, :all] = [ line[last_line, :all], data ].flatten
       elsif data.is_a?(Enumerable)
         line[line_no, :all] = data
+      elsif data.is_a?(BoxedData)
+        line[line_no] = data.data
+        line.box(line_no, data.count, data.split)
       else
         line[line_no] = data
       end
@@ -313,11 +326,22 @@ class TaxForm
   end
 end
 
+
+
+
+########################################################################
+#
+# LINES CLASS
+#
+########################################################################
+
+
 class TaxForm; class Lines
   def initialize(form)
     @form = form
     @lines_data = {}
     @lines_order = []
+    @boxed_lines = {}
   end
 
   attr_reader :form
@@ -377,17 +401,48 @@ class TaxForm; class Lines
     end
   end
 
+  def box(line, count, split = "")
+    @boxed_lines[line.to_s] = [ count, split ]
+  end
+
+  def boxed?(line)
+    @boxed_lines.include?(line.to_s)
+  end
+
+  def box_data(line)
+    @boxed_lines[line.to_s]
+  end
+
+  def embox(line)
+    line = line.to_s
+    raise "Not a boxed line" unless boxed?(line)
+    data = self[line]
+    bld = @boxed_lines[line]
+    boxes = data.to_s.split(bld[1])
+    if data.is_a?(Numeric)
+      boxes.unshift(*([ "" ] * [ bld[0] - boxes.count, 0 ].max))
+    else
+      boxes = boxes[0, bld[0]]
+    end
+    return boxes
+  end
+
   def export(io = STDOUT)
 
     io.puts("Form #{@form.name}")
     @lines_order.each do |line|
       data = @lines_data[line]
       prefix = "\t#{line}\t"
-      [ data ].flatten.each do |item|
-        item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
-        item = item.to_s.gsub("\n", "\\n")
-        io.puts("#{prefix}#{item}")
-        prefix = "\t#{'"'.ljust(line.length)}\t"
+      if @boxed_lines[line]
+        bld = @boxed_lines[line]
+        io.puts("#{prefix}<#{bld[1]}|#{bld[0]}|#{data}>")
+      else
+        [ data ].flatten.each do |item|
+          item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
+          item = item.to_s.gsub("\n", "\\n")
+          io.puts("#{prefix}#{item}")
+          prefix = "\t#{'"'.ljust(line.length)}\t"
+        end
       end
     end
     io.puts()

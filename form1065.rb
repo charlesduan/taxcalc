@@ -8,14 +8,16 @@ class Form1065 < TaxForm
   end
 
   def compute
-    line['name'] = form('Partnership').line(:name)
-    line['address'] = form('Partnership').line(:address)
-    line['address2'] = form('Partnership').line(:address2)
-    line['A'] = form('Partnership').line('business')
-    line['B'] = form('Partnership').line('product')
-    line['C'] = form('Partnership').line('code')
-    line['D'] = form('Partnership').line('ein')
-    line['E'] = form('Partnership').line(:start)
+    bio = form('Partnership')
+    line['name'] = bio.line(:name)
+    line['address'] = bio.line(:address) + \
+      (bio.line(:address2, :present) ? " " + bio.line(:address2) : "")
+    line['city_zip'] = bio.line(:city_zip)
+    line['A'] = bio.line('business')
+    line['B'] = bio.line('product')
+    line['C'] = bio.line('code')
+    line['D'] = bio.line('ein')
+    line['E'] = bio.line(:start)
 
     assert_question(
       "Does this partnership meet the 4 conditions in Schedule B, line 4?",
@@ -26,12 +28,12 @@ class Form1065 < TaxForm
       "Does any box in line G need to be checked?", false
     )
 
-    case form('Partnership').line('accounting')
+    case bio.line('accounting')
     when 'Cash' then line['H.1'] = 'X'
     when 'Accrual' then line['H.2'] = 'X'
     else
       line['H.3'] = 'X'
-      line['H.other'] = form('Partnership').line('accounting')
+      line['H.other'] = bio.line('accounting')
     end
 
     line['I'] = forms('Partner').count

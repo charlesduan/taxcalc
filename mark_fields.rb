@@ -99,10 +99,10 @@ class PdfFileParser
     IO.popen("groff -mom -t | ps2pdf - #{tempdir}/ct.pdf", 'w') do |io|
       io.write(ct)
     end
+    command = [ CPDF, '-merge', '-i', filename, '-i', "#{tempdir}/ct.pdf" ]
+    command.push('AND', '-pad-multiple', '2') if @even_pages
+    command.push('-o', filename)
     popen(
-      CPDF, '-merge', '-i', filename, '-i', "#{tempdir}/ct.pdf",
-      'AND', '-pad-multiple', '2',
-      '-o', filename
     ) do |io|
       puts io.read
     end
@@ -420,9 +420,16 @@ class LinePosData
     # which are all the line numbers plus extra numbers for array-type values
     tax_form.line.each do |l, v|
       next if l.end_with?('!')
-      lines.push(l)
-      if v.is_a?(Array) && v.count > 1
-        lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
+      next if l.end_with?('explanation')
+      if tax_form.line.boxed?(l)
+        1.upto(tax_form.line.embox(l).count) { |x|
+          lines.push(x == 1 ? l : "#{l}##{x}")
+        }
+      else
+        lines.push(l)
+        if v.is_a?(Array) && v.count > 1
+          lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
+        end
       end
     end
 
@@ -500,6 +507,7 @@ class LinePosData
   def start_fill
     @fill_data = []
     @continuation_lines = []
+    @explanation_lines = []
   end
 
   #
@@ -557,6 +565,11 @@ class LinePosData
       return fill_multi(line, value)
     end
 
+    if line =~ /explanation/
+      @explanation_lines.push(value)
+      return
+    end
+
     page, x, y, w, h = *self[line]
     ypos = [ 0, h - 9, 3 ].sort[1] + y
     res = [
@@ -583,18 +596,34 @@ class LinePosData
     @fill_data.push(res)
   end
 
-  def make_continuation(bio)
-    return nil if @continuation_lines.empty?
+  def make_explanation(bio)
+    return nil if @explanation_lines.empty?
 
-    continuation_text = ""
-    continuation_text << ".T_MARGIN 1i\n.FAMILY H\n"
-    continuation_text << "\\f[B]Form #@form_name Continuation Sheet\n.PP\\f[]\n"
-    continuation_text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n\n"
+    text = ""
+    text << ".T_MARGIN 1i\n.FAMILY H\n"
+    text << "\\f[B]Form #@form_name Explanation Sheet\n.PP\\f[]\n"
+    text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n\n"
+
+    return text
+  end
+
+  def make_continuation(bio)
+    return nil if @continuation_lines.empty? && @explanation_lines.empty?
+
+    text = ""
+    text << ".T_MARGIN 1i\n.FAMILY H\n"
+    text << "\\f[B]Form #@form_name Continuation Sheet\\f[]\n.PP\n"
+    text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n\n"
+
+    @explanation_lines.each do |explanation|
+      text << "\\f[B]#{explanation[0]}\\f[]\n.PP\n"
+      text << explanation[1..-1].join("\n") + "\n.PP\n\n"
+    end
 
     @continuation_lines.each do |start, page, y, lines|
       if lines.count == 1
         l, v = *lines[0]
-        continuation_text << "Line #{l}: #{v}\n\n"
+        text << "Line #{l}: #{v}\n\n"
       else
 
         flat_lines = lines.map { |l, v| [ l, v ].flatten.map { |x| x.to_s } }
@@ -610,19 +639,19 @@ class LinePosData
         }.join("\t") + "\n_\n"
         max_rows = flat_lines.map { |col| col.length }.max
 
-        continuation_text << ".TS\nexpand;\n"
-        continuation_text << "lfB " * widths.count + "\n"
-        continuation_text << tbl_string
+        text << ".TS\nexpand;\n"
+        text << "lfB " * widths.count + "\n"
+        text << tbl_string
 
         (0...max_rows).each do |row|
-          continuation_text << (
+          text << (
             fmt_string % flat_lines.map { |col| col[row] || '' }
           )
         end
-        continuation_text << ".TE\n"
+        text << ".TE\n"
       end
     end
-    return continuation_text
+    return text
   end
 
   def end_fill(filename)
@@ -706,9 +735,14 @@ class MultiFormManager
     lpd.start_fill
 
     form.line.each do |l, v|
-      if lpd[l]
-        lpd.fill(l, v)
-      elsif l !~ /^_/
+      if l.end_with?("!") # Ignore
+      elsif lpd[l]
+        if form.line.boxed?(l)
+          lpd.fill(l, form.line.embox(l))
+        else
+          lpd.fill(l, v)
+        end
+      else
         STDERR.puts("No position data for form #{form.name}, line #{l}")
       end
     end

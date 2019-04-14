@@ -52,15 +52,19 @@ class Form8958 < TaxForm
     copy_line(:first_name, @my_bio)
     copy_line(:last_name, @my_bio)
     copy_line(:ssn, @my_bio)
+    box_line(:ssn, 3, '-')
     line[:spouse_first_name] = @spouse_bio.line[:first_name]
     line[:spouse_last_name] = @spouse_bio.line[:last_name]
     line[:spouse_ssn] = @spouse_bio.line[:ssn]
+    box_line(:spouse_ssn, 3, '-')
 
     my_name = "#{line[:first_name]} #{line[:last_name]}"
     spouse_name = "#{line[:spouse_first_name]} #{line[:spouse_last_name]}"
 
     line['B.ssn'] = line[:ssn]
     line['C.ssn'] = line[:spouse_ssn]
+    box_line('B.ssn', 3, '-')
+    box_line('C.ssn', 3, '-')
     line[1, :all] = forms('W-2').lines('c')
     enter_split(1, 'W-2', split_w2, 1)
 
@@ -98,6 +102,15 @@ class Form8958 < TaxForm
     }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
     enter_split(8, '1065 Schedule K-1', split_k1, 1)
 
+    #
+    # Page 2
+    #
+
+    line['B.ssn_2'] = line[:ssn]
+    line['C.ssn_2'] = line[:spouse_ssn]
+    box_line('B.ssn_2', 3, '-')
+    box_line('C.ssn_2', 3, '-')
+
     if my_se && my_se.line[12] > 0
       line[9, :add] = "Deduction for #{my_name}"
       line['9A', :add] = my_se.line[13]
@@ -131,17 +144,17 @@ class Form8958 < TaxForm
     enter_split(12, 'State Tax', split_state_tax, 'amount')
 
     line[12, :add] = forms('1098').lines('lender').map { |x|
-      "Home mortgage interest: #{x}"
+      "Home mortgage interest:\n#{x}"
     }
     enter_split(12, '1098', split_1098, 1)
 
     line[12, :add] = forms('1098').lines('lender').map { |x|
-      "Real estate taxes: #{x}"
+      "Real estate taxes:\n#{x}"
     }
     enter_split(12, '1098', split_1098, 10)
 
     line[12, :add] = forms('Charity Gift').lines('name').map { |x|
-      "Gifts to charity: #{x}"
+      "Gifts to charity:\n#{x}"
     }
     enter_split(12, 'Charity Gift', split_charity, 'amount')
 

@@ -7,6 +7,10 @@ class FormD65 < TaxForm
     'D-65'
   end
 
+  def year
+    2018
+  end
+
   def check_box(line_no, condition)
     if condition
       line["#{line_no}.yes"] = '*'
@@ -18,20 +22,35 @@ class FormD65 < TaxForm
   def compute
     f1065 = form(1065)
 
-    line[:ein] = f1065.line[:D]
-    line[:tax_period_month] = 12
-    line[:tax_period_year] = (Date.today.year - 1) % 100
+    line[:ein] = f1065.line[:D].sub("-", "")
+    box_line(:ein, 9)
+    line[:tax_period] = "12#{year % 100}"
+    box_line(:tax_period, 4)
 
     line[:business_name] = f1065.line[:name]
-    line[:address] = f1065.line[:address]
-    csz = f1065.line[:address2]
+    box_line(:business_name, 25)
+    addr, addr2 = f1065.line[:address], nil
+    if addr.length > 26
+      addr.match(/^(.{0,26}) (.*)$/) { |m| addr, addr2 = m[1], m[2] }
+    end
+    line[:address] = addr
+    line[:address2] = addr2 if addr2
+    box_line(:address, 26)
+    box_line(:address2, 26)
+    csz = f1065.line[:address2] # TODO: After 2018 this will be city_zip
+    box_line(:address2, 26)
     if csz =~ /,? ([A-Z][A-Z]) (\d{5}(?:-\d{4})?)$/
       line[:city] = $`
+      box_line(:city, 20)
       line[:state] = $1
+      box_line(:state, 2)
       line[:zip] = $2
+      box_line(:zip, 5)
     else
       raise "Could not parse city, state, zip"
     end
+
+    1.upto(22) do |n| box_line(n, 9) end
 
     line[1] = f1065.line['1c']
     copy_line(2, f1065)
@@ -66,11 +85,8 @@ class FormD65 < TaxForm
     line['F1.2'] = line[1]
     line['F2'] = (line['F1.2'] * 1.0 / line['F1.1']).round(6)
 
-    if f1065.line[:E] =~ /^(\d+)\/(\d+)\/(\d+)$/
-      line[:A] = "%02d/%02d" % [ $1, $3.to_i % 100 ]
-    else
-      raise "Could not parse start date"
-    end
+    line[:A] = f1065.line[:E].strftime("%m%y")
+    box_line(:A, 4)
 
     if f1065.line['H.1', :present]
       line['B.cash'] = '*'
@@ -82,6 +98,7 @@ class FormD65 < TaxForm
     end
 
     line[:C] = f1065.line[:I]
+    box_line(:C, 4)
     check_box(:D, f1065.line['B1b', :present])
 
     check_box(:E, f1065.line['B1c', :present])
@@ -107,6 +124,15 @@ class FormD65 < TaxForm
     end
 
     check_box(:N, interview('Was your previous year 1065 amended or changed?'))
+
+    line[:filing_explanation, :all] = [
+      'Explanation for Filing Form D-65 Rather Than Form D-30',
+      'Form D-65 is being filed because the partnership for which the form is',
+      'being filed is a trade or business deriving more than 80% of its gross',
+      'income from personal services rendered by owners or members of the',
+      'partnership in conducting or carrying on a trade or business in which',
+      'capital is not a material income- producing factor.',
+    ]
 
   end
 end

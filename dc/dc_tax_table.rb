@@ -1,5 +1,7 @@
 module DcTaxTable
 
+  # Updated for 2018
+
   def self.parse_table(table)
     res = []
     table.each_line do |line|
@@ -20,9 +22,9 @@ module DcTaxTable
   def compute_tax(income)
     if income <= 100000
       return compute_tax_table(income)
-    elsif income < 350000
+    elsif income <= 350000
       return 3500 + (0.085 * (income - 60000)).round
-    elsif income < 1000000
+    elsif income <= 1000000
       return 28150 + (0.0875 * (income - 350000)).round
     else
       return 85025 + (0.0895 * (income - 1000000)).round

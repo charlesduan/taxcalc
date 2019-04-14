@@ -209,8 +209,11 @@ class FormManager
             raise "Unknown form type #{type}"
           end
         end
-      rescue
-        warn "Error during import: #{file}, line #{io.lineno}: #$!"
+      rescue => e
+        warn(
+          "Error during import: #{file}, line #{io.lineno}: #{e}\n" + \
+          "#{e.backtrace.join("\n")}\n"
+        )
         exit 1
       end
     end
