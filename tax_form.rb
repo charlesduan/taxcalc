@@ -40,7 +40,6 @@ class TaxForm
       else
         new_copy.line[lnum] = val
       end
-      puts "HERE!!! #{lnum}" if line.boxed?(lnum)
       new_copy.box_line(lnum, *line.box_data(lnum)) if line.boxed?(lnum)
     end
     return new_copy
@@ -343,6 +342,8 @@ class TaxForm; class Lines
     @lines_order = []
     @boxed_lines = {}
   end
+
+  include Enumerable
 
   attr_reader :form
 

@@ -156,6 +156,13 @@ class Form1040 < TaxForm
 
     line[1] = forms('W-2').lines(1, :sum)
 
+    if has_form?(8958) && has_form?('Explanation of 8958')
+      line['1.note'] = 'See attached explanation of line 1'
+      line['1.explanation', :all] = [
+        'Explanation of Line 1 based on Form 8958'
+      ] + form('Explanation of 8958').line[:explanation, :all]
+    end
+
     sched_b = compute_form(Form1040B)
 
     # Interest

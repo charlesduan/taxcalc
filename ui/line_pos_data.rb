@@ -146,21 +146,23 @@ class LinePosData
       if line =~ /^\D*\d+/
         start_num = $&
         page, x, y, w, h = *self[line]
+        options = { :position => ContinuationPosData.new(start_num, page, y) }
 
-        # @continuation_lines is a four-element array, the first three items of
-        # which are used to determine whether to suppress the continuation
-        # message. The fourth item is an array of lines to include on the
-        # continuation sheet; each item is a two-element array of the line
-        # number and values array.
-        @continuation_lines.each do |c_start_num, c_page, c_y, c_lines|
-          if c_start_num == start_num && c_page == page && (c_y - y).abs < 10
+        # @continuation_lines is a two-element array, the first item being a set
+        # of options. Among those options, the :position option is a
+        # ContinuationPosData object that allows for testing of whether the line
+        # matches an existing continuation line record. The second item is an
+        # array of lines to include on the continuation sheet; each item is a
+        # two-element array of the line number and values array.
+        @continuation_lines.each do |c_options, c_lines|
+          if c_options[:position] == options[:position]
             c_lines.push([ line, value ])
             return
           end
         end
-        @continuation_lines.push([ start_num, page, y, [ [ line, value ] ] ])
+        @continuation_lines.push([ options, [ [ line, value ] ] ])
       else
-        @continuation_lines.push([ nil, nil, nil, [ [ line, value ] ] ])
+        @continuation_lines.push([ {}, [ [ line, value ] ] ])
       end
       return fill(line, "See continuation sheet")
     end
@@ -176,11 +178,6 @@ class LinePosData
   def fill(line, value)
     if value.is_a?(Array)
       return fill_multi(line, value)
-    end
-
-    if line =~ /explanation/
-      @explanation_lines.push(value)
-      return
     end
 
     page, x, y, w, h = *self[line]
@@ -209,38 +206,54 @@ class LinePosData
     @fill_data.push(res)
   end
 
-  def make_explanation(bio)
-    return nil if @explanation_lines.empty?
+  #
+  # Adds an explanatory text.
+  #
+  def add_explanation(line, value)
+    @explanation_lines.push(value)
+  end
 
-    text = ""
-    text << ".T_MARGIN 1i\n.FAMILY H\n"
-    text << "\\f[B]Form #@form_name Explanation Sheet\n.PP\\f[]\n"
-    text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n\n"
-
-    return text
+  #
+  # Adds a manually-entered table that contains all the lines of a tax form.
+  #
+  def add_continuation_table(form)
+    lines = form.line.to_a
+    @continuation_lines.push([ { :title => form.name }, lines ])
   end
 
   def make_continuation(bio)
     return nil if @continuation_lines.empty? && @explanation_lines.empty?
 
     text = ""
-    text << ".T_MARGIN 1i\n.FAMILY H\n"
+    text << <<-EOF
+.PRINTSTYLE TYPESET
+.T_MARGIN 1i
+.FAMILY H
+.PARA_INDENT 0p
+.PARA_SPACE
+.START
+    EOF
     text << "\\f[B]Form #@form_name Continuation Sheet\\f[]\n.PP\n"
-    text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n\n"
+    text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n"
 
     @explanation_lines.each do |explanation|
       text << "\\f[B]#{explanation[0]}\\f[]\n.PP\n"
       text << explanation[1..-1].join("\n") + "\n.PP\n\n"
     end
 
-    @continuation_lines.each do |start, page, y, lines|
+    @continuation_lines.each do |options, lines|
+
+      if options[:title]
+        text << "\\f[B]#{options[:title]}\\f[]\n.PP\n"
+      end
+
       if lines.count == 1
         l, v = *lines[0]
         text << "Line #{l}: #{v}\n\n"
       else
 
         flat_lines = lines.map { |l, v| [ l, v ].flatten.map { |x| x.to_s } }
-        flat_lines[0][0] = "Line #{flat_lines[0][0]}"
+        flat_lines[0][0] = "#{flat_lines[0][0]}"
         widths = flat_lines.map { |col| col.map { |x| x.length }.max }
         big_cols = widths.map { |x| x > 8 }
         big_col_width = (75 - 9 * widths.count) / big_cols.count { |x| x } + 9
@@ -271,8 +284,24 @@ class LinePosData
     @parser.fill_form(@fill_data, filename)
   end
 
+  # Adds the continuation data to the output PDF.
   def add_continuation(continuation_data, filename)
     @parser.add_continuation(continuation_data, filename)
+  end
+
+
+
+  class ContinuationPosData
+    def initialize(start_num, page, y)
+      @start_num, @page, @y = start_num, page, y
+    end
+    attr_reader :start_num, :page, :y
+    def ==(obj)
+      return false unless obj.is_a?(ContinuationPosData)
+      return false unless obj.start_num == @start_num && obj.page == @page
+      return false unless (obj.y - @y).abs < 10
+      return true
+    end
   end
 
 end

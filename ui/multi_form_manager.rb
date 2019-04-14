@@ -70,6 +70,10 @@ class MultiFormManager
 
     form.line.each do |l, v|
       if l.end_with?("!") # Ignore
+      elsif l =~ /explanation$/
+        lpd.add_explanation(l, v)
+      elsif l == 'continuation'
+        lpd.add_continuation_table(form.manager.form(v))
       elsif lpd[l]
         if form.line.boxed?(l)
           lpd.fill(l, form.line.embox(l))

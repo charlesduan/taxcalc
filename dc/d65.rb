@@ -1,5 +1,6 @@
 require 'tax_form'
 require 'date'
+require 'dc/d65_distrib'
 
 class FormD65 < TaxForm
 
@@ -133,6 +134,9 @@ class FormD65 < TaxForm
       'partnership in conducting or carrying on a trade or business in which',
       'capital is not a material income- producing factor.',
     ]
+
+    compute_form(D65PassThroughDistribution)
+    line[:continuation] = 'Schedule of Pass-Through Distribution of Income'
 
   end
 end

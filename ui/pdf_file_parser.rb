@@ -89,8 +89,7 @@ class PdfFileParser
     command = [ CPDF, '-merge', '-i', filename, '-i', "#{tempdir}/ct.pdf" ]
     command.push('AND', '-pad-multiple', '2') if @even_pages
     command.push('-o', filename)
-    popen(
-    ) do |io|
+    popen(*command) do |io|
       puts io.read
     end
   end
