@@ -397,7 +397,8 @@ relevant functionality is not implemented.
 store objects that maintain a tree of computations. For example, if line 7 is
 the sum of lines 5 and 6, line 7 would be presented as an object referencing
 those two lines and carrying an ``add'' instruction. This would help with
-tracing errors and optimizing computations.
+tracing errors and optimizing computations. It will also help with detecting
+whether form or line information was never used, since that is likely an error.
 
 \emph{Asterisks for line notes.} Currently if there is an explanatory note to a
 line, it just goes in some place determined during the form marking phase;
