@@ -33,7 +33,6 @@ class LinePosData
     # which are all the line numbers plus extra numbers for array-type values
     tax_form.line.each do |l, v|
       next if l.end_with?('!')
-      next if l.end_with?('explanation')
       if tax_form.line.boxed?(l)
         1.upto(tax_form.line.embox(l).count) { |x|
           lines.push(x == 1 ? l : "#{l}##{x}")

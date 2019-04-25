@@ -51,6 +51,11 @@ class FormD65 < TaxForm
       raise "Could not parse city, state, zip"
     end
 
+    line[:agent_name] = f1065.line['PR.name']
+    line[:agent_tin] = f1065.line['PR.tin'].gsub("-", "")
+    box_line(:agent_name, 21)
+    box_line(:agent_tin, 9)
+
     1.upto(22) do |n| box_line(n, 9) end
 
     line[1] = f1065.line['1c']
@@ -126,17 +131,17 @@ class FormD65 < TaxForm
 
     check_box(:N, interview('Was your previous year 1065 amended or changed?'))
 
-    line[:filing_explanation, :all] = [
+    line[:filing_explanation!, :all] = [
       'Explanation for Filing Form D-65 Rather Than Form D-30',
       'Form D-65 is being filed because the partnership for which the form is',
       'being filed is a trade or business deriving more than 80% of its gross',
       'income from personal services rendered by owners or members of the',
       'partnership in conducting or carrying on a trade or business in which',
-      'capital is not a material income- producing factor.',
+      'capital is not a material income-producing factor.',
     ]
 
     compute_form(D65PassThroughDistribution)
-    line[:continuation] = 'Schedule of Pass-Through Distribution of Income'
+    line[:continuation!] = 'Schedule of Pass-Through Distribution of Income'
 
   end
 end

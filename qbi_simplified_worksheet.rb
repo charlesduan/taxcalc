@@ -12,7 +12,7 @@ class QBISimplifiedWorksheet < TaxForm
 
   def compute
 
-    assert_no_forms('1040 Schedule C')
+    assert_no_forms('1099-MISC') # which would trigger a Schedule C
     forms('1065 Schedule K-1').each do |f|
       add_table_row(
         '1a' => f.line[:B].sub(/\n.*/, ''),

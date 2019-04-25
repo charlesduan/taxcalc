@@ -11,8 +11,7 @@ class Form1040A < TaxForm
   end
 
   def compute
-    line[:name] = form(1040).full_name
-    line[:ssn] = form(1040).ssn
+    set_name_ssn
 
     line['5a'] = forms('State Tax').lines(:amount, :sum) + \
       forms('W-2').lines(17, :sum)

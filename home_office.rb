@@ -23,6 +23,10 @@ class Pub587Worksheet < TaxForm
     'Publication 587 Worksheets'
   end
 
+  def year
+    2018
+  end
+
   def initialize(manager, ho_form, income_form)
     super(manager)
     @ho_form = ho_form

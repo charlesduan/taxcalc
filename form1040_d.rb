@@ -7,7 +7,7 @@ class Form1040D < TaxForm
   end
 
   def year
-    2017
+    2018
   end
 
   def needed?
@@ -35,10 +35,22 @@ class Form1040D < TaxForm
       line['2h'] = forms_b.lines('I.2h', :sum)
     end
 
-    assert_no_forms(6252, 4684, 6781, 8824)
+    # Assume there are none of these:
+    # Form 6252: Installment sales
+    # Form 4684: Casualties and thefts
+    # Form 6781: Section 1251 contracts (non-equity options, futures contracts)
+    # Form 8824: Like-kind exchanges of real property
+    # Form 4797: Sale of business property
+    # Form 2439: RIC or REIT undistributed capital gains
+
     line[5] = forms('1065 Schedule K-1').lines(8, :sum)
 
-    assert_no_forms('Capital Loss Carryover Worksheet')
+    if @manager.submanager(:last_year).has_form?('1040 Schedule D')
+      last_d = @manager.submanager(:last_year).has_form?('1040 Schedule D')
+      if last_d.line[21, :present]
+        raise "Capital Loss Carryover not implemented"
+      end
+    end
 
     line[7] = line['1b.h'] + line['2h']
 
@@ -60,11 +72,9 @@ class Form1040D < TaxForm
       line['9h'] = forms_e.lines('II.2h', :sum)
     end
 
-    assert_no_forms(4797, 2439, 6252, 4684, 6781, 8824)
     line[12] = forms('1065 Schedule K-1').lines('9a', :sum)
 
     assert_no_lines('1099-DIV', '2a', '2b', '2c', '2d')
-    assert_no_forms('Capital Loss Carryover Worksheet')
     line[15] = line['8b.h'] + line['9h']
 
     line[16] = line[7] + line[15]

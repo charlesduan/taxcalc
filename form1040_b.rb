@@ -7,12 +7,11 @@ class Form1040B < TaxForm
   end
 
   def year
-    2017
+    2018
   end
 
   def compute
-    line[:name] = form(1040).full_name
-    line[:ssn] = form(1040).ssn
+    set_name_ssn
 
     line['1l', :all] = forms('1099-INT').lines('name')
     line['1r', :all] = forms('1099-INT').lines(1)

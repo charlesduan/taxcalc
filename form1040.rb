@@ -43,10 +43,6 @@ class Form1040 < TaxForm
     line[:first_name] + ' ' + line[:last_name]
   end
 
-  def ssn
-    %w(ssn_1 ssn_2 ssn_3).map { |x| line[x] }.join("-")
-  end
-
   def compute
 
     @bio = forms('Biographical').find { |x| x.line[:whose] == 'mine' }
@@ -67,7 +63,8 @@ class Form1040 < TaxForm
     copy_line(:first_name, @bio)
     copy_line(:last_name, @bio)
 
-    line[:ssn_1], line[:ssn_2], line[:ssn_3] = @bio.line[:ssn].split(/-/)
+    line[:ssn] = @bio.line[:ssn]
+    box_line(:ssn, 3, '-')
 
     if interview("Can someone claim you as a dependent?")
       line['ysd.dependent'] = 'X'
@@ -82,8 +79,8 @@ class Form1040 < TaxForm
       copy_line(:last_name, @sbio)
     end
     if @status.is(%w(mfj mfs))
-      line[:spouse_ssn_1], line[:spouse_ssn_2], line[:spouse_ssn_3] = \
-        @sbio.line[:ssn].split(/-/)
+      line[:spouse_ssn] = @sbio.line[:ssn]
+      box_line(:spouse_ssn, 3, '-')
     end
 
     if interview("Can someone claim your spouse as a dependent?")
@@ -158,7 +155,7 @@ class Form1040 < TaxForm
 
     if has_form?(8958) && has_form?('Explanation of 8958')
       line['1.note'] = 'See attached explanation of line 1'
-      line['1.explanation', :all] = [
+      line['1.explanation!', :all] = [
         'Explanation of Line 1 based on Form 8958'
       ] + form('Explanation of 8958').line[:explanation, :all]
     end
@@ -292,12 +289,14 @@ class Form1040 < TaxForm
       line['20a'] = line[19]
       if interview("Do you want your refund direct deposited?")
         line['20b'] = interview("Direct deposit routing number:")
+        box_line('20b', 9)
         if interview("Direct deposit is to checking?")
           line['20c.checking'] = 'X'
         else
           line['20c.savings'] = 'X'
         end
         line['20d'] = interview("Direct deposit account number:")
+        box_line('20d', 17)
       end
     else
 
@@ -413,7 +412,7 @@ class QdcgtWorksheet < TaxForm
 
   def compute
     f1040 = form(1040)
-    assert_no_forms(2555, '2555-EZ')
+    assert_question("Did you have any foreign income?", false)
     line[1] = f1040.line[10]
     line[2] = f1040.line['3a']
     if has_form?('1040 Schedule D')

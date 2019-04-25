@@ -67,7 +67,10 @@ class FormD40 < TaxForm
     # SS income; removed from 1040
     #line[9] = forms(1040).lines('20b', :sum)
 
-    assert_no_forms('D-20', 'D-30', 'D-41') # Line 10
+    assert_question(
+      "Did you file a DC franchise or fiduciary return (D-20, D-30, D-40)?",
+      false
+    )
 
     # Line 11
     assert_question('Did you receive income as an annuitant\'s survivor?',

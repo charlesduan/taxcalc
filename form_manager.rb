@@ -88,6 +88,13 @@ class FormManager
     @no_forms[form_name.to_s] = 1
   end
 
+  # Copy records of no forms to another manager.
+  def copy_no_forms(manager)
+    @no_forms.keys.each do |nf|
+      manager.no_form(nf)
+    end
+  end
+
   # Copy a form, perhaps from another manager.
   def copy_form(other_form)
     new_form = other_form.copy(self)
@@ -131,6 +138,10 @@ class FormManager
 
   def has_form?(name)
     @forms.include?(name.to_s)
+  end
+
+  def all_forms
+    @ordered_forms.dup
   end
 
   #

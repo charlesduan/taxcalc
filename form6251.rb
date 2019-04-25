@@ -171,9 +171,7 @@ class Form6251 < TaxForm
     end
 
     # Line 7
-    if has_form?(2555)
-      raise "Form 6251 does not implement Form 2555 computation"
-    end
+    assert_question("Did you have any foreign income?", false)
     l7test = false
     if form(1040).line['3a'] > 0
       l7test = true
@@ -227,9 +225,9 @@ class Form6251 < TaxForm
       l10 += f.line[46]
     end
     l10 -= @ftc_form.line[:fill!] if @ftc_form
-    if has_form?('1040 Schedule J')
-      raise 'Form 6251, Line 10 does not implement Schedule J computation'
-    end
+
+    # Schedule J: assumed that you are not a farmer or fisherman
+
     line[10] = l10
   end
 

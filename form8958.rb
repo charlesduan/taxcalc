@@ -30,6 +30,14 @@ class Form8958 < TaxForm
 
   def compute
 
+    # Accounting for No Form records
+    @manager.copy_no_forms(@my_manager)
+    @manager.copy_no_forms(@spouse_manager)
+
+    # Ensure that every form provided to the community is split in some way.
+    @all_forms = @manager.all_forms
+    @all_forms.delete(self)
+
     split_biographical
 
     @itemize = interview('Do you want to itemize deductions?')
@@ -49,6 +57,14 @@ class Form8958 < TaxForm
     split_forms('Dependent')
     split_forms('Home Office')
 
+    unless @all_forms.empty?
+      warn "These forms were not accounted for in Form 8958 computation:"
+      @all_forms.each do |f| warn(f.name) end
+      raise "Unaccounted forms in 8958 processing"
+    end
+      
+
+    # Form 8958 biographical information
     copy_line(:first_name, @my_bio)
     copy_line(:last_name, @my_bio)
     copy_line(:ssn, @my_bio)
@@ -200,10 +216,16 @@ class Form8958 < TaxForm
 
     @spouse_manager.copy_form(@my_bio).line[:whose, :overwrite] = 'spouse'
     @spouse_manager.copy_form(@spouse_bio).line[:whose, :overwrite] = 'mine'
+
+    @all_forms.delete(@my_bio)
+    @all_forms.delete(@spouse_bio)
   end
 
   def split_forms(form_name)
-    res = forms(form_name).map { |f| split_form(f) }
+    res = forms(form_name).map { |f|
+      @all_forms.delete(f)
+      split_form(f)
+    }
     if res.map(&:first).all?(&:nil?)
       @my_manager.no_form(form_name)
     end

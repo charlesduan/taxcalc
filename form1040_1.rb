@@ -26,7 +26,7 @@ class Form1040_1 < TaxForm
     assert_no_forms('1099-MISC')
     #line[12] = forms('1040 Schedule C').lines(31, :sum)
 
-    sched_d = compute_form(Form1040D)
+    sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
 
     if sched_d
       line[13] = sched_d.line[:fill!]

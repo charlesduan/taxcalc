@@ -39,7 +39,7 @@ class Form4562 < TaxForm
         raise "Cannot handle multiple businesses"
       end
       line['business'] = k1_form.line['B'].split("\n")[0]
-      line[:id] = form(1040).ssn
+      line[:id] = form(1040).line[:ssn]
 
       line[1] = 1_000_000
       l2 = k1_form.line[12]

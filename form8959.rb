@@ -24,7 +24,8 @@ class Form8959 < TaxForm
     line[7] = (line[6] * 0.009).round
 
     with_form('1040 Schedule SE') do |sched_se|
-      assert_no_forms('1040-PR', '1040-SS')
+      # Forms 1040-PR or 1040-SS may be required if the self-employed person
+      # lives in a US territory.
       line[8] = [ 0, sched_se.line[6] ].max
       line[9] = form(1040).status.form_8959_limit
       line[10] = line[4]

@@ -17,8 +17,8 @@ class Form1040SE < TaxForm
     # doesn't deduct W-2 wages from the extra social security wages tax.
     #
 
-    line[2] = forms('1040 Schedule C').lines(31, :sum) + \
-      forms('1065 Schedule K-1').lines(14, :sum)
+    assert_no_forms('1099-MISC') # Otherwise Schedule C must be computed
+    line[2] = forms('1065 Schedule K-1').lines(14, :sum)
 
     line[3] = sum_lines('1a', '1b', 2)
 

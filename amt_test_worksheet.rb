@@ -59,7 +59,7 @@ class AMTTestWorksheet < TaxForm
       line['12no'] = 'X'
       line[12] = (line[11] * 0.26).round
     end
-    assert_no_forms('1040 Schedule J')
+    # Schedule J: assumed we are not a farmer or fisherman.
     # I'm assuming no Premium Tax Credit at issue and thus no Schedule 2, line
     # 46.
     line[13] = f1040.line['11a']
