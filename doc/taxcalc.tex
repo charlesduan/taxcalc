@@ -46,60 +46,132 @@ computation script and then rerun the third-phase filling script, thereby
 updating all of the tax forms automatically.
 
 
-\section{Phase One: Computation}
 
-This section describes the operation of the first phase, computation of tax form
-line items.
 
-\subsection{Structure of Tax Form Data}
+\section{Recommended Procedure for Annual Filing}
 
-The basic data structure used throughout the system is the TaxForm, which in
-essence is simply a named table mapping line numbers to values. Values may be of
-several types:
+This section provides recommendations on preparing an annual tax filing. This
+includes updating the software in view of changes to the tax laws and forms, as
+well as preparing the returns themselves.
+
+First, prepare the script for running the computations, and enter the data for
+received forms (W-2s, 1099s, etc.). It is preferable to do this first rather
+than updating the tax form computations, because it allows for partially running
+the program in advance. This has two benefits as you update the computations: It
+reveals bugs earlier, and it lets you assess with real data whether it is worth
+implementing a new computation.
+
+At this step, be sure to review the informational forms in the Appendix and
+ensure that you have entered all relevant information required there.
+
+Next, update the computations. Start with the main form being computed (e.g.,
+Form 1040), and work line by line through the script. I found it preferable to
+address each form dependency as it came immediately, resulting in a depth-first
+update. That is, when the 1040 calls for a result from Schedule B, I would pause
+work on the 1040 and go update Schedule B. The advantage of this is that you can
+continue running partial tests of the computations. The main disadvantage is
+that it becomes hard to keep track of which form you are working on; I generally
+addressed this by leaving comments in the files as I worked on them.
+
+Once all the computations are done and run without errors, move on to phase 2
+and mark the form fields. I found it useful to mark both the forms and the
+worksheets, even though the worksheets do not need to be filed, because it made
+it easier to review everything for accuracy.
+
+Then prepare the script for filling in all the forms (phase 3), and fill them in
+to produce a draft return. This will help to identify any computation errors.
+
+Once you have reviewed the draft return and corrected any issues, you can
+optimize the return (e.g., try different filing statuses, move dependents
+around, choose standard versus itemized deductions, and so on). Once you are
+satisfied, you can print, sign, and file your returns.
+
+\section{Object Classes and Data Structures}
+
+The tax computation system is written in Ruby and is organized around two main
+classes: the TaxForm and the FormManager.
+
+
+\subsection{The TaxForm}
+
+Generally, each tax form is represented as an instance of a Ruby class for that
+form, a subclass of TaxForm. A TaxForm has four essential methods:
 \begin{description}
-\item[blank zero] A single dash, representing a zero value.
-\item[number] A number, possibly with a decimal point and possibly led with a
-minus sign.
-\item[date] Formatted as mm/dd/yyyy.
-\item[array] A list of values, each of which is one of the above types. Arrays
-may be specified in two forms: A comma-separated list surrounded by square
-brackets, or another way described below.
-\item[text string] Anything else.
+\item[name] The name of this form. The word ``Form'' should not precede names.
+\item[year] The tax year for which this form has been updated. This is used to
+check whether the form has been updated yet. (An out-of-date form will still
+be executed; it will just produce a warning.)
+\item[compute] Compute the form. This method should fill in all the lines of the
+form.
+\item[needed?] Whether the tax form is ultimately needed for inclusion in the
+return. This method should be called after compute, and it should inspect the
+results of the lines of the form to determine if the form needs to be filed.
 \end{description}
-Another data type is ``boxed data,'' described below; it is represented in a
-format surrounded with angle brackets and is essentially a text string or
-number.
 
-A plain text file may store one or more forms according to the following format.
-A form begins with a line starting with the word ``Form'', a space, and the
-name of the form. Lines of the form follow; they must be indented with
-whitespace, and the line number should be separated from the value with
-whitespace. For example:
-\begin{quote}
-\ttfamily\obeylines\obeyspaces
-Form W-2
-\     first\_name         John
-\     last\_name          Doe
-\     a                   123-45-6789
-\     b                   98-7654321
-\     c                   Acme Widgets Co.
-\     1                   50000
-\     2                   15000
-\end{quote}
-Further forms may be included in the same file, delineated with the start word
-``Form'' at the beginning of a line.
+A form is essentially a hash table that maps line numbers to data values. Line
+numbers may be any strings so long as they contain no spaces. Values may be
+atomic values (numbers, strings, dates), or may be arrays of those atomic
+values. The order of lines is remembered (and can be altered manually).
 
-An array may be constructed by placing each array element on a separate line in
-the file, replacing the line number with a double quote mark. For example:
-\begin{quote}
-\ttfamily\obeylines\obeyspaces
-A   15
-"   18
-"   20
-\end{quote}
-is identical to ``\texttt{A [15, 18, 20]}''.
+The TaxForm has several methods with the name ``line'' for getting and setting
+lines:
+\begin{itemize}
+\item line[\#] returns the value of that line. If the value is an array or is
+unset, an error is raised.
+\item line[\#, :opt] returns the value of the line, or if the line is
+unset it returns BlankZero.
+\item line[\#, :all] returns an array for this line's values. It always returns
+an array, even if the line only has an atomic value.
+\item line[\#, :sum] returns the sum of this line's values.
+\item line[\#, :present] returns true or false depending on whether the line is
+set.
+\item line[\#] = x will set the line to an atomic value; it will raise an error
+if given an array. If the line is already set, a warning will be raised.
+\item line[\#, :all] = [ x, y, z ] will set the line to an array value.
+\item line[\#, :add] = x will force the line to be an array and then will append
+the given value to that array.
+\item line[\#, :overwrite] = x will set the line to an atomic value, and will
+not warn if the line was already set.
+\end{itemize}
+As a shortcut, the ``method\_missing'' method for TaxForm will infer line
+numbers from methods named ``line\_\#''.
 
+Every TaxForm is associated with a FormManager. Many of the methods of TaxForm
+are delegated to its FormManager as a matter of convenience.
 
+\subsection{How Tables Are Stored in Forms}
+
+Consider a form that requires input like so:
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Line 1a} & \textbf{1b} & \textbf{1c} \\
+\textbf{Business name} & \textbf{Income} & \textbf{Expenses} \\
+\hline
+Acme Enterprises & 5000 & 400 \\
+\hline
+Foobar Inc. & 10000 & \\
+\hline
+Big Corp. & 15000 & 600 \\
+\hline
+\end{tabular}
+\end{center}
+This would be stored in a TaxForm as three lines named 1a, 1b, and 1c as
+follows:
+\begin{itemize}
+\item Line 1a: [ ``Acme Enterprises'', ``Foobar Inc.'', ``Big Corp.'' ]
+\item Line 1b: [ 5000, 10000, 15000 ]
+\item Line 1c: [ 400, --, 600 ]
+\end{itemize}
+It may appear transposed from what one ordinarily thinks of as ``lines,'' but it
+corresponds better to the line numbering that tax forms tend to use. It also
+makes for somewhat easier processing since the usual situation is that a form
+calls for summation over a column, which can be easily obtained (e.g.,
+``line[`1b', :sum]'').
+
+A method ``add\_table\_row'' takes a hash mapping line numbers to values for a
+single row, and updates each line in a manner that reflects a ``row'' being
+added to a table of those lines.
 
 \subsection{Special Line Names}
 
@@ -121,9 +193,93 @@ array where the first item is the title of the explanation and the subsequent
 items are the text of the explanation, in troff format.
 
 
-\subsection{Form Submanagers}
 
-The main FormManager for an entity may contain ``submanagers,'' namely
+
+
+\subsection{The TaxForm File Format}
+
+As described above, data for tax computation is presented in TaxForm objects.
+These objects are serialized to plain text files in the following format.
+A form begins with a line starting with the word ``Form'', a space, and the
+name of the form. Lines of the form follow; they must be indented with
+whitespace, and the line number should be separated from the value with
+whitespace. For example:
+\begin{quote}
+\ttfamily\obeylines\obeyspaces
+Form W-2
+\     first\_name          John
+\     last\_name           Doe
+\     a                   123-45-6789
+\     b                   98-7654321
+\     c                   Acme Widgets Co.
+\     1                   50000
+\     2                   15000
+\end{quote}
+Further forms may be included in the same file, delineated with the start word
+``Form'' at the beginning of a line.
+
+The line value may be any of the following:
+\begin{description}
+\item[blank zero] A single dash, representing a zero value.
+\item[number] A number, possibly with a decimal point and possibly led with a
+minus sign.
+\item[date] Formatted as mm/dd/yyyy.
+\item[array] A list of values, each of which is one of the above types. Arrays
+may be specified in two forms: A comma-separated list surrounded by square
+brackets, or another way described below.
+\item[text string] Anything else.
+\end{description}
+Another data type is ``boxed data,'' described below; it is represented in a
+format surrounded with angle brackets and is essentially a text string or
+number.
+
+An array may be constructed by placing each array element on a separate line in
+the file, replacing the line number with a double quote mark. For example:
+\begin{quote}
+\ttfamily\obeylines\obeyspaces
+A   15
+"   18
+"   20
+\end{quote}
+is identical to ``\texttt{A [15, 18, 20]}''.
+
+When forms are read in from a file, they are instantiated as objects of class
+NamedForm, even if a class specific to the form exists. This helps to
+distinguish forms read from input from those that were computed. Generally it
+should be unnecessary to use any of the methods specific to particular forms on
+forms read from files, since those forms have already been fully computed.
+
+\paragraph{No Form.} If there are no forms of a certain type, the directive ``No
+Form [\#]'' may be included in the import file. This avoids a warning that is
+produced when the FormManager tries to find a form that is not present. (The
+purpose of the warning is to avoid accidental omissions of forms.)
+
+\paragraph{Table.} If there are many TaxForm objects of the same type (e.g.,
+Charity Gift), you can save some typing by entering them in a tabular format:
+\begin{quote}
+\ttfamily\obeylines\frenchspacing\obeyspaces
+Table Charity Gift
+\    amount   cash?   name
+\    500      yes     Red Cross
+\    30       no      Salvation Army
+\    1000     yes     NPR
+\end{quote}
+The last of these columns may contain values with spaces in them; the earlier
+ones may not.
+
+
+\subsection{The FormManager}
+
+The FormManager maintains a complete tax return and manages the forms in that
+return. Its methods mostly deal with adding, computing, and querying forms.
+
+One interesting feature is that a FormManager has a method ``forms(name)'' that
+returns an array of forms with the given name. The returned object is an Array
+delegate that has an additional method ``lines'' for querying all the lines of
+all the returned forms.
+
+\paragraph{Submanagers.}
+A FormManager for an entity may contain ``submanagers,'' namely
 references to other FormManager objects for different entities or tax years.
 This is a convenient way to draw information from a related filing.
 
@@ -131,6 +287,36 @@ Submanagers are added using the add\_submanager method, which requires a name
 for identifying the submanager. Common names are :last\_year and :spouse. The
 add\_submanager\_from\_file method creates a new FormManager, imports data from
 the file, and adds a new submanager.
+
+\paragraph{The Interviewer.} A FormManager maintains an Interviewer that allows
+for TaxForms to query the user for information during execution. The Interviewer
+can also store the responses to a file so that the questions need not be asked
+again.
+
+I'm generally trying to move away from Interviewer questions, instead putting
+all information into informational TaxForm structures described in the Appendix.
+
+
+\section{Phase One: Computation}
+
+This section describes the operation of the first phase, computation of tax form
+line items.
+
+The usual process is as follows:
+\begin{enumerate}
+\item A FormManager is created and set up with the relevant parameters,
+submanagers, interviewer, and so on.
+\item Input forms are read using the FormManager's ``import'' method.
+\item The FormManager's ``compute\_form(class)'' method is called to compute a
+new form. The FormManager creates an instance of the given TaxForm class,
+adds the instance to the manager, executes that instance's ``compute'' method,
+and then removes the form if the ``needed?\@'' method returns false. The
+``compute'' method will likely make further calls to ``compute\_form'' if
+further forms are needed.
+\item The computed forms are saved to a file using the FormManager's ``export''
+method.
+\end{enumerate}
+
 
 
 \section{Phase Two: Form Field Marking}
@@ -194,7 +380,60 @@ form.
 
 
 
+
+
+\section{Wish List}
+
+These are features that I'd like to implement some day.
+
+\emph{Overall conditional tests.} Right now I don't implement a variety of forms
+for situations like foreign income or special rules for fishermen; I just leave
+comments indicating that those are not implemented. Better would be to have some
+sort of up-front survey to confirm conditions that I don't expect (basically
+interview questions), and then assert those conditions in places where the
+relevant functionality is not implemented.
+
+\emph{Traceable computations.} Rather than storing result data, form lines could
+store objects that maintain a tree of computations. For example, if line 7 is
+the sum of lines 5 and 6, line 7 would be presented as an object referencing
+those two lines and carrying an ``add'' instruction. This would help with
+tracing errors and optimizing computations.
+
+\emph{Asterisks for line notes.} Currently if there is an explanatory note to a
+line, it just goes in some place determined during the form marking phase;
+there's no reference to the note near the line itself.
+
+\emph{Sequence numbers.} These could most simply be implemented as instance
+methods on each form class and used to order the output, though that would mean
+that the sequence numbers are lost after the computation phase. They could also
+be stored as a line in each form. Or they could be maintained in some external
+database, though that seems unnecessarily difficult to maintain.
+
+\emph{Generalized manager.} Rather than having to write a script that computes
+the 1040, there could be a higher-level form that performs the functions of the
+script in a more generalized way, among other things computing the 1040. This
+has the benefit that it could compute ancillary information as a cover sheet,
+such as a manifest of forms to file, the mailing address, and some summary
+information about the results.
+
+\emph{Better Interviewer questioning.} Right now, the questions themselves are
+the keys for uniquely identifying the questions. This is not great for length
+reasons. I'd prefer to use short names for the questions, and then have some
+sort of translation table for presenting the complete question, perhaps with
+help texts.
+
+\emph{Line explanations.} I would like to be able to display explanations for
+each line, to assist in reviewing computation results without having to fill in
+the forms. This would require some sort of database mapping line numbers to
+descriptions, either dispersed throughout the form classes or in some unified
+file.
+
+
+
+
 \appendix
+
+\part*{Appendix}
 
 
 \section{Additions to Forms}
