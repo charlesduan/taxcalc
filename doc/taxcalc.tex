@@ -227,11 +227,14 @@ minus sign.
 \item[array] A list of values, each of which is one of the above types. Arrays
 may be specified in two forms: A comma-separated list surrounded by square
 brackets, or another way described below.
+\item[boxed data] Formatted as
+$<$\emph{delim}|\emph{num}|\emph{data}$>$, where \emph{num} is a
+number of boxes (usually the length of \emph{data}), \emph{delim} is a separator
+for the boxes (usually a null string for splitting per character, but a social
+security number would take a hyphen to fit it into a three-box unit), and
+\emph{data} is a number or text string.
 \item[text string] Anything else.
 \end{description}
-Another data type is ``boxed data,'' described below; it is represented in a
-format surrounded with angle brackets and is essentially a text string or
-number.
 
 An array may be constructed by placing each array element on a separate line in
 the file, replacing the line number with a double quote mark. For example:
@@ -344,11 +347,13 @@ portion of text, rather than a single field for all the text. The ``boxed data''
 feature enables filling in these form fields correctly.
 
 To use this feature, the relevant TaxForm should call the method
-``boxed\_line(line, count, split)'' where line is the line number to be placed
+``box\_line(line, count, split)'' where line is the line number to be placed
 in boxes, count is the number of boxes available, and split is how to separate
 the line's data into segments (the default is an empty string, which means each
 character is separated individually). All this does is mark the relevant line in
 the form as a boxed-data line; computation proceeds unchanged.
+
+The format of boxed data in a tax form file is described above.
 
 When the form field marking program is invoked, it will detect boxed-data lines
 and treat them like arrays. Thus, each box will need to be marked individually.

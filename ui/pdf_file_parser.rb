@@ -54,7 +54,8 @@ class PdfFileParser
   def page_image(num, resolution)
     unless @resolutions[resolution]
       popen(
-        GS, '-NODISPLAY', '-dSAFER', '-dBATCH', '-dNOPAUSE', '-sDEVICE=pnggray',
+        GS, '-dSAFER', '-dBATCH', '-dNOPAUSE',
+        '-sDEVICE=pnggray',
         "-r#{resolution}", "-sOutputFile=#{tempdir}/img-#{resolution}-%03d.png",
         @file
       ) do |io|

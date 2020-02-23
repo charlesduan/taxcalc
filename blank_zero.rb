@@ -1,4 +1,4 @@
-class BlankNum < DelegateClass(Fixnum)
+class BlankNum < DelegateClass(Integer)
   def to_s
     self == 0 ? '-' : to_i.to_s
   end
