@@ -9,7 +9,7 @@ class FormD65 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def check_box(line_no, condition)
@@ -25,7 +25,7 @@ class FormD65 < TaxForm
 
     line[:ein] = f1065.line[:D].sub("-", "")
     box_line(:ein, 9)
-    line[:tax_period] = "12#{year % 100}"
+    line[:tax_period] = "1231#{year}"
     box_line(:tax_period, 4)
 
     line[:business_name] = f1065.line[:name]
@@ -35,11 +35,13 @@ class FormD65 < TaxForm
       addr.match(/^(.{0,26}) (.*)$/) { |m| addr, addr2 = m[1], m[2] }
     end
     line[:address] = addr
-    line[:address2] = addr2 if addr2
     box_line(:address, 26)
-    box_line(:address2, 26)
-    csz = f1065.line[:address2] # TODO: After 2018 this will be city_zip
-    box_line(:address2, 26)
+    if addr2
+      line[:address2] = addr2
+      box_line(:address2, 26)
+    end
+
+    csz = f1065.line[:city_zip]
     if csz =~ /,? ([A-Z][A-Z]) (\d{5}(?:-\d{4})?)$/
       line[:city] = $`
       box_line(:city, 20)
@@ -52,7 +54,7 @@ class FormD65 < TaxForm
     end
 
     line[:agent_name] = f1065.line['PR.name']
-    line[:agent_tin] = f1065.line['PR.tin'].gsub("-", "")
+    line[:agent_tin] = f1065.line['PR.tin!'].gsub("-", "")
     box_line(:agent_name, 21)
     box_line(:agent_tin, 9)
 
@@ -85,6 +87,13 @@ class FormD65 < TaxForm
     line[21] = sum_lines(*9..20)
 
     line[22] = line[8] - line[21]
+
+
+    #
+    # Page 2
+    #
+    line[:page2_name] = line[:business_name]
+    line[:page2_ein] = line[:ein]
 
     assert_question('Did you have non-DC gross receipts of income?', false)
     line['F1.1'] = line[1]

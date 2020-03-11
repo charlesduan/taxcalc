@@ -1,6 +1,6 @@
 class NamedForm < TaxForm
-  def initialize(name, data)
-    super(data)
+  def initialize(name, manager)
+    super(manager)
     @name = name.to_s
     @exportable = false
   end

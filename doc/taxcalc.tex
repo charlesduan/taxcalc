@@ -187,12 +187,15 @@ Instead of having to put logic into the schedule to choose between copying line
 7 and line 15, the worksheet can designate a line ``fill!\@'' and the schedule
 can take the value from that line.
 
-\paragraph{Lines ending with the text ``\_explanation''.} This is for
+\paragraph{Lines ending with the text ``\ldots explanation!''.} This is for
 explanations that should appear on a continuation sheet. The value should be an
 array where the first item is the title of the explanation and the subsequent
 items are the text of the explanation, in troff format.
 
-
+\paragraph{Line ``continuation!''.} The value of this line is the name of a form
+found elsewhere in the output; that form will be attached as a continuation
+sheet in the form of a table. (Currently, only one form can be attached to a
+given form as a continuation sheet in this manner.)
 
 
 
@@ -508,7 +511,9 @@ A form for a capitalized asset.
 \begin{description}
 \item[date] The date the asset was put into service.
 \item[amount] The dollar value of the asset when purchased.
-\item[179?] Whether the asset is a section 179 deductible asset.
+\item[179?] Whether the asset is a section 179 deductible asset. Generally,
+tangible personal property and computer software qualify. See Pub.~946 chapter
+2.
 \item[listed?] Whether the asset is a listed asset, see Pub.~946 chapter 5.
 \item[dc\_category] The depreciation category for the asset in DC, see the FP-31
 instructions, under Depreciation Guidelines.

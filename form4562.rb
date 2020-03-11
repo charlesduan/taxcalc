@@ -1,4 +1,5 @@
 require 'tax_form'
+require 'asset_manager'
 
 # Depreciation and amortization (and section 179 deduction)
 class Form4562 < TaxForm
@@ -8,7 +9,7 @@ class Form4562 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -29,9 +30,9 @@ class Form4562 < TaxForm
       line['id'] = form(1065).line(:D)
 
       line[1] = 1_000_000
-      line[2] = forms('Asset') { |x| x.line["179?"] }.map { |x|
+      line[2] = assets_179.map { |x|
         x.line['amount']
-      }.inject(:+)
+      }.inject(0, :+)
 
     else
       line[:name] = form(1040).full_name
@@ -73,14 +74,9 @@ class Form4562 < TaxForm
     line[5] = l5_limit
 
     if for_partnership
-      if forms('Asset').any? { |x| x.line['listed?'] }
-        raise "No support for listed property"
-      end
-
-      non_listed_179_assets = forms('Asset') { |x|
-        !x.line['listed?'] && x.line["179?"]
-      }
-
+      non_listed_179_assets = find_or_compute_form(
+        'Asset Manager', AssetManager
+      ).assets_179_nonlisted
       line['6a', :all] = non_listed_179_assets.lines(:description)
       line['6b', :all] = non_listed_179_assets.lines(:amount)
       line['6c', :all] = non_listed_179_assets.lines(:amount)

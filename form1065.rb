@@ -1,10 +1,16 @@
 require 'tax_form'
 require 'form4562'
+require 'deductions'
+require 'asset_manager'
 
 class Form1065 < TaxForm
 
   def name
     1065
+  end
+
+  def year
+    2019
   end
 
   def compute
@@ -43,11 +49,19 @@ class Form1065 < TaxForm
     line[3] = line['1c'] - line[2, :opt]
     line[8] = sum_lines(3, 4, 5, 6, 7)
 
-    if has_form?('Asset')
+    @asset_manager = @manager.compute_form(AssetManager)
+    if @asset_manager.has_current_assets?
       @manager.compute_form(Form4562)
     end
 
-    line[20] = form('Deductions').line[:fill!]
+    @asset_manager.attach_safe_harbor_election(self)
+
+    line[20] = @manager.compute_form(Deductions).line[:fill!]
+    if line[20] > 0
+      form('Deductions').make_continuation(
+        self, 'Line 20 Statement of Business Expenses'
+      )
+    end
     line[21] = sum_lines(9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20)
     line[22] = line[8] - line[21]
 
@@ -71,7 +85,7 @@ class Form1065 < TaxForm
 
     assert_question(
       "Is the answer to any question on Schedule B `yes' " + \
-      "(other than 2, 4, and 24)?",
+      "(other than 2 and 4)?",
       false
     )
 
@@ -113,8 +127,8 @@ class Form1065 < TaxForm
     line['B22.no'] = 'X'
     line['B23.no'] = 'X'
 
-    # Line 24 is satisfied if line 4 was satisfied above.
-    line['B24.yes'] = 'X'
+    # Line 24, in 2019, was reversed so the answer is now no.
+    line['B24.no'] = 'X'
 
     assert_question(
       "Do you want to opt out of the centralized partnership audit regime?",
@@ -129,7 +143,8 @@ class Form1065 < TaxForm
     end
     line['PR.name'] = pr_name
     if pr_form.line['type'] == 'Individual'
-      line['PR.tin'] = pr_form.line['ssn']
+      # The TIN is no longer on the form, but still need it for DC
+      line['PR.tin!'] = pr_form.line['ssn']
       line['PR.address'] = pr_form.line['address']
       line['PR.address2'] = pr_form.line['address2']
       line['PR.phone'] = interview("Partnership representative phone:")
@@ -138,23 +153,26 @@ class Form1065 < TaxForm
     end
 
     line['B26.no'] = 'X'
+    line['B27'] = '0'
+    line['B28.no'] = 'X'
 
     line['K1'] = line[22]
     line['K5'] = forms('1099-INT').lines(1, :sum)
+    assert_no_forms('1099-DIV')
     if has_form?(4562)
       line['K12'] = form(4562).line[12]
     end
 
     line['K14a'] = line['K1']
 
-    line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4 K5 K6a K7 K8 K9a K10 K11)) \
-      - sum_lines(*%w(12 13a 13b 13c2 13d 16l))
+    line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11))\
+      - sum_lines(*%w(12 13a 13b 13c2 13d 16p))
 
     line['Analysis.2a(ii)'] = line['Analysis.1']
 
     # We assumed previously that the Schedule B line 6 answer was yes, so assets
     # are less than $10 million and no M-3 is filed.
-    raise "No state in address" unless (line[:address2] =~ / ([A-Z]{2}) \d{5}/)
+    raise "No state in address" unless (line[:city_zip] =~ / ([A-Z]{2}) \d{5}/)
     state = $1
     if %w(
       CT DE DC GA IL IN KY ME MD MA MI NH NJ NY NC OH PA RI SC TN VT VA WV WI

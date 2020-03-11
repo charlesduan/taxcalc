@@ -6,7 +6,7 @@ class D65PassThroughDistribution < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
