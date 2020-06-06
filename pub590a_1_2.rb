@@ -4,7 +4,7 @@ class Pub590AWorksheet1_2 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def initialize(manager, ira_analysis)
@@ -16,13 +16,7 @@ class Pub590AWorksheet1_2 < TaxForm
 
     status = form(1040).status
 
-    # Compute whether over 50 years old
-    if form(1040).bio.line[:birthday] < Date.new(Date.today.year - 50, 1, 1)
-      @over50 = true
-    else
-      @over50 = false
-    end
-
+    @over50 = (age >= 50)
     ret_limits = nil
 
     covered = forms('W-2').lines('13ret?').any? { |x| x == true }
@@ -105,10 +99,10 @@ end
 # Traditional IRA deduction limits for modified AGI, per worksheet line 1.
 FilingStatus.set_param(
   'ira_deduction_limit',
-  [ 63000, 73000 ], [ 101000, 121000 ], [ 0, 10000 ], :single, :mfj
+  [ 64_000, 74_000 ], [ 103_000, 123_000 ], [ 0, 10_000 ], :single, :mfj
 )
 FilingStatus.set_param(
   'ira_deduction_limit_spouse',
-  nil, [ 189000, 199000 ], [ 0, 10000 ], nil, nil
+  nil, [ 193_000, 203_000 ], [ 0, 10_000 ], nil, nil
 )
 

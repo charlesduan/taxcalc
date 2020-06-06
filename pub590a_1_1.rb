@@ -6,7 +6,7 @@ class Pub590AWorksheet1_1 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def initialize(manager, ira_analysis)
@@ -16,18 +16,18 @@ class Pub590AWorksheet1_1 < TaxForm
 
   def compute
 
-    # Because the IRS instructions somehow expect you to calculate Schedule 1,
-    # line 36 before line 32, this computation below uses a different approach
+    # Because the IRS instructions somehow expect you to calculate 1040 line 8b
+    # before line 8a, this computation below uses a different approach
     # that appears equivalent.
-    line[1] = form(1040).line[6] - form('1040 Schedule 1').sum_lines(
-      23, 24, 25, 26, 27, 28, 29, 30, '31a'
+    line[1] = form(1040).line_7b - form('1040 Schedule 1').sum_lines(
+      10, 11, 12, 13, 14, 15, 16, 17, '18a'
     )
     # Line 2 adds back the student loan interest deduction that would have been
     # subtracted in the Schedule 1 computation above. Since it is omitted from
     # the above computation, it is not included here.
     line[2] = 0
-    # Line 3 pertains to DPAD activities that are added as a special case to
-    # line 36. I assume that there aren't any.
+    # Line 3 similarly restores the tuition and fees deduction, which was not
+    # subtracted from above.
     line[3] = 0
     #
     # These relate to foreign earned income, foreign housing, savings bond

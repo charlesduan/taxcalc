@@ -108,6 +108,10 @@ class TaxForm
     end
   end
 
+  #
+  # Assert that the following lines are unfilled in any forms with the given
+  # name.
+  #
   def assert_no_lines(fnum, *lnums)
     lnums.each do |num|
       if forms(fnum).lines(num, :present)

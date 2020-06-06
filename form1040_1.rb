@@ -19,7 +19,11 @@ class Form1040_1 < TaxForm
     set_name_ssn
 
     # Line 10
-    assert_no_forms('1099-G')
+    if @manager.has_form?('1099-G')
+      line[10] = compute_1099g
+    end
+    # If this line ever includes refunds for taxes other than income taxes, line
+    # 2b on Form 6251 (AMT) needs to be adjusted
 
     line[11] = forms(:Alimony).lines(:amount, :sum)
 
@@ -43,6 +47,28 @@ class Form1040_1 < TaxForm
 
   end
 
+  def compute_1099g
+    assert_no_lines('1099-G', 1, 4, 5, 6, 7, 9, 11)
+    salt_recovery = forms('1099-G').lines(2, :sum)
+    lym = @manager.submanager(:last_year)
+    return BlankZero unless lym.has_form?('1040 Schedule A')
+    lysa = lym.form('1040 Schedule A')
+    if lysa.line_5d - salt_recovery < lysa.line_5e
+      raise "SALT tax recovery not implemented"
+      #
+      # In case you need to implement this: Look at IRS Publication 525 and
+      # Revenue Ruling 2019-11:
+      #
+      #   https://www.irs.gov/pub/irs-drop/rr-19-11.pdf
+      #
+      # Basically you need to figure what deduction would have been available
+      # has the proper tax been paid, and the recovery income should be the
+      # difference.
+      #
+    end
+    return BlankZero
+  end
+
   def compute_adjustments
 
     line[25] = forms('HSA Contribution').map { |f|
@@ -54,7 +80,7 @@ class Form1040_1 < TaxForm
 
     ira_analysis = form('IRA Analysis')
     ira_analysis.compute_contributions
-    line[32] = ira_analysis.line[32]
+    line[32] = ira_analysis.line[:deductible_contribution, :opt]
 
     line[36] = sum_lines(23, 24, 25, 26, 27, 28, 29, 30, '31a', 32, 33, 34, 35)
   end

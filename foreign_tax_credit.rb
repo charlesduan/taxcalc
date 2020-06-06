@@ -1,6 +1,7 @@
 require 'tax_form'
 
-# Computes the foreign tax credit, including Form 1116 if necessary.
+# Computes the foreign tax credit, including Form 1116 if necessary. This
+# follows the instructions for 1040 Schedule 3, line 1.
 
 class ForeignTaxCredit < TaxForm
 
@@ -9,7 +10,7 @@ class ForeignTaxCredit < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -21,7 +22,7 @@ class ForeignTaxCredit < TaxForm
       return
     elsif ftc < form(1040).status.is('mfj') ? 600 : 300
       if interview(
-        'Do your foreign taxes satisfy Form 1040 Schedule 3, Line 48?'
+        'Do your foreign taxes satisfy Form 1040 Schedule 3, Line 1?'
       )
         line[:fill!] = ftc
         return

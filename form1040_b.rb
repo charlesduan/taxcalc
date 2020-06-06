@@ -7,7 +7,7 @@ class Form1040B < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -22,7 +22,10 @@ class Form1040B < TaxForm
     end
 
     line[2] = line['1r', :sum]
-    line[3] = form_line_or(8815, -1, 0)
+
+    # Line 3
+    assert_question("Do you have any series EE or I savings bonds?", false)
+
     line[4] = line[2] - line[3]
 
     line['5l', :all] = forms('1099-DIV').lines('name')

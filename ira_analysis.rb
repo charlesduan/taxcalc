@@ -20,16 +20,23 @@ class IraAnalysis < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
 
+  #
+  # Computes distributions only; contributions are computed later.
+  #
   def compute
 
     assert_question(
       'Did you have a qualified disaster distribution (Form 8915)?', false
     )
+
+    # In all cases, set :this_year_contrib first
+    contrib = forms('Traditional IRA Contribution').lines(:amount, :sum)
+    line[:this_year_contrib] = contrib
 
     all_1099rs = forms('1099-R')
     if all_1099rs.any? { |x| !x.line['ira-sep-simple?'] }
@@ -38,8 +45,6 @@ class IraAnalysis < TaxForm
 
     # Since we're only computing distributions, quit if there weren't any
     return if all_1099rs.empty?
-
-    all_distribs = all_1099rs.lines(1, :sum)
 
     #
     # The destination could also be a traditional-to-traditional rollover, a
@@ -61,16 +66,12 @@ class IraAnalysis < TaxForm
       x.line[:destination] == 'cash'
     }.lines(1, :sum)
 
-    contrib = forms('Traditional IRA Contribution').lines(:amount, :sum)
-    line[:this_year_contrib] = contrib
-
     # If there are traditional IRA contributions, then we need to use the Pub.
     # 590B worksheet to reconcile the amount to fill into the 1040.
     if line[:this_year_contrib] > 0
       # Both contributions and distributions.
       # Follow Pub. 590-B, Worksheet 1-1 and instructions
-      @pub590b_w1_1 = compute_form(Pub590BWorksheet1_1.new(@manager, self)
-      )
+      @pub590b_w1_1 = compute_form(Pub590BWorksheet1_1.new(@manager, self))
     end
 
     # Compute form 8606 (just distributions)
@@ -82,12 +83,7 @@ class IraAnalysis < TaxForm
 
   def compute_contributions
 
-    # compute may not be called (if no 1099-R forms are received), so this value
-    # needs to be filled in
-    unless line[:this_year_contrib, :present]
-      contrib = forms('Traditional IRA Contribution').lines(:amount, :sum)
-      line[:this_year_contrib] = contrib
-    end
+    # Was calculated in compute
     return unless line[:this_year_contrib] > 0
 
     @pub590a_w1_1 = @manager.compute_form(
@@ -97,7 +93,7 @@ class IraAnalysis < TaxForm
       Pub590AWorksheet1_2.new(@manager, self)
     )
 
-    line[32] = @pub590a_w1_2.line[7]
+    line[:deductible_contribution] = @pub590a_w1_2.line[7]
 
     if @form8606
       @form8606.compute_contributions

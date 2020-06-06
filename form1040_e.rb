@@ -8,7 +8,7 @@ class Form1040E < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   include HomeOfficeManager

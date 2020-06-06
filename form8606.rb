@@ -1,6 +1,10 @@
 require 'tax_form'
 require 'date'
 
+#
+# Nondeductible IRA contributions and distributions. Computations of this form
+# are controlled by the IraAnalysis form, so that one should be reviewed first.
+#
 class Form8606 < TaxForm
 
   def initialize(manager, ira_analysis)
@@ -13,27 +17,43 @@ class Form8606 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
+  #
+  # This only computes distributions. Contributions are computed later.
   def compute
 
     set_name_ssn
 
+    # This worksheet is computed only if there was both a distribution and a
+    # contribution this year.
     if @ira_analysis.pub590b_w1_1
+      #
+      # This follows the instructions in Pub. 590-B, "Contribution and
+      # distribution in the same year." However, of the numbered instructions in
+      # that section, it does 6 and 8 first since those are independent of the
+      # contributions analysis, and the remaining steps are performed in
+      # compute_contributions.
+      #
       explain("      Applying Pub. 590-B Worksheet 1-1 analysis")
       w1_1 = @ira_analysis.pub590b_w1_1
       explain("      Taxable IRA distributions, lines 13 and 15a-c, taken" +
               " from worksheet")
       line[13] = w1_1.line[8]
+
       line['15a'] = w1_1.line[11, :present] ? w1_1.line[11] : w1_1.line[9]
+      assert_question(
+        'Did you have a qualified disaster distribution (Form 8915)?', false
+      )
       line['15b'] = 0 # No qualified disaster
       line['15c'] = line['15a'] - line['15b']
       line['note_1'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
 
       explain("      Roth conversions, lines 17-18, taken from worksheet")
+
       line[16] = @ira_analysis.line[:roth_conversion]
-      line[17] = w1_1.line[8]
+      line[17] = w1_1.line[8] # From 590-B instructions
       line[18] = w1_1.line[10] if w1_1.line[10, :present]
       line[:note_2] = 'Line 18 from Pub. 590-B Worksheet 1-1'
 
@@ -52,7 +72,10 @@ class Form8606 < TaxForm
     explain("Computing Form #{name} contributions for #{@manager.name}")
     w1_1 = @ira_analysis.pub590b_w1_1
     line[1] = @ira_analysis.pub590a_w1_2.line[8]
+
     if w1_1
+      # Both distributions and contributions were made. Follow the Pub. 590-B
+      # instructions
       explain("      Found Pub. 590-B Worksheet 1-1; computing lines 2 to 5")
       compute_2_to_3
       compute_4_to_5

@@ -5,7 +5,7 @@ class Form1040SE < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -32,9 +32,16 @@ class Form1040SE < TaxForm
     end
 
     line[6] = sum_lines('4c', '5b')
-    line[7] = 128400 # Maximum social security wages
+    line[7] = 132900 # Maximum social security wages, 2019
 
     line['8a'] = forms('W-2').lines(3, :sum) + forms('W-2').lines(7, :sum)
+
+    # Lines 8b and 8c relate to unreported tips and employee wages
+    # miscategorized as independent contractor payments. These two assertions
+    # ensure that neither occurred.
+    assert_question('Did you receive unreported tips?', false)
+    assert_no_forms('1099-MISC')
+
     line['8d'] = sum_lines('8a', '8b', '8c')
 
     l9 = line[7] - line['8d']

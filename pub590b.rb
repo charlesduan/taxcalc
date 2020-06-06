@@ -12,11 +12,13 @@ class Pub590BWorksheet1_1 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
     analysis = @ira_analysis
+
+    # Last year's basis
     line[1] = @manager.submanager(:last_year).form(8606).line[14]
     line[2] = analysis.line[:this_year_contrib]
     line[3] = sum_lines(1, 2)

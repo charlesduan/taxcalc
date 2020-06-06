@@ -92,7 +92,7 @@ The tax computation system is written in Ruby and is organized around two main
 classes: the TaxForm and the FormManager.
 
 
-\subsection{The TaxForm}
+\subsection{The TaxForm API}
 
 Generally, each tax form is represented as an instance of a Ruby class for that
 form, a subclass of TaxForm. A TaxForm has four essential methods:
@@ -112,6 +112,9 @@ A form is essentially a hash table that maps line numbers to data values. Line
 numbers may be any strings so long as they contain no spaces. Values may be
 atomic values (numbers, strings, dates), or may be arrays of those atomic
 values. The order of lines is remembered (and can be altered manually).
+
+
+\subsubsection{Referring to Lines in a Form}
 
 The TaxForm has several methods with the name ``line'' for getting and setting
 lines:
@@ -139,7 +142,7 @@ numbers from methods named ``line\_\#''.
 Every TaxForm is associated with a FormManager. Many of the methods of TaxForm
 are delegated to its FormManager as a matter of convenience.
 
-\subsection{How Tables Are Stored in Forms}
+\subsubsection{How Tables Are Stored in Forms}
 
 Consider a form that requires input like so:
 \begin{center}
@@ -173,7 +176,7 @@ A method ``add\_table\_row'' takes a hash mapping line numbers to values for a
 single row, and updates each line in a manner that reflects a ``row'' being
 added to a table of those lines.
 
-\subsection{Special Line Names}
+\subsubsection{Special Line Names}
 
 Generally line names in a form may be any text that has no spaces. But several
 line names will receive special treatment.
@@ -447,7 +450,7 @@ file.
 
 \section{Additions to Forms}
 
-\subsection{1095-B}
+\subsection{1095-B, -C}
 
 This is the health coverage form. No information other than the items listed
 below is needed.
@@ -458,7 +461,8 @@ contributions.
 \item[coverage] ``individual'' or ``family''.
 \item[months] The months of coverage for this plan. (Currently it is assumed
 that all persons on the form are covered for the same months.) These should be
-all-lowercase three-letter abbreviations of months.
+all-lowercase three-letter abbreviations of months, or ``all'' to indicate all
+months.
 \end{description}
 
 \subsection{1098}
@@ -474,8 +478,9 @@ you can multiply the interest paid by the lowest interest rate of the year.
 \subsection{1099-DIV}
 
 \begin{description}
-\item[qualified\_exception] If this form shows qualified dividends, this flag
-must be set to indicate whether an exception applies. See 1040 instructions.
+\item[qexception?] If this form shows qualified dividends, this flag
+must be set to indicate whether an exception applies. See 1040 instructions for
+line 3a. The exceptions relate to unusual transactions.
 \end{description}
 
 
