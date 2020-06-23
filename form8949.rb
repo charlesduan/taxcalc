@@ -1,5 +1,8 @@
 require 'tax_form'
 
+#
+# Sales and dispositions of capital assets
+#
 class Form8949 < TaxForm
 
   def name

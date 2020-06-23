@@ -1,4 +1,5 @@
 require 'tax_form'
+require 'form8283'
 
 class Form1040A < TaxForm
 
@@ -7,7 +8,7 @@ class Form1040A < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -31,9 +32,6 @@ class Form1040A < TaxForm
       if f.line[:amount] >= 250 && !f.line[:documented?]
         raise "Charity gift over $250 not documented"
       end
-      if f.line[:amount] >= 500 && !f.line[:cash?]
-        raise "In-kind charity gifts over $500 not implemented"
-      end
     end
 
     line[11] = forms('Charity Gift') { |f|
@@ -42,6 +40,10 @@ class Form1040A < TaxForm
     line[12] = forms('Charity Gift') { |f|
       !f.line[:cash?]
     }.lines(:amount, :sum).round
+
+    if line[12] > 500
+      compute_form(Form8283)
+    end
 
     line[14] = sum_lines(11, 12, 13)
     if line[14] > 0.2 * form(1040).line(7)
@@ -80,13 +82,18 @@ class Form1040A < TaxForm
   end
 end
 
+#
+# Computes what portion of home mortgage interest is deductible. So far, I have
+# not hit the limits (line 16) and so have not implemented some features, such
+# as average mortgage balance, that could lower the computation.
+#
 class Pub936Worksheet < TaxForm
   def name
     'Pub. 936 Home Mortgage Interest Worksheet'
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -130,6 +137,9 @@ class Pub936Worksheet < TaxForm
       line[14] = (1.0 * line[11] / line[12]).round(3)
       line[15] = (line[13] * line[14]).round
       line[16] = line[13] - line[15]
+      if line[16] > 0
+        raise "You should refine the Pub. 936 Worksheet implementation"
+      end
     end
   end
 

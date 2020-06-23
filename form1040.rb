@@ -14,6 +14,8 @@ require 'form1040_se'
 require 'form6251'
 require 'form8959'
 require 'form8960'
+require 'form8995'
+require 'form8995a'
 require 'ira_analysis'
 require 'date'
 require 'qbi_simplified_worksheet'
@@ -26,7 +28,7 @@ class Form1040 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   MONTHS = %w(jan feb mar apr may jun jul aug sep oct nov dec)
@@ -66,14 +68,6 @@ class Form1040 < TaxForm
     line[:ssn] = @bio.line[:ssn]
     box_line(:ssn, 3, '-')
 
-    if interview("Can someone claim you as a dependent?")
-      line['ysd.dependent'] = 'X'
-    end
-    if @bio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
-      line['ysd.65yo'] = 'X'
-    end
-    line['ysd.blind?'] = 'X' if @bio.line[:blind?]
-
     if @status.is('mfj')
       copy_line(:first_name, @sbio)
       copy_line(:last_name, @sbio)
@@ -82,27 +76,6 @@ class Form1040 < TaxForm
       line[:spouse_ssn] = @sbio.line[:ssn]
       box_line(:spouse_ssn, 3, '-')
     end
-
-    if interview("Can someone claim your spouse as a dependent?")
-      line['ssd.dependent'] = 'X'
-    end
-    if @sbio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
-      line['ssd.65yo'] = 'X'
-    end
-    line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
-
-    @force_itemize = false
-    if status.is('mfs')
-      itemize = interview('Do you want to itemize deductions?')
-      @force_itemize = true if itemize
-      line['ssd.isrdsa'] = 'X' if itemize || interview(
-        'Are you a dual-status alien?'
-      )
-    end
-    unless (MONTHS - forms('1095-B').lines[:months, :all]).empty?
-      assert_question('Did you have health insurance the whole year?', true)
-    end
-    line['fyhcc'] = 'X'
 
     copy_line('home_address', @bio)
     copy_line('apt_no', @bio)
@@ -118,13 +91,45 @@ class Form1040 < TaxForm
       'Does your spouse want to donate to the Presidential Election Campaign?'
     )
 
+    line['more_than_4_deps'] = 'X' if forms('Dependent').count > 4
+
+    if interview("Can someone claim you as a dependent?")
+      line['ysd.dependent'] = 'X'
+    end
+    if interview("Can someone claim your spouse as a dependent?")
+      line['ssd.dependent'] = 'X'
+    end
+
+    @force_itemize = false
+    if status.is('mfs')
+      itemize = interview('Do you want to itemize deductions?')
+      @force_itemize = true if itemize
+      line['ssd.isrdsa'] = 'X' if itemize || interview(
+        'Are you a dual-status alien?'
+      )
+    end
+
+    if @bio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
+      line['ysd.65yo'] = 'X'
+    end
+    line['ysd.blind?'] = 'X' if @bio.line[:blind?]
+    if @sbio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
+      line['ssd.65yo'] = 'X'
+    end
+    line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
+
+    #unless (MONTHS - forms('1095-B').lines[:months, :all]).empty?
+    #  assert_question('Did you have health insurance the whole year?', true)
+    #end
+    #line['fyhcc'] = 'X'
+
     #
     # Dependents
     #
 
-    line['more_than_4_deps'] = 'X' if forms('Dependent').count > 4
     forms('Dependent').each do |dep|
       ssn_parts = dep.line[:ssn].split(/-/)
+      # TODO: Figure out boxed lines for tables
       row = {
         :dep_1 => dep.line[:name],
         :dep_2_1 => ssn_parts[0],
@@ -141,16 +146,7 @@ class Form1040 < TaxForm
       add_table_row(row)
     end
 
-    line[:occupation] = @bio.line[:occupation]
-    if @status.is('mfj')
-      line[:spouse_occupation] = @sbio.line[:occupation]
-    end
-
-
-    #
-    # PAGE 2
-    #
-
+    # Wages, salaries, tips
     line[1] = forms('W-2').lines(1, :sum)
 
     if has_form?(8958) && has_form?('Explanation of 8958')
@@ -162,13 +158,15 @@ class Form1040 < TaxForm
 
     sched_b = compute_form(Form1040B)
 
-    # Interest
     assert_no_forms('1099-OID')
+
+    # Tax-exempt interest
     line['2a'] = forms('1099-INT').lines[8, :sum] + \
       forms('1099-DIV').lines[10, :sum]
+    # Taxable interest
     line['2b'] = sched_b.line[4]
 
-    # Dividends
+    # Qualified dividends
     line['3a'] = forms('1099-DIV') { |f| f.line['1b', :present] }.map { |f|
       unless f.line[:qexception?, :present]
         raise "Indicate that no exception applies to 1099-DIV " + \
@@ -176,24 +174,36 @@ class Form1040 < TaxForm
       end
       f.line[:qexception?] ? 0 : f.line['1b']
     }.inject(:+) + forms('1065 Schedule K-1').lines('6b', :sum)
+    # Ordinary dividends
     line['3b'] = sched_b.line[6]
 
     # IRAs, pensions, and annuities
     ira_analysis = compute_form(IraAnalysis)
-    line['4a'] = ira_analysis.sum_lines('15a', '16a')
-    line['4b'] = ira_analysis.sum_lines('15b', '16b')
+    line['4a'] = ira_analysis.line_distribs
+    line['4b'] = ira_analysis.line_taxable
 
+    # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')
 
+    # Capital gains/losses
+    sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
+    if sched_d
+      line[6] = sched_d.line[:fill!]
+    else
+      line[6] = BlankZero
+    end
+
+    # Other income, Schedule 1
     sched_1 = compute_form(Form1040_1)
+    line['7a'] = sched_1.line[22]
 
     # Total income
-    line['6.add'] = sched_1.line[22]
-    line[6] = sum_lines(*%w(1 2b 3b 4b 5b 6.add))
+    line['7b'] = sum_lines(*%w(1 2b 3b 4b 5b 6 7a))
 
     # AGI
     sched_1.compute_adjustments
-    line[7] = line6 - sched_1.line36
+    line['8a'] = sched_1.line_22
+    line['8b'] = line_7b - line_8a
 
     # Standard or itemized deduction
     choose_itemize = false
@@ -206,6 +216,7 @@ class Form1040 < TaxForm
       end
     end
 
+    # Compute standard deduction
     %w(
       ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
     ).each do |l|
@@ -214,131 +225,140 @@ class Form1040 < TaxForm
       end
     end
     sd = status.standard_deduction
+
+    # Compute itemized deduction
     if itemize || choose_itemize
       sched_a = compute_form(Form1040A)
 
       if itemize || sched_a.line[17] > sd
-        line[8] = sched_a.line[17]
+        line[9] = sched_a.line[17]
       else
         @manager.remove_form(sched_a)
-        line[8] = sd
+        line[9] = sd
       end
 
     else
-      line[8] = sd
+      line[9] = sd
     end
 
     # Qualified business income deduction
-    taxable_income = line[7] - line[8]
-    if taxable_income <= status.double_mfj(157_500)
-      line[9] = compute_form(QBISimplifiedWorksheet).line[15]
+    taxable_income = line_8b - line_9; # AGI minus deduction
+    if taxable_income <= status.qbi_form
+      line[10] = compute_form(Form8995).line_15
+    else
+      line[10] = compute_form(Form8995A).line_39
     end
-    line[10] = line[7] - sum_lines(8, 9)
+
+    # Total deductions
+    line['11a'] = sum_lines(9, 10)
+    # Taxable income
+    line['11b'] = [ line_8b - line_11a, 0 ].max
+
+    #
+    # PAGE 2
+    #
 
     # Tax
-    line['11a'] = compute_tax
+    line['12a'] = compute_tax
 
     sched_2 = compute_form(Form1040_2)
     if sched_2
-      line['11b'] = 'X'
-      line[11] = line['11a'] + sched_2.line[47]
+      line['12b'] = line['12a'] + sched_2.line[3]
     else
-      line[11] = line['11a']
+      line['12b'] = line['12a']
     end
 
-    compute_form(Form1040_3)
-
     # Child tax credit and other credits
-    line['12a'] = @manager.compute_form(ChildTaxCreditWorksheet).line[:fill!]
+    line['13a'] = @manager.compute_form(ChildTaxCreditWorksheet).line[:fill!]
+    compute_form(Form1040_3)
     with_or_without_form('1040 Schedule 3') do |f|
       if f
-        line['12b'] = 'X'
-        line[12] = line['12a'] + f.line[55]
+        line['13b'] = line['13a'] + f.line[7]
       else
-        line[12] = line['12a']
+        line['13b'] = line['13a']
       end
     end
 
-    line[13] = line[11] - line[12]
+    line[14] = [ line['12b'] - line['13b'], 0 ].max
 
-    line[14] = compute_form(Form1040_4).line[64]
+    line[15] = sched_2.line_10 if sched_2
 
-    line[15] = sum_lines(13, 14)
-    line[16] = forms('W-2').lines(2, :sum)
+    line[16] = sum_lines(14, 15)
+    line[17] = forms('W-2').lines(2, :sum)
 
-    # 17a: earned income credit. Inapplicable for mfs status.
-    # 17b: child credit.
+    # 18a: earned income credit. Inapplicable for mfs status.
+    # 18b: child credit.
     with_form('Child Tax Credit Worksheet') do |f|
       if f.line['11.yes', :present] || f.line['12.yes', :present]
         raise "Refundable child tax credit not implemented"
       end
     end
-    # 17c: American Opportunity (education) credit. Inapplicable for mfs status.
+    # 18c: American Opportunity (education) credit. Inapplicable for mfs status.
+    with_or_without_form('1040 Schedule 3') do |f|
+      line['18d'] = f.line[14] if f
+    end
 
-    line['17_sch5'] = compute_form(Form1040_5).line[75]
-
-    line[17] = sum_lines(*%w(17a 17b 17c 17_sch5))
+    line['18e'] = sum_lines(*%w(18a 18b 18c 18d))
 
     # Total payments
-    line[18] = sum_lines(16, 17)
+    line[19] = sum_lines(17, '18e')
 
-    if line[18] > line[15]
+    if line[19] > line[16]
 
       # Refund
-      line[19] = line[18] - line[15]
-      line['20a'] = line[19]
+      line[20] = line[19] - line[16]
+      line['21a'] = line[20]
       if interview("Do you want your refund direct deposited?")
-        line['20b'] = interview("Direct deposit routing number:")
-        box_line('20b', 9)
+        line['21b'] = interview("Direct deposit routing number:")
+        box_line('21b', 9)
         if interview("Direct deposit is to checking?")
-          line['20c.checking'] = 'X'
+          line['21c.checking'] = 'X'
         else
-          line['20c.savings'] = 'X'
+          line['21c.savings'] = 'X'
         end
-        line['20d'] = interview("Direct deposit account number:")
-        box_line('20d', 17)
+        line['21d'] = interview("Direct deposit account number:")
+        box_line('21d', 17)
       end
     else
 
       # Amount owed
-      line[22] = line[15] - line[18]
+      line[23] = line[16] - line[19]
       compute_penalty
     end
+
+    line[:occupation] = @bio.line[:occupation]
+    if @status.is('mfj')
+      line[:spouse_occupation] = @sbio.line[:occupation]
+    end
+    copy_line('phone', @bio)
 
   end
 
 
   def compute_tax
-    if unearned_income > 2100
+
+    # Form for rich kids (under 24)
+    if age < 24
       raise "Form 8615 is not implemented"
     end
 
-    if has_form?('1040 Schedule D')
-      sched_d = form('1040 Schedule D')
-      if sched_d.line['20no', :present]
-        line[:tax_method!] = 'Sch D'
-        return compute_tax_schedule_d # Not implemented; raises error
-      elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
+    with_or_without_form('1040 Schedule D') do |sched_d|
+      if sched_d
+        if sched_d.line['20no', :present]
+          line[:tax_method!] = 'Sch D'
+          return compute_tax_schedule_d # Not implemented; raises error
+        elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
+          line[:tax_method!] = 'QDCGTW'
+          return compute_tax_qdcgt
+        end
+      elsif line['3a', :present] or line[6, :opt] != 0
         line[:tax_method!] = 'QDCGTW'
         return compute_tax_qdcgt
       end
-    elsif line['3a', :present] or form('1040 Schedule 1').line[13, :present]
-      return compute_tax_qdcgt
     end
 
     # Default computation method
     return compute_tax_standard(line[10])
-  end
-
-  def unearned_income
-    total = sum_lines(*%w(2b 3b))
-    with_form('1040 Schedule 1') do |f|
-      total += f.sum_lines(13, 14)
-    end
-    with_form('1040 Schedule E') do |f|
-      total += f.sum_lines(26, '29a.h', '34a.d')
-    end
-    return total
   end
 
   def compute_tax_standard(income)
@@ -371,27 +391,32 @@ class Form1040 < TaxForm
 
   def compute_penalty
     assert_no_forms(8828, 4137, 5329, 8885, 8919)
-    tax_shown = line[15] - sum_lines(*%w(17a 17b 17c))
-    with_form('1040 Schedule 4') do |f| tax_shown -= f.line[61, :opt] end
-    with_form('1040 Schedule 5') do |f| tax_shown -= f.sum_lines(70, 73) end
+    tax_shown = line[16] - sum_lines(*%w(18a 18b 18c))
+    with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(9, 12) end
 
     # Test if a penalty is owed. First check if the amount owed is over $1000
     # and also over 10% of tax shown.
-    if line[22] > 1000 && line[22] > 0.1 * tax_shown
+    if line[23] > 1000 && line[23] > 0.1 * tax_shown
 
-      ly1040 = @manager.submanager(:last_year).form(1040)
+      ly = @manager.submanager(:last_year)
       # Last year's tax shown
-      last_year_tax = ly1040.line[63] - \
-        ly1040.sum_lines(*%w(61 66a 67 68 69 72))
+      last_year_tax = ly.form(1040).line_15 - \
+        ly.form(1040).sum_lines(*%w(17a, 17b, 17c)) - \
+        ly.form('1040 Schedule 4').line(61, :opt) - \
+        ly.form('1040 Schedule 5').sum_lines(70, 73)
 
       unless last_year_tax == 0
         penalty_threshold = last_year_tax
-        last_year_agi = ly1040.line[37]
+        last_year_agi = ly.form(1040).line[7]
         if last_year_agi > status.halve_mfs(150000)
           penalty_threshold = (1.1 * last_year_tax)
         end
 
-        unless sum_lines(64, 65, 71) >= penalty_threshold
+        tax_paid = line[17]
+        with_or_without_form('1040 Schedule 3') do |f|
+          tax_paid += f.sum_lines(8, 11) if f
+        end
+        unless tax_paid >= penalty_threshold
           warn "Penalty computation not implemented"
         end
 
@@ -407,21 +432,21 @@ class QdcgtWorksheet < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
     f1040 = form(1040)
     assert_question("Did you have any foreign income?", false)
-    line[1] = f1040.line[10]
-    line[2] = f1040.line['3a']
+    line[1] = f1040.line_11b
+    line[2] = f1040.line_3a
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       line['3yes'] = 'X'
       line[3] = [ 0, [ sched_d.line[15], sched_d.line[16] ].min ].max
     else
       line['3no'] = 'X'
-      line[3] = form('1040 Schedule 1').line[13]
+      line[3] = f1040.line_6
     end
 
     line[4] = line[2] + line[3]
@@ -556,12 +581,12 @@ class ChildTaxCreditWorksheet < TaxForm
   end
 end
 
-FilingStatus.set_param('standard_deduction', 12000, 24000, :single, 18000, :mfj)
-FilingStatus.set_param('qdcgt_exemption', 38600, 77200, :single, 51700, :mfj)
-FilingStatus.set_param('qdcgt_cap', 425800, 479000, 239500, 452400, :mfj)
-
-# Not updated for 2018:
-FilingStatus.set_param('line_51_credit', 31000, 62000, 31000, 64500, 31000)
+FilingStatus.set_param('standard_deduction',
+                       12_200, 24_400, :single, 18_350, :mfj)
+FilingStatus.set_param('qbi_form',
+                       160_700, 321_400, 160_725, :single, :single)
+FilingStatus.set_param('qdcgt_exemption', 39_375, 78_750, :single, 52_750, :mfj)
+FilingStatus.set_param('qdcgt_cap', 434_550, 488_850, 244_425, 461_700, :mfj)
 
 # A one-liner that will convert the tables of the tax brackets worksheet into
 # the appropriate forms below:
@@ -573,37 +598,12 @@ FilingStatus.set_param(
   nil,
   nil,
   [
-    [ 157500, 0.24, 5710.50 ],
-    [ 200000, 0.32, 18310.50 ],
-    [ 300000, 0.35, 24310.50 ],
-    [ nil, 0.37, 30310.50 ],
+    [ 160725, 0.24, 5825.50 ],
+    [ 204100, 0.32, 18683.50 ],
+    [ 306175, 0.35, 24806.50 ],
+    [ nil, 0.37, 30930.00 ],
   ],
   nil,
   nil
 )
-class SpouseExemption < FilingStatusVisitor
 
-  def single(line)
-  end
-
-  def mfj(line)
-    unless line.form.interview("Can someone claim your spouse as a dependent?")
-      line['6b'] = 'X'
-    end
-  end
-
-  def mfs(line)
-    unless line.form.interview("Is your spouse filing a tax return?")
-      mfj(line)
-    end
-  end
-
-  def hoh(line)
-    if line.form.interview("Are you married?")
-      mfs(line)
-    end
-  end
-
-  def qw(line)
-  end
-end

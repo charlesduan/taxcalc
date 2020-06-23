@@ -16,7 +16,7 @@ class Form8958 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   attr_accessor :my_manager, :spouse_manager

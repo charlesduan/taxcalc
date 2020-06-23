@@ -24,7 +24,7 @@ class Pub587Worksheet < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def initialize(manager, ho_form, income_form)
@@ -73,10 +73,16 @@ class Pub587Worksheet < TaxForm
   def compute_actual
     raise "Home office actual expenses not implemented"
 
-    # Right now it's not worth implementing this because it would require also
-    # implementing the reduction in the Schedule A mortgage interest deduction,
-    # and as a practical matter the mortgage interest gets deducted either here
-    # or there.
+    #
+    # Chances are, the actual method should not be used unless we start hitting
+    # mortgage interest deduction limits or utility costs go up. The main
+    # deductions here are mortgage interest and depreciation, but mortgage
+    # interest is deductible personally on Schedule A, and depreciation ends up
+    # being recaptured at time of sale, making the deduction a wash. While the
+    # $5 per square foot rate of the simplified method is lower than the actual
+    # expenses, it cannot be recaptured at time of sale, so chances are it works
+    # out better.
+    #
 
   end
 

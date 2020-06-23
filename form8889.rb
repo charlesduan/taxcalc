@@ -1,5 +1,8 @@
 require 'tax_form'
 
+#
+# Health Savings Accounts
+#
 class Form8889 < TaxForm
 
   def name
@@ -7,7 +10,7 @@ class Form8889 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def initialize(manager, hsa_form)
@@ -28,9 +31,9 @@ class Form8889 < TaxForm
       f.line[:hdhp?] == true && f.line[:months, :all].include?('dec')
     }
     if hdhp_last_month_forms.any? { |f| f.line[:coverage] == 'family' }
-      line[3] = 6900
+      line[3] = 7000
     elsif hdhp_last_month_forms.any? { |f| f.line[:coverage] == 'individual' }
-      line[3] = 3450
+      line[3] = 3500
     else
       raise "Form 8889, line 3 not implemented where last-month rule not met"
     end
@@ -69,14 +72,19 @@ class Form8889 < TaxForm
     indiv_months = []
     family_months = []
 
-    forms('1095-B').each do |f|
+    (forms('1095-B') + forms('1095-C')).each do |f|
       next unless f.line[:hdhp?]
+      months = f.line[:months, :all]
+      if months.include?('all')
+        months = %w(jan feb mar apr may jun jul aug sep oct nov dec)
+      end
+
       case f.line[:coverage]
       when 'family'
-        return 'family' if f.line[:months, :all].include?('dec')
-        family_months &= f.line[:months, :all]
+        return 'family' if months.include?('dec')
+        family_months &= months
       when 'individual'
-        indiv_months &= f.line[:months, :all]
+        indiv_months &= months
       else
         raise "Unknown value for Form 1095-B coverage: #{f.line[:coverage]}"
       end

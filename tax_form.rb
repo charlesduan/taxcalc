@@ -322,10 +322,12 @@ class TaxForm
     end
   end
 
-  # Computes a person's age as of the end of the relevant tax year.
+  # Computes a person's age as of the end of the relevant tax year. Per the IRS
+  # rule that a birthday on January 1 of a year counts as the last year, we
+  # subtract one day from the birthday.
   def age(bio = nil)
     bio ||= form(1040).bio
-    return year - bio.line[:birthday].year
+    return year - (bio.line[:birthday] - 1).year
   end
 end
 

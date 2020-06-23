@@ -572,9 +572,25 @@ A charitable contribution.
 \item[cash?] Whether the contribution was in cash (as opposed to in-kind).
 \item[name] The name of the charity.
 \item[documented?] Whether the donation was documented. See Pub.\ 526. This is
-checked if the contribution is over the \$250 threshold.
+checked if the contribution is over the \$250 threshold. Currently it is assumed
+that any documentation meets the requirements of a contemporaneous written
+acknowledgment (received before filing the return).
 \end{description}
-
+For charity gifts that are non-cash that total over \$500, Form 8283 must also
+be filled, which requires additional information on the nature of the gift:
+\begin{description}
+\item[vin] The VIN of a donated vehicle.
+\item[description] A description of the donated goods and their condition.
+Clothing must be donated in good used condition.
+\item[date] The date the contribution was made.
+\item[date\_acq] The approximate date on which the property was acquired, or
+``Various'' if the items were acquired on various dates at least 12 months ago.
+\item[how\_acq] How the property was acquired, for example by purchase, gift,
+inheritance, or exchange.
+\item[basis] The basis or cost of the property.
+\item[method] Method for determining fair market value. IRS examples are
+appraisal, thrift shop value, catalog, or comparable sales.
+\end{description}
 
 
 \subsection{Dependent}

@@ -13,6 +13,12 @@ require 'pub590a_1_2'
 # just the IRA distributions. Second, the compute_contributions method is called
 # at 1040 line 32, to compute any IRA deduction.
 #
+# TODO: The aforementioned method of computation may not be the best; it may be
+# preferable to complete all computations initially, breaking into the three
+# separate situations of (1) distributions only, (2) contributions only, and (3)
+# contributions and distributions in one year. This appears to be how the IRS
+# proposes to do it in Pub. 590-B.
+#
 class IraAnalysis < TaxForm
 
   def name
@@ -51,7 +57,7 @@ class IraAnalysis < TaxForm
     # Roth-to-Roth rollover, a qualified charitable distribution, an HSA funding
     # distribution, or cash. The "destination" field in Form 1099-R should
     # reflect these. To implement any other destinations for an IRA
-    # distribution, see the 1040 line 15a instructions.
+    # distribution, see the 1040 line 4a instructions.
     #
     if all_1099rs.any? { |x| x.line['destination'] != 'Roth conversion' }
       raise "Cannot handle 1099-R distributions that are not Roth conversions"
@@ -76,8 +82,10 @@ class IraAnalysis < TaxForm
 
     # Compute form 8606 (just distributions)
     @form8606 = compute_form(Form8606.new(@manager, self))
-    line['15a'] = line[:roth_conversion]
-    line['15b'] = @form8606.sum_lines('15c', 18, 25)
+
+    # These lines are used to report to Form 1040, lines 4a-4b
+    line[:distribs] = line[:roth_conversion]
+    line[:taxable] = @form8606.sum_lines('15c', 18, 25)
 
   end
 
