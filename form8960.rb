@@ -25,7 +25,7 @@ class Form8960 < TaxForm
     end
 
     # Rental real estate, partnerships, trusts
-    line['4a'] = form('1040 Schedule 1').line[17]
+    line['4a'] = form('1040 Schedule 1').line[5]
     with_form('1040 Schedule E') do |f|
       # We assume that any partnerships listed on 1040 Schedule E, part II that
       # involve nonpassive income/losses are section 162 businesses (i.e.,
@@ -36,7 +36,7 @@ class Form8960 < TaxForm
     end
     line['4c'] = line['4a'] + line['4b']
 
-    line['5a'] = form('1040 Schedule 1').sum_lines(13, 14)
+    line['5a'] = form(1040).line_6 + form('1040 Schedule 1').line[4, :opt]
     line['5d'] = sum_lines('5a', '5b', '5c')
 
     # Total investment income
@@ -48,7 +48,7 @@ class Form8960 < TaxForm
       # The view appears to be that the excludable expense is calculated first
       # based on the full tax, and then the $10,000 limit is applied to that.
       l9b = f.line['5d'] - (f.line['5a.sales', :present] ? f.line['5a'] : 0)
-      l9b *= 1.0 * line[8] / form(1040).line[7]
+      l9b *= 1.0 * line[8] / form(1040).line['8b']
       line['9b'] = [ l9b.round, f.line['5e'] ].min
     end
     with_form(4954) do |f|
@@ -59,7 +59,7 @@ class Form8960 < TaxForm
     line[11] = sum_lines('9d', 10)
 
     line[12] = [ 0, line[8] - line[11] ].max
-    line[13] = form(1040).line[7]
+    line[13] = form(1040).line['8b']
 
     line[14] = form(1040).status.niit_threshold
 

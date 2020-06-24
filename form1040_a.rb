@@ -46,7 +46,7 @@ class Form1040A < TaxForm
     end
 
     line[14] = sum_lines(11, 12, 13)
-    if line[14] > 0.2 * form(1040).line(7)
+    if line[14] > 0.2 * form(1040).line_8b
       raise "Pub. 526 limit on charitable contributions not implemented"
     end
 

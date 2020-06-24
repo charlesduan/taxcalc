@@ -90,7 +90,7 @@ class Form8958 < TaxForm
     line[3, :all] = forms('1099-DIV').lines('name')
     enter_split(3, '1099-DIV', split_1099div, '1a')
 
-    line[4, :all] = forms('1099-G').lines('name')
+    line[4, :all] = forms('1099-G').lines('payer')
     enter_split(4, '1099-G', split_1099g, 2)
 
     line[5, :all] = forms('1065 Schedule K-1').lines('B').map { |x|
@@ -247,13 +247,13 @@ class Form8958 < TaxForm
 
   def split_form(f)
 
-    case f.line['whose']
+    case f.line['whose', :opt]
     when 'me', 'mine', 'self'
       is_mine = true
     when 'spouse', 'hers', 'his', 'theirs', 'him', 'her', 'them', 'spouse\'s'
       is_mine = false
     else
-      raise 'Invalid "whose" value; use "me" or "spouse"'
+      raise "Invalid 'whose' value in Form #{f.name}; use 'me' or 'spouse'"
     end
 
     if f.line['split', :present]

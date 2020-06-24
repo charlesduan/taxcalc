@@ -14,7 +14,7 @@ class FormD40S < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -27,35 +27,52 @@ class FormD40S < TaxForm
     end
   end
 
+
+
+  def add_calc_j(from1, from2, to)
+    line["J.#{to}.m"] = line["J.#{from1}.m"] + line["J.#{from2}.m", :opt]
+    line["J.#{to}.s"] = line["J.#{from1}.s"] + line["J.#{from2}.s", :opt]
+  end
+  def sub_calc_j(from1, from2, to)
+    line["J.#{to}.m"] = line["J.#{from1}.m"] - line["J.#{from2}.m", :opt]
+    line["J.#{to}.s"] = line["J.#{from1}.s"] - line["J.#{from2}.s", :opt]
+  end
   def compute_calculation_j
     my1040 = forms(1040).find { |f| f.line[:whose] == 'mine' }
     sp1040 = forms(1040).find { |f| f.line[:whose] == 'spouse' }
-
-    line['J.a.m'] = my1040.line[7]
-    line['J.a.s'] = sp1040.line[7]
     d40 = form('D-40')
-    unless d40.line[5, :opt] == 0 && d40.line[4, :opt] == 0
+
+    line['J.a.m'] = my1040.line['8b']
+    line['J.a.s'] = sp1040.line['8b']
+
+    unless d40.sum_lines(5, 6) == 0
       raise 'DC income additions splitting is not implemented'
     end
-    line['J.c.m'] = sum_lines('J.a.m', 'J.b.m')
-    line['J.c.s'] = sum_lines('J.a.s', 'J.b.s')
-    unless d40.line[13, :opt] == 0
+    add_calc_j(:a, :b, :c)
+    unless d40.line[14, :opt] == 0
       raise 'DC income subtractions splitting is not implemented'
     end
-    line['J.e.m'] = line['J.c.m'] - line['J.d.m', :opt]
-    line['J.e.s'] = line['J.c.s'] - line['J.d.s', :opt]
+    sub_calc_j(:c, :d, :e)
 
-    deduction = form('D-40').line[16]
+    deduction = d40.line[17]
     line['J.f.m'] = optimize_split(deduction)
     line['J.f.s'] = deduction - line['J.f.m']
+    sub_calc_j(:e, :f, :g)
 
-    line['J.g.m'] = line['J.e.m'] - line['J.f.m']
-    line['J.g.s'] = line['J.e.s'] - line['J.f.s']
+    # Line J.h. When you implement this, you probably also have to change the
+    # split optimization above.
+    if d40.line_19 != 0
+      raise "QHTC splitting for Schedule J not implemented"
+    end
+    sub_calc_j(:g, :h, :i)
 
-    line['J.h.m'] = compute_tax(line['J.g.m'])
-    line['J.h.s'] = compute_tax(line['J.g.s'])
+    line['J.j.m'] = compute_tax(line['J.i.m'])
+    line['J.j.s'] = compute_tax(line['J.i.s'])
 
-    line['J.i'] = sum_lines('J.h.m', 'J.h.s')
+    # J.k not implemented; relates to QHTC
+
+    add_calc_j(:j, :k, :l)
+    line['J.m'] = sum_lines('J.l.m', 'J.l.s')
 
   end
 
@@ -76,7 +93,7 @@ class FormD40S < TaxForm
 
 
   def needed?
-    return true if line['J.i', :present]
+    return true if line['J.m', :present]
     return true if line['dep_name', :present]
     return false
   end

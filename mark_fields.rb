@@ -140,9 +140,15 @@ if __FILE__ == $0
   @form_file = ARGV.shift
   if @mfm.has_form?(@form_name)
   elsif !@form_file
-    warn("The blank PDF filename for Form #{@form_name} is unknown.")
-    warn("Please provide it as an argument on the command line.")
-    exit 1
+    warn("No blank PDF for Form #{@form_name}; trying to download.")
+    uname = case @form_name
+            when /^\d{4}$/ then "f#@form_name"
+            when /^(\d{4}) Schedule (\w+)/ then "f#$1s#$2"
+            else raise "Can't determine form URL"
+            end
+    url = "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"
+    @form_file = "blank/#{uname}.pdf"
+    system('curl', '--output', @form_file, url)
   end
 end
 require 'tk'

@@ -12,7 +12,7 @@ class FormD40 < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -46,24 +46,35 @@ class FormD40 < TaxForm
       raise 'Unknown filing status'
     end
 
-    line['a'] = forms(1040).lines(1, :sum)
-    line['b'] = forms('1040 Schedule 1').lines(12, :sum)
-    line['c'] = forms('1040 Schedule 1').lines(13, :sum)
-    line['d'] = forms('1040 Schedule 1').lines(17, :sum)
 
-    line[3] = forms(1040).lines(7, :sum)
+
+    line['a'] = forms(1040).lines(1, :sum)
+    line['b'] = forms('1040 Schedule 1').lines(3, :sum)
+    line['c'] = forms(1040).lines(6, :sum)
+    line['d'] = forms('1040 Schedule 1').lines(5, :sum)
+
+    hc_months = (forms('1095-B') + forms('1095-C')).map { |f|
+      f.line_coverage == 'family' ? f.line_months : []
+    }.flatten.uniq
+    if hc_months.include?('all') || hc_months.length == 12
+      line[3] = 'X'
+    else
+      raise "DC health coverage forms not implemented"
+    end
+
+    line[4] = forms(1040).lines('8b', :sum)
 
     # These are on Schedule I. One check is made here.
-    if forms(4562).lines(12, :sum) > 25000
+    if has_form?(4562) and forms(4562).lines(12, :sum) > 25000
       raise "Schedule I, line 3 not implemented"
     end
     assert_question('Do you have any DC income additions or subtractions?',
                     false)
 
-    line[6] = sum_lines(3, 4, 5)
+    line[7] = sum_lines(4, 5, 6)
 
     # State tax refunds
-    line[8] = forms('1040 Schedule 1').lines(10, :sum)
+    line[9] = forms('1040 Schedule 1').lines(1, :sum)
     # SS income; removed from 1040
     #line[9] = forms(1040).lines('20b', :sum)
 
@@ -76,81 +87,122 @@ class FormD40 < TaxForm
     assert_question('Did you receive income as an annuitant\'s survivor?',
                     false)
 
-    line[13] = sum_lines(*7..12)
-    line[14] = line[6] - line[13]
+    line[14] = sum_lines(*8..13)
+
+    # DC AGI
+    line[15] = line[7] - line[14]
 
     if has_form?('1040 Schedule A')
-      line['15itemized'] = 'X'
-      line[16] = @manager.compute_form(D40CalculationF).line[:fill!]
+      line['16itemized'] = 'X'
+      line[17] = @manager.compute_form(D40CalculationF).line[:fill!]
     else
-      line['15standard'] = 'X'
+      line['16standard'] = 'X'
       raise "Must do Calculation G-1 of Schedule S"
     end
 
-    line[17] = line[14] - line[16]
+    line[18] = line[15] - line[17]
+
+    # Capital gain from sale of qualified tech company. This can be assumed to
+    # be zero if no Schedule D was filed.
+    if has_form?('1040 Schedule D')
+      raise "DC capital gains for QHTC not implemented"
+    else
+      line[19] = BlankZero
+    end
+
+    line[20] = line[18] - line[19]
+
+    line[21] = compute_tax(line[20])
+    if line[19] == 0
+      line[22] = BlankZero
+    else
+      raise "DC tax on QHTC gains not implemented"
+    end
 
     if line[1] == 'mfssr'
-      line['18.mfssr'] = 'X'
-      line[18] = compute_form(FormD40S).line['J.i']
+      line['23.mfssr'] = 'X'
+      line[23] = compute_form(FormD40S).line['J.m']
     else
-      line[18] = compute_tax(line[17])
+      line[23] = sum_lines(21, 22)
     end
 
     # Child care expenses. This is based on DC Code section 47-1806.04(c)(1). My
     # interpretation of that section is that no DC credit may be taken where the
     # federal credit is not "allowed," so I don't think that a federal MFS
     # person could take the credit.
-    line[19] = forms('1040 Schedule 3').lines(49, :sum)
+    if has_form?(2441)
+      line[24] = 0.32 * forms(2441).lines(9, :sum)
+    elsif forms(1040).any? { |f| f.line['status.mfs', :present] }
+      line[24] = BlankZero
+    else
+      raise "Need to implement DC child care expenses eligibility"
+    end
 
-    # Line 20: Schedule U credits. We don't have any of these.
-    line[21] = sum_lines(19, 20)
-    line[22] = [ BlankZero, line[18] - line[21] ].max
+    # Line 25: Schedule U credits. We don't have any of these.
+    line[26] = sum_lines(24, 25)
+    line[27] = [ BlankZero, line[23] - line[26] ].max
 
-    # Line 23: earned income credit. Assumed that there isn't one.
-    # Line 24: Schedule H homeowner/renter property tax credit.
-    if forms(1040).lines(7, :sum) <= 62000
+    # Line 28: DC health care
+    if (line[3, :present])
+      line[28] = BlankZero
+    else
+      raise "DC health care not implemented"
+    end
+
+    line[29] = sum_lines(27, 28)
+
+    # Line 30: earned income credit. Assumed that there isn't one.
+    # Line 31: Schedule H homeowner/renter property tax credit.
+    if forms(1040).any? { |f|
+      f.line_8b <= 75_000
+    }
       raise "Schedule H may be applicable but not implemented"
     end
-    # Line 25: refundable Schedule U credits. Assumed we don't have any.
-    line[26] = @manager.compute_form(FormD40WH).line['total']
 
-    line[27] = forms('State Estimated Tax') { |f|
+    # Line 32: refundable Schedule U credits. Assumed we don't have any.
+
+    # Withholdings
+    line[33] = @manager.compute_form(FormD40WH).line['total']
+
+    # Estimated tax
+    line[34] = forms('State Estimated Tax') { |f|
       f.line[:state] == 'DC'
     }.lines['amount', :sum]
 
-    # Line 28: extension to file estimated tax paid. Assumed there isn't any.
-    # Lines 29-30: amounts relevant to amended returns. Assumed that this isn't
+    # Line 35: extension to file estimated tax paid. Assumed there isn't any.
+    # Lines 36-37: amounts relevant to amended returns. Assumed that this isn't
     # one.
 
     # Total payments and refundable credits.
-    line[31] = sum_lines('23d', '23e', 24, 25, 26, 27, 28, 29)
+    line[38] = sum_lines('30d', '30e', 31, 32, 33, 34, 35, 36)
 
     # If the payments/refunds are less than the total tax, then there is tax
     # due.
-    if line[31] < line[22]
-      line[32] = line[22] - line[31]
-
-      if line[32] >= 100
-        prepayments = sum_lines(26, 27)
-        if prepayments < 0.9 * line[22]
-          last_year_tax = @manager.submanager(:last_year).form('D-40').line[26]
-          if prepayments < 1.1 * last_year_tax
-            line['35.check'] = 'X'
-            line[35] = @manager.compute_form(FormD2210).line[11]
-          end
-        end
-      end
-
-      line[37] = sum_lines(32, 35, 36)
+    if line[38] < line[29]
+      line[39] = line[29] - line[38]
+      compute_underpayment
+      line[44] = sum_lines(39, 42, 43)
 
     else
       # Payments/refunds exceed total tax; a refund is due.
-      line[33] = line[31] - line[22]
-      line[38] = line[33] - sum_lines(34, 35, 36)
+      line[40] = line[38] - line[29]
+      line[45] = line[40] - sum_lines(41, 42, 43)
       if interview("Is your refund going to an account outside the U.S.?")
         line['38.outside_us.yes'] = 'X'
       else
         line['38.outside_us.no'] = 'X'
+      end
+    end
+  end
+
+  def compute_underpayment
+    return if line[39] < 100
+    prepayments = sum_lines(33, 34)
+    if prepayments < 0.9 * line[29]
+      last_year_tax = @manager.submanager(:last_year).form('D-40').line[22]
+      if prepayments < 1.1 * last_year_tax
+        line['35.check'] = 'X'
+        line[35] = @manager.compute_form(FormD2210).line[11]
       end
     end
   end
@@ -163,7 +215,7 @@ class D40CalculationF < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -184,7 +236,7 @@ class D40CalculationF < TaxForm
 
     line[:g] = %w(4 9 15).map { |l| sch_as.lines(l, :sum) }.inject(&:+)
     line[:h] = line_f - line_g
-    line[:i] = d40.line[14]
+    line[:i] = d40.line[15]
     line[:j] = (d40.line[1] == 'mfs' ? 100000 : 200000)
     line[:k] = line_i - line_j
     line[:l] = (line_k * 0.05).round

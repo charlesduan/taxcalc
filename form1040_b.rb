@@ -26,7 +26,7 @@ class Form1040B < TaxForm
     # Line 3
     assert_question("Do you have any series EE or I savings bonds?", false)
 
-    line[4] = line[2] - line[3]
+    line[4] = line[2] - line[3, :opt]
 
     line['5l', :all] = forms('1099-DIV').lines('name')
     line['5r', :all] = forms('1099-DIV').lines('1a')

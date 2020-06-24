@@ -19,7 +19,7 @@ class Pub590AWorksheet1_2 < TaxForm
     @over50 = (age >= 50)
     ret_limits = nil
 
-    covered = forms('W-2').lines('13ret?').any? { |x| x == true }
+    covered = forms('W-2').lines('13ret?', :present)
     if covered
       # IRA deduction MAGI limits if you are covered by a retirement plan
       ret_limits = status.ira_deduction_limit

@@ -43,25 +43,20 @@ class Form1040E < TaxForm
     k1s.each do |k1|
       raise 'Partnership losses not implemented' if k1.line[1] < 0
       pship_name = k1.line[:B].split("\n")[0]
-      f4562 = forms(4562).find { |x| x.line[:business] == pship_name }
-
-      if k1.line[1] > 0
-        add_table_row(
-          '28a' => pship_name,
-          '28b' => 'P',
-          '28d' => k1.line[:A],
-          '28k' => k1.line[1],
-          '28j' => f4562.line[12],
-        )
-      else
-        add_table_row(
-          '28a' => pship_name,
-          '28b' => 'P',
-          '28d' => k1.line[:A],
-          '28i' => -k1.line[1],
-          '28j' => f4562.line[12],
-        )
+      res = {
+        '28a' => pship_name,
+        '28b' => 'P',
+        '28d' => k1.line[:A],
+      }
+      if k1.line[1] < 0
+        res['28i'] = -k1.line[1];
       end
+      f4562 = forms(4562).find { |x| x.line[:business] == pship_name }
+      res['28j'] = f4562.line[12] if f4562
+      if k1.line[1] > 0
+        res['28k'] = k1.line[1];
+      end
+      add_table_row(res)
     end
 
     ho_upes.each do |ein, deduction|

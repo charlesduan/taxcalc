@@ -13,7 +13,7 @@ class FormD40WH < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute

@@ -40,6 +40,11 @@ class Form4562 < TaxForm
         raise "Cannot handle multiple businesses"
       end
       line['business'] = k1_form.line['B'].split("\n")[0]
+
+      #
+      # This form is not needed unless line 12 is filled on a 1065 K-1.
+      #
+      return unless k1_form.line[12, :present]
       line[:id] = form(1040).line[:ssn]
 
       line[1] = 1_000_000
@@ -109,6 +114,10 @@ class Form4562 < TaxForm
       '19g.g', '19h.g', '19i.g', '20a.g', '20b.g', '20c.g', 21
     ) + (has_form?(1065) ? line[12, :opt] : 0)
 
+  end
+
+  def needed?
+    return line[22, :present]
   end
 
 end

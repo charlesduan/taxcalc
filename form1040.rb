@@ -4,8 +4,6 @@ require 'filing_status'
 require 'form1040_1'
 require 'form1040_2'
 require 'form1040_3'
-require 'form1040_4'
-require 'form1040_5'
 require 'form1040_a'
 require 'form1040_b'
 require 'form1040_d'
@@ -18,7 +16,7 @@ require 'form8995'
 require 'form8995a'
 require 'ira_analysis'
 require 'date'
-require 'qbi_simplified_worksheet'
+require 'qbi_manager'
 require 'amt_test_worksheet'
 
 class Form1040 < TaxForm
@@ -195,7 +193,7 @@ class Form1040 < TaxForm
 
     # Other income, Schedule 1
     sched_1 = compute_form(Form1040_1)
-    line['7a'] = sched_1.line[22]
+    line['7a'] = sched_1.line_9
 
     # Total income
     line['7b'] = sum_lines(*%w(1 2b 3b 4b 5b 6 7a))
@@ -243,11 +241,7 @@ class Form1040 < TaxForm
 
     # Qualified business income deduction
     taxable_income = line_8b - line_9; # AGI minus deduction
-    if taxable_income <= status.qbi_form
-      line[10] = compute_form(Form8995).line_15
-    else
-      line[10] = compute_form(Form8995A).line_39
-    end
+    line[10] = compute_form(QBIManager).line[:deduction]
 
     # Total deductions
     line['11a'] = sum_lines(9, 10)
@@ -489,7 +483,7 @@ class ChildTaxCreditWorksheet < TaxForm
   end
 
   def year
-    2018
+    2019
   end
 
   def compute
@@ -511,7 +505,7 @@ class ChildTaxCreditWorksheet < TaxForm
     end
 
     # Income limits
-    line[4] = f1040.line[7]
+    line[4] = f1040.line['8b']
     line[5] = f1040.status.double_mfj(200_000)
     if line[4] > line[5]
       line['6.yes'] = 'X'
@@ -536,13 +530,13 @@ class ChildTaxCreditWorksheet < TaxForm
       return
     end
 
-    line[9] = f1040.line[11]
+    line[9] = f1040.line['12b']
 
     with_form('1040 Schedule 3') do |f|
-      line['10_3_48'] = f.line[48, :opt]
-      line['10_3_49'] = f.line[49, :opt]
-      line['10_3_50'] = f.line[50, :opt]
-      line['10_3_51'] = f.line[51, :opt]
+      line['10_3_1'] = f.line[1, :opt]
+      line['10_3_2'] = f.line[2, :opt]
+      line['10_3_3'] = f.line[3, :opt]
+      line['10_3_4'] = f.line[4, :opt]
     end
     with_form(5695) do |f|
       line['10_5695_30'] = f.line[30, :opt]
@@ -557,7 +551,7 @@ class ChildTaxCreditWorksheet < TaxForm
       line['10_r_22'] = f.line[22, :opt]
     end
     line[10] = sum_lines(*%w(
-      10_3_48 10_3_49 10_3_50 10_3_51 10_5695_30 10_8910_15 10_8936_23 10_r_22
+      10_3_1 10_3_2 10_3_3 10_3_4 10_5695_30 10_8910_15 10_8936_23 10_r_22
     ))
 
     if line[10] >= line[9]
@@ -583,8 +577,7 @@ end
 
 FilingStatus.set_param('standard_deduction',
                        12_200, 24_400, :single, 18_350, :mfj)
-FilingStatus.set_param('qbi_form',
-                       160_700, 321_400, 160_725, :single, :single)
+
 FilingStatus.set_param('qdcgt_exemption', 39_375, 78_750, :single, 52_750, :mfj)
 FilingStatus.set_param('qdcgt_cap', 434_550, 488_850, 244_425, 461_700, :mfj)
 
