@@ -2,7 +2,7 @@ require 'filing_status'
 
 FilingStatus.set_param('tax_table_column', 2, 3, 4, 5, 3)
 
-# Updated for 2019.
+# Updated for 2019. The year must be updated in the compute_tax_table method.
 #
 # To update, to to the 1040 HTML instructions and copy the tax table directly
 # below. The commas and thousands separators are processed automatically.
@@ -19,6 +19,11 @@ module TaxTable
   end
 
   def compute_tax_table(income, status)
+
+    if year != 2019
+      raise 'Tax table must be updated'
+    end
+
     TAX_TABLE.each do |row|
       if income >= row[0] && income < row[1]
         return row[status.tax_table_column]

@@ -9,11 +9,6 @@ class Pub590AWorksheet1_1 < TaxForm
     2019
   end
 
-  def initialize(manager, ira_analysis)
-    super(manager)
-    @ira_analysis = ira_analysis
-  end
-
   def compute
 
     # Because the IRS instructions somehow expect you to calculate 1040 line 8b

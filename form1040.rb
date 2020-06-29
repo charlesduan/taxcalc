@@ -148,7 +148,7 @@ class Form1040 < TaxForm
     line[1] = forms('W-2').lines(1, :sum)
 
     if has_form?(8958) && has_form?('Explanation of 8958')
-      line['1.note'] = 'See attached explanation of line 1'
+      line['1*note'] = 'See attached explanation of line 1'
       line['1.explanation!', :all] = [
         'Explanation of Line 1 based on Form 8958'
       ] + form('Explanation of 8958').line[:explanation, :all]
@@ -177,8 +177,8 @@ class Form1040 < TaxForm
 
     # IRAs, pensions, and annuities
     ira_analysis = compute_form(IraAnalysis)
-    line['4a'] = ira_analysis.line_distribs
-    line['4b'] = ira_analysis.line_taxable
+    line['4a'] = ira_analysis.line_total_distribs
+    line['4b'] = ira_analysis.line_taxable_distribs
 
     # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')
@@ -278,7 +278,11 @@ class Form1040 < TaxForm
     line[15] = sched_2.line_10 if sched_2
 
     line[16] = sum_lines(14, 15)
-    line[17] = forms('W-2').lines(2, :sum)
+    withholdings = forms('W-2').lines(2, :sum)
+    with_or_without_form(8959) do |f|
+      withholdings += f.line[24, :opt] if f
+    end
+    line[17] = withholdings
 
     # 18a: earned income credit. Inapplicable for mfs status.
     # 18b: child credit.

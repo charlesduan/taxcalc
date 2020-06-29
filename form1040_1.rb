@@ -76,8 +76,8 @@ class Form1040_1 < TaxForm
     line[14] = sched_se.line[13] if sched_se
 
     ira_analysis = form('IRA Analysis')
-    ira_analysis.compute_contributions
-    line[19] = ira_analysis.line[:deductible_contribution, :opt]
+    ira_analysis.continue_computation
+    line[19] = ira_analysis.line[:deductible_contribs]
 
     line[22] = sum_lines(10, 11, 12, 13, 14, 15, 16, 17, '18a', 19, 20, 21)
   end
