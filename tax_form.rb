@@ -347,6 +347,7 @@ class TaxForm; class Lines
     @lines_data = {}
     @lines_order = []
     @boxed_lines = {}
+    @aliases = {}
   end
 
   include Enumerable
@@ -359,7 +360,37 @@ class TaxForm; class Lines
     end
   end
 
+  def resolve_alias(line)
+    line = line.to_s
+    if @aliases[line]
+      res = @aliases[line]
+      if @form != @form.manager.currently_computing && res.start_with?(line)
+        warn("In #{@form.manager.currently_computing.name}, use alias for " +
+             "Form #{@form.name}, line #{res}")
+      end
+      return res
+    end
+    return @aliases[line] if @aliases[line]
+    return line
+  end
+
+  def assign_aliases(line)
+    parts = line.split('/')
+    # If any of the parts are already aliases to anything other than this line
+    # itself, there's an ambiguity that raises an error.
+    parts.each do |p|
+      if @aliases[p] && @aliases[p] != line
+        raise "Ambiguous line alias #{line}"
+      end
+    end
+    return unless parts.length > 1
+    parts.each do |p|
+      @aliases[p] = line
+    end
+  end
+
   def line_name(line)
+    line = resolve_alias(line)
     "Form #{@form.name}, line #{line}"
   end
 
@@ -383,11 +414,11 @@ class TaxForm; class Lines
     @lines_order.push(line) unless @lines_data[line]
     form.explain("    #{line}:  #{value.inspect}")
     @lines_data[line] = value
+    assign_aliases(line)
   end
 
   def [](line, type = nil)
-    line = line.to_s
-    raise "Reached unimplemented value" if line == '-1'
+    line = resolve_alias(line)
 
     unless @lines_data.include?(line)
       return false if type == :present
@@ -409,19 +440,19 @@ class TaxForm; class Lines
   end
 
   def box(line, count, split = "")
-    @boxed_lines[line.to_s] = [ count, split ]
+    @boxed_lines[resolve_alias(line)] = [ count, split ]
   end
 
   def boxed?(line)
-    @boxed_lines.include?(line.to_s)
+    @boxed_lines.include?(resolve_alias(line))
   end
 
   def box_data(line)
-    @boxed_lines[line.to_s]
+    @boxed_lines[resolve_alias(line)]
   end
 
   def embox(line)
-    line = line.to_s
+    line = resolve_alias(line)
     raise "Not a boxed line" unless boxed?(line)
     data = self[line]
     bld = @boxed_lines[line]
@@ -458,7 +489,7 @@ class TaxForm; class Lines
 
   def place_lines(*nums)
     nums.each do |num|
-      num = num.to_s
+      num = resolve_alias(num)
       if @lines_order.include?(num)
         @lines_order.delete(num)
         @lines_order.push(num)

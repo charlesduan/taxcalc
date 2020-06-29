@@ -22,7 +22,7 @@ class Form1040_1 < TaxForm
 
     # Line 10
     if @manager.has_form?('1099-G')
-      line[1] = compute_1099g
+      line['1/taxrefund'] = compute_1099g
     end
     # If this line ever includes refunds for taxes other than income taxes, line
     # 2b on Form 6251 (AMT) needs to be adjusted

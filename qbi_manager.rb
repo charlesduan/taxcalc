@@ -55,7 +55,7 @@ class QBIManager < TaxForm
     )
 
     # Exclude SSTB (consulting income) if the income threshold is exceeded
-    line[:taxable_income] = f1040.line_8b - f1040.line_9;
+    line[:taxable_income] = f1040.line_agi - f1040.line_deduction;
     if line[:taxable_income] > f1040.status.qbi_max
       line[:sstb_excluded?] = true
       @qbi.reject!(&:sstb)

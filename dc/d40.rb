@@ -62,7 +62,7 @@ class FormD40 < TaxForm
       raise "DC health coverage forms not implemented"
     end
 
-    line[4] = forms(1040).lines('8b', :sum)
+    line[4] = forms(1040).lines(:agi, :sum)
 
     # These are on Schedule I. One check is made here.
     if has_form?(4562) and forms(4562).lines(12, :sum) > 25000
@@ -74,7 +74,7 @@ class FormD40 < TaxForm
     line[7] = sum_lines(4, 5, 6)
 
     # State tax refunds
-    line[9] = forms('1040 Schedule 1').lines(1, :sum)
+    line[9] = forms('1040 Schedule 1').lines(:taxrefund, :sum)
     # SS income; removed from 1040
     #line[9] = forms(1040).lines('20b', :sum)
 
@@ -154,7 +154,7 @@ class FormD40 < TaxForm
     # Line 30: earned income credit. Assumed that there isn't one.
     # Line 31: Schedule H homeowner/renter property tax credit.
     if forms(1040).any? { |f|
-      f.line_8b <= 75_000
+      f.line_agi <= 75_000
     }
       raise "Schedule H may be applicable but not implemented"
     end
@@ -221,11 +221,11 @@ class D40CalculationF < TaxForm
   def compute
     sch_as = forms('1040 Schedule A')
 
-    line[:a] = sch_as.lines(17, :sum)
-    line[:b] = sch_as.lines(7, :sum)
+    line[:a] = sch_as.lines(:total, :sum)
+    line[:b] = sch_as.lines(:salt, :sum)
     line[:c] = line_a - line_b
-    line[:d] = sch_as.lines('5b', :sum)
-    line[:e] = sch_as.lines(6, :sum)
+    line[:d] = sch_as.lines(:salt_real, :sum)
+    line[:e] = sch_as.lines(:other_tax, :sum)
     line[:f] = sum_lines(:c, :d, :e)
 
     d40 = form('D-40')

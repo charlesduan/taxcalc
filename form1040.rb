@@ -165,7 +165,9 @@ class Form1040 < TaxForm
     line['2b'] = sched_b.line[4]
 
     # Qualified dividends
-    line['3a'] = forms('1099-DIV') { |f| f.line['1b', :present] }.map { |f|
+    line['3a/qualdiv'] = forms('1099-DIV') { |f|
+      f.line['1b', :present]
+    }.map { |f|
       unless f.line[:qexception?, :present]
         raise "Indicate that no exception applies to 1099-DIV " + \
           "with qualified dividends, using the qexception? line"
@@ -201,7 +203,7 @@ class Form1040 < TaxForm
     # AGI
     sched_1.compute_adjustments
     line['8a'] = sched_1.line_22
-    line['8b'] = line_7b - line_8a
+    line['8b/agi'] = line_7b - line_8a
 
     # Standard or itemized deduction
     choose_itemize = false
@@ -229,31 +231,31 @@ class Form1040 < TaxForm
       sched_a = compute_form(Form1040A)
 
       if itemize || sched_a.line[17] > sd
-        line[9] = sched_a.line[17]
+        line['9/deduction'] = sched_a.line_total
       else
         @manager.remove_form(sched_a)
-        line[9] = sd
+        line['9/deduction'] = sd
       end
 
     else
-      line[9] = sd
+      line['9/deduction'] = sd
     end
 
     # Qualified business income deduction
-    taxable_income = line_8b - line_9; # AGI minus deduction
-    line[10] = compute_form(QBIManager).line[:deduction]
+    taxable_income = line_agi - line_deduction; # AGI minus deduction
+    line['10/qbid'] = compute_form(QBIManager).line[:deduction]
 
     # Total deductions
     line['11a'] = sum_lines(9, 10)
     # Taxable income
-    line['11b'] = [ line_8b - line_11a, 0 ].max
+    line['11b/taxinc'] = [ line_8b - line_11a, 0 ].max
 
     #
     # PAGE 2
     #
 
     # Tax
-    line['12a'] = compute_tax
+    line['12a/tax'] = compute_tax
 
     sched_2 = compute_form(Form1040_2)
     if sched_2
@@ -388,7 +390,9 @@ class Form1040 < TaxForm
   end
 
   def compute_penalty
-    assert_no_forms(8828, 4137, 5329, 8885, 8919)
+    [ 8828, 4137, 5329, 8885, 8919 ].each do |f|
+      raise "Penalty with form #{f} not implemented" if has_form?(f)
+    end
     tax_shown = line[16] - sum_lines(*%w(18a 18b 18c))
     with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(9, 12) end
 
@@ -436,8 +440,8 @@ class QdcgtWorksheet < TaxForm
   def compute
     f1040 = form(1040)
     assert_question("Did you have any foreign income?", false)
-    line[1] = f1040.line_11b
-    line[2] = f1040.line_3a
+    line[1] = f1040.line_taxinc
+    line[2] = f1040.line_qualdiv
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       line['3yes'] = 'X'
@@ -509,7 +513,7 @@ class ChildTaxCreditWorksheet < TaxForm
     end
 
     # Income limits
-    line[4] = f1040.line['8b']
+    line[4] = f1040.line_agi
     line[5] = f1040.status.double_mfj(200_000)
     if line[4] > line[5]
       line['6.yes'] = 'X'

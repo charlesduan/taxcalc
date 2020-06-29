@@ -54,7 +54,7 @@ class Form1040_2 < TaxForm
       l8 += f8959.line[18]
     end
 
-    if form(1040).line_8b > form(1040).status.niit_threshold
+    if form(1040).line_agi > form(1040).status.niit_threshold
       f8960 = @manager.compute_form(Form8960)
       line['8b'] = 'X'
       l8 += f8960.line[17]

@@ -37,7 +37,7 @@ class Form1040_3 < TaxForm
     end
 
     # Retirement savings credit
-    if form(1040).line_8b <= form(1040).status.qrsc_limit
+    if form(1040).line_agi <= form(1040).status.qrsc_limit
       raise 'Line 51 retirement savings credit not implemented'
     end
 

@@ -42,8 +42,8 @@ class FormD40S < TaxForm
     sp1040 = forms(1040).find { |f| f.line[:whose] == 'spouse' }
     d40 = form('D-40')
 
-    line['J.a.m'] = my1040.line['8b']
-    line['J.a.s'] = sp1040.line['8b']
+    line['J.a.m'] = my1040.line_agi
+    line['J.a.s'] = sp1040.line_agi
 
     unless d40.sum_lines(5, 6) == 0
       raise 'DC income additions splitting is not implemented'

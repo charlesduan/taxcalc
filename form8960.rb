@@ -48,7 +48,7 @@ class Form8960 < TaxForm
       # The view appears to be that the excludable expense is calculated first
       # based on the full tax, and then the $10,000 limit is applied to that.
       l9b = f.line['5d'] - (f.line['5a.sales', :present] ? f.line['5a'] : 0)
-      l9b *= 1.0 * line[8] / form(1040).line['8b']
+      l9b *= 1.0 * line[8] / form(1040).line_agi
       line['9b'] = [ l9b.round, f.line['5e'] ].min
     end
     with_form(4954) do |f|
@@ -59,7 +59,7 @@ class Form8960 < TaxForm
     line[11] = sum_lines('9d', 10)
 
     line[12] = [ 0, line[8] - line[11] ].max
-    line[13] = form(1040).line['8b']
+    line[13] = form(1040).line_agi
 
     line[14] = form(1040).status.niit_threshold
 

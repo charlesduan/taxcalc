@@ -12,6 +12,7 @@ class FormManager
     @explain = {}
     @submanagers = {}
     @year = nil
+    @compute_stack = []
   end
 
   attr_reader :name
@@ -115,7 +116,9 @@ class FormManager
     f = f.new(self, *args) if f.is_a?(Class)
     add_form(f)
     f.explain("Computing Form #{f.name} for #{name}")
+    @compute_stack.push(f)
     f.compute
+    @compute_stack.pop
     f.explain("Done computing Form #{f.name}")
     unless f.needed?
       f.explain("Removing Form #{f.name} as not needed")
@@ -123,6 +126,11 @@ class FormManager
       return nil
     end
     return f
+  end
+
+  # Returns the form that is currently being computed
+  def currently_computing
+    return @compute_stack.last
   end
 
 
