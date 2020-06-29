@@ -142,6 +142,19 @@ numbers from methods named ``line\_\#''.
 Every TaxForm is associated with a FormManager. Many of the methods of TaxForm
 are delegated to its FormManager as a matter of convenience.
 
+\subsubsection{Line Name Aliases}
+
+A line may be given multiple ``names,'' or aliases, separated with a slash. Each
+portion separated by slashes becomes an alias for the same line. For example, a
+line named ``8b/agi'' would have two aliases ``8b'' and ``agi'' that could both
+be used to refer to the same line.
+
+The purpose of aliases is to provide a stable name for key lines in forms, when
+the numbering may change across years. As a result, the non-numeric alias is
+preferable for use as a line name, especially when referring to the line from
+different forms. A warning will be given when the numeric alias (assumed to be
+the first alias from the line's full name) is used alone in another form.
+
 \subsubsection{How Tables Are Stored in Forms}
 
 Consider a form that requires input like so:
