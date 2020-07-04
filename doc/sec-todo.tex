@@ -1,0 +1,58 @@
+\section{Wish List}
+
+These are features that I'd like to implement some day.
+
+\emph{Traceable computations.} Rather than storing result data, form lines could
+store objects that maintain a tree of computations. For example, if line 7 is
+the sum of lines 5 and 6, line 7 would be presented as an object referencing
+those two lines and carrying an ``add'' instruction. This would help with
+tracing errors and optimizing computations. It will also help with detecting
+whether form or line information was never used, since that is likely an error.
+
+\emph{Sequence numbers.} These could most simply be implemented as instance
+methods on each form class and used to order the output, though that would mean
+that the sequence numbers are lost after the computation phase. They could also
+be stored as a line in each form. Or they could be maintained in some external
+database, though that seems unnecessarily difficult to maintain.
+
+\emph{Generalized manager.} Rather than having to write a script that computes
+the 1040, there could be a higher-level form that performs the functions of the
+script in a more generalized way, among other things computing the 1040. This
+has the benefit that it could compute ancillary information as a cover sheet,
+such as a manifest of forms to file, the mailing address, and some summary
+information about the results.
+
+\emph{Better Interviewer questioning.} Right now, the questions themselves are
+the keys for uniquely identifying the questions. This is not great for length
+reasons. I'd prefer to use short names for the questions, and then have some
+sort of translation table for presenting the complete question, perhaps with
+help texts.
+
+\emph{Line explanations.} I would like to be able to display explanations for
+each line, to assist in reviewing computation results without having to fill in
+the forms. This would require some sort of database mapping line numbers to
+descriptions, either dispersed throughout the form classes or in some unified
+file.
+
+\emph{Forced line aliases.} It is possible to make an alias for a line (e.g.,
+``agi'' for the relevant line of the 1040), which ensures that other forms
+remain correct even if the number of that line changes. Currently, a form may
+reference another form's lines by line number or alias, but the system will
+issue a warning if an aliased line is reference by number. It would be better if
+every reference to an external form's lines were by alias rather than number.
+
+\emph{Assertions without requiring input.} Many forms use an interview question
+to confirm that the user does not meet a rare special condition. Better would be
+for the forms to dump all these assertions into a file for the user to review
+later.
+
+\emph{Rename managers.} The QBIManager class, for example---it would better be
+named QBIAnalysis.
+
+\emph{Name registration.} Forms effectively have two names, a class name and a
+textual name. Reconciling these into a single name would be helpful.
+
+\emph{Push instruction testing.} If a form produces a line value that is meant
+to be incorporated into another form, it would be helpful to have some sort of
+assertion that the line is indeed incorporated into that other form. See the
+section on Push versus Pull Filling.

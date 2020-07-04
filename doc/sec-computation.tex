@@ -1,0 +1,92 @@
+\section{Phase One: Computation}
+
+This section describes the operation of the first phase, computation of tax form
+line items.
+
+The usual process is as follows:
+\begin{enumerate}
+\item A FormManager is created and set up with the relevant parameters,
+submanagers, interviewer, and so on.
+\item Input forms are read using the FormManager's ``import'' method.
+\item The FormManager's ``compute\_form(class)'' method is called to compute a
+new form. The FormManager creates an instance of the given TaxForm class,
+adds the instance to the manager, executes that instance's ``compute'' method,
+and then removes the form if the ``needed?\@'' method returns false. The
+``compute'' method will likely make further calls to ``compute\_form'' if
+further forms are needed.
+\item The computed forms are saved to a file using the FormManager's ``export''
+method.
+\end{enumerate}
+
+
+\section{When Forms Are Computed}
+
+Computations of forms are always invoked by either the main program or another
+form in the course of that other form's computation. This appears to mimic the
+IRS's expectations that one will start filling Form 1040 line by line, and
+figure each schedule and other form as the need arises. In particular, many
+forms must be computed after some portion of the 1040 is already completed,
+meaning that they must be invoked in the midst of the 1040 computation.
+
+In some cases, notably the computation of nondeductible IRA contributions, the
+IRS's instructions are problematically nonlinear and even create circular
+dependencies. It is useful though unfortunate that the rigorous computations of
+this system expose these issues.
+
+
+
+\subsection{Push versus Pull Filling}
+
+The IRS instructions often use a ``push''-style approach in which a worksheet or
+form is filled to reach a key number, which is to be then entered or included in
+another form. For example, the last line of Schedule A is to be entered onto the
+relevant line of Form 1040.
+
+This program instead follows a ``pull'' convention in which each form is
+responsible for gathering information from all relevant forms. In the above
+example, the code for Schedule A would simply compute its last line without
+using it, and Form 1040 will query the completed Schedule A to find the
+last-line value to fill. This convention is consistent with the expectation that
+each form is responsible for performing all computations necessary to fill the
+form, which includes invoking computations of other necessary forms. The
+implementer of the 1040 form would know better whether the deduction line should
+be filled with the Schedule A value (as opposed to, say, the standard
+deduction), so it would be problematic for Schedule A to insert the value onto
+the 1040 prematurely.
+
+A disadvantage of the ``pull'' approach is that many lines are computed from
+multiple and possibly unexpected forms. The tax line on the 1040, for example,
+includes several different taxes, and the 1040 needs to combine all those
+values, such as the Net Investment Income Tax. A helpful feature that could be
+implemented in the future would be to allow one form, such as the NIIT form, to
+add an assertion to an external form to insure that its values are used.
+
+
+
+\subsection{Preventing Errors}
+
+A key problem for programming tax computation is ensuring accuracy. The large
+amount of input data is a likely source of errors---mistyped numbers or missed
+forms---and many unusual rules can arise that require special edge-case
+handling. A few conventions are used to minimize errors.
+
+\emph{Assertions.} In many cases, certain conditions are so rare that they are
+not worth implementing. The computation programs will thus raise assertions if
+they detect conditions that are not implemented. In some cases, detecting the
+condition will not be possible on the data alone, in which an interview question
+is asked to determine that the special condition is not present.
+
+\emph{Form checking.} For input forms, it is assumed that the user may fail to
+enter certain ones. As a result, when a computation uses an input form that is
+not present, a warning is given unless the user has explicitly indicated that
+there are no forms of that type (using the ``No Form'' instruction described
+previously). This checking could be improved, because currently there is not
+much distinction between input forms (1099s, W-2s) and computation forms
+(Schedule A, Form 8606).
+
+\emph{Line presence.} If a computation requests a particular line, the line must
+be present unless the ``:opt'' option is given as described above, and it must
+not be an array unless an array was expected.
+
+
+

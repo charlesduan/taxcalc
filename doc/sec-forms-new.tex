@@ -1,0 +1,238 @@
+\section{Informational Forms}
+
+
+
+\subsection{Alimony}
+
+Alimony received. See Pub.\ 504.
+
+\begin{description}
+\item[amount] The amount of alimony received.
+\end{description}
+
+
+\subsection{Asset}
+
+A form for a capitalized asset.
+
+\begin{description}
+\item[date] The date the asset was put into service.
+\item[amount] The dollar value of the asset when purchased.
+\item[179?] Whether the asset is a section 179 deductible asset. Generally,
+tangible personal property and computer software qualify. See Pub.~946 chapter
+2.
+\item[listed?] Whether the asset is a listed asset, see Pub.~946 chapter 5.
+\item[dc\_category] The depreciation category for the asset in DC, see the FP-31
+instructions, under Depreciation Guidelines.
+\item[dc\_type] Choose from ``reference'', ``fixed'', or ``other'' to categorize
+the asset for DC Form FP-31, lines 1--3.
+\item[description] A description of the asset.
+\end{description}
+
+
+\subsection{Biographical}
+
+Biographical information for an individual tax filer. Spouses should have a
+separate Biographical form.
+
+\begin{description}
+\item[whose] The individual to whom this form pertains. May be ``mine'' or
+``spouse''.
+\item[first\_name] The first name and middle initial.
+\item[last\_name] The last name.
+\item[phone] Telephone number.
+\item[ssn] Social Security number, with dashes.
+\item[home\_address] The first line of the home address.
+\item[apt\_no] The apartment number for the address.
+\item[city\_zip] The city, state, and ZIP code.
+\item[birthday] The person's birthday.
+\item[blind?] Whether the person is blind.
+\item[occupation] Your occupation
+\end{description}
+
+\subsection{Business Expense}
+
+A deductible business expense. See IRS Pub.~535, chapter 11.
+
+\begin{description}
+\item[date] The date of the business expense.
+\item[amount] The dollar amount of the expense.
+\item[category] The category of expense. ``Meals'' and ``Utilities'' will
+automatically be halved, the former per the IRS 50\% rule and the latter on the
+assumption that 50\% of the expense was for non-business purposes. Other common
+values are ``Supplies'', ``Travel'', and ``Membership''.
+\item[description] A description of the expense.
+\end{description}
+
+
+\subsection{Charity Gift}
+
+A charitable contribution.
+
+\begin{description}
+\item[amount] The dollar value of the contribution.
+\item[cash?] Whether the contribution was in cash (as opposed to in-kind).
+\item[name] The name of the charity.
+\item[documented?] Whether the donation was documented. See Pub.\ 526. This is
+checked if the contribution is over the \$250 threshold. Currently it is assumed
+that any documentation meets the requirements of a contemporaneous written
+acknowledgment (received before filing the return).
+\end{description}
+For charity gifts that are non-cash that total over \$500, Form 8283 must also
+be filled, which requires additional information on the nature of the gift:
+\begin{description}
+\item[vin] The VIN of a donated vehicle.
+\item[description] A description of the donated goods and their condition.
+Clothing must be donated in good used condition.
+\item[date] The date the contribution was made.
+\item[date\_acq] The approximate date on which the property was acquired, or
+``Various'' if the items were acquired on various dates at least 12 months ago.
+\item[how\_acq] How the property was acquired, for example by purchase, gift,
+inheritance, or exchange.
+\item[basis] The basis or cost of the property.
+\item[method] Method for determining fair market value. IRS examples are
+appraisal, thrift shop value, catalog, or comparable sales.
+\end{description}
+
+
+\subsection{Dependent}
+
+A dependent.
+
+\begin{description}
+\item[name] The dependent's name.
+\item[ssn] The dependent's social security number.
+\item[relationship] The dependent's relationship with the form provider.
+\item[qualifying] Whether the dependent qualifies for a tax credit. Options are
+``child'' for the child tax credit, ``other'' for the credit for other
+dependents, and ``none'' where the dependent is not qualifying.
+\end{description}
+
+
+\subsection{Estimated Tax}
+
+Estimated tax payment made to the IRS.
+
+\begin{description}
+\item[amount] The amount of estimated tax paid.
+\end{description}
+
+\subsection{HSA Contribution}
+
+Records of contributions to an HSA account.
+
+\begin{description}
+\item[ssn] The SSN of the beneficiary of the HSA account.
+\item[contributions] Contributions made to the HSA, but not including employer
+contributions or HSA/Archer MSA rollovers or HSA funding distributions.
+\end{description}
+
+\subsection{Home Office}
+
+A portion of a home used as an office for a particular business.
+
+\begin{description}
+\item[type] The type of business associated with this home office. Currently the
+only supported type is ``partnership''.
+\item[ein] The EIN of the relevant business.
+\item[method] Either ``simplified'' or ``actual''.
+\item[sqft] Square footage of the home office area.
+\item[daycare?] Whether the relevant business was a daycare.
+\item[property] The name of the Real Estate form with which this home office is
+associated.
+\end{description}
+
+\subsection{State Estimated Tax}
+
+Estimated tax payment made to a state.
+
+\begin{description}
+\item[amount] The amount of estimated tax paid.
+\item[state] The two-letter code for the state.
+\end{description}
+
+
+
+
+\subsection{State Tax}
+
+A record of state taxes paid in the relevant tax year (usually for the previous
+year). This is the amount actually paid to the state tax office, (i.e., the
+amount due), not the total tax including what was already paid via withholdings.
+
+\begin{description}
+\item[amount] The amount of tax paid.
+\item[name] A description (not used for computation).
+\end{description}
+
+\subsection{Traditional IRA Contribution}
+
+A contribution to a traditional IRA.
+
+\begin{description}
+\item[amount] The amount contributed.
+\item[tax\_year] The tax year of the contribution.
+\item[date] The date of the contribution.
+\end{description}
+
+
+\subsection{Partner}
+
+A single partner within a partnership.
+
+\begin{description}
+\item[name] The partner's name.
+\item[liability] Either ``general'' or ``limited''.
+\item[nationality] Either ``domestic'' or ``foreign''.
+\item[type] The entity type of the partner. Currently only ``Individual'' is
+supported fully. Other possibilities include ``Estate''. (This should also, in
+the future, include corporations, partnerships, trusts, nonprofits, and foreign
+governments, among others.)
+\item[share] This partner's share of profits and losses, as a decimal fraction
+such that all the partners' shares add to 1. Currently it is assumed that shares
+of profits and shares of losses are equal.
+\item[capital] This partner's percentage contribution of capital to the
+partnership, as a decimal fraction such that all the partners' shares add to 1.
+\item[ssn] The SSN of the partner.
+\item[country] The country of citizenship of the partner, relevant to Form 1065
+Schedule B-1, part II, column iii.
+\item[address] The first line of the partner's address.
+\item[address2] The second line of the partner's address.
+\end{description}
+
+
+
+
+\subsection{Partnership}
+
+Biographical information for a partnership.
+
+\begin{description}
+\item[name] The name of the partnership.
+\item[address] The first line of the address.
+\item[address2] The second line of the address.
+\item[business] The line of business of the partnership, Form 1065 line A.
+\item[product] The product or service of the partnership, Form 1065 line B.
+\item[code] The business code, Form 1065 line C.
+\item[ein] The employer identification number of the partnership.
+\item[start] The start date of the partnership.
+\item[accounting] ``Cash'', ``Accrual'', or other accounting method.
+\end{description}
+
+\subsection{Real Estate}
+
+A description of real property, used in a variety of contexts and to link other
+forms that deal with a particular property.
+
+\begin{description}
+\item[property] A name for the property that will uniquely identify the property
+across tax forms.
+\item[basis] The basis price for the property, i.e., the purchase value. See
+Pub.\ 551.
+\item[sqft] The square footage of the property.
+\item[purchase\_date] The date on which the property was purchased.
+\end{description}
+
+
+
+

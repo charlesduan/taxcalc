@@ -1,0 +1,39 @@
+\section{Recommended Procedure for Annual Filing}
+
+This section provides recommendations on preparing an annual tax filing. This
+includes updating the software in view of changes to the tax laws and forms, as
+well as preparing the returns themselves.
+
+First, prepare the script for running the computations, and enter the data for
+received forms (W-2s, 1099s, etc.). It is preferable to do this first rather
+than updating the tax form computations, because it allows for partially running
+the program in advance. This has two benefits as you update the computations: It
+reveals bugs earlier, and it lets you assess with real data whether it is worth
+implementing a new computation.
+
+At this step, be sure to review the informational forms in the Appendix and
+ensure that you have entered all relevant information required there.
+
+Next, update the computations. Start with the main form being computed (e.g.,
+Form 1040), and work line by line through the script. I found it preferable to
+address each form dependency as it came immediately, resulting in a depth-first
+update. That is, when the 1040 calls for a result from Schedule B, I would pause
+work on the 1040 and go update Schedule B. The advantage of this is that you can
+continue running partial tests of the computations. The main disadvantage is
+that it becomes hard to keep track of which form you are working on; I generally
+addressed this by leaving comments in the files as I worked on them.
+
+Once all the computations are done and run without errors, move on to phase 2
+and mark the form fields. I found it useful to mark both the forms and the
+worksheets, even though the worksheets do not need to be filed, because it made
+it easier to review everything for accuracy.
+
+Then prepare the script for filling in all the forms (phase 3), and fill them in
+to produce a draft return. This will help to identify any computation errors.
+
+Once you have reviewed the draft return and corrected any issues, you can
+optimize the return (e.g., try different filing statuses, move dependents
+around, choose standard versus itemized deductions, and so on). Once you are
+satisfied, you can print, sign, and file your returns.
+
+

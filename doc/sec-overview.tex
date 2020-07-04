@@ -1,0 +1,52 @@
+\section{Introduction}
+
+This is a system for preparing tax forms. The idea is to translate the relevant
+computations and forms into modular computer programs that, when assembled
+together, can compute a complete tax return based on received tax information.
+
+The basic motivation for this system is the separation of form and content. Tax
+forms are essentially association tables, in which numbered lines are associated
+with blank spaces to be filled with numbers or other data. The content could be
+represented as a two-column spreadsheet, but the complexity of calculations and
+interactions among multiple forms makes an object-oriented representation
+in a general-purpose programming language preferable. Thus, the system separates
+the computations necessary to figure the tax forms first, and then enters the
+figured numbers into the graphical forms.
+
+Several advantages arise out of automating the filling of tax forms in this way.
+Automating the computations allows for testing out different elections during
+the tax computation (e.g., opting for itemized deductions or the standard
+deduction) without having to recompute the numbers by hand. It allows for
+programming accuracy checks to find errors in form inputs (e.g., missed lines on
+W-2 forms). It also saves time across years, since the computations for most tax
+forms do not change greatly across years. And it enables multiple people's taxes
+to be computed using the same software. The primary disadvantage is that
+programming general-case computations is less efficient than computing a single
+tax return, but it is believed that the aforementioned advantages outweigh the
+time spent.
+
+Use of the system proceeds in three phases.
+
+The first phase is the computation of form values. The user enters relevant data
+from received tax forms and other sources into files, and then writes a short
+script that imports that data and computes the values for tax forms to be
+prepared. This produces a plain text file containing the line item data to be
+filled into the tax forms.
+
+The second phase is the identification of form fields. For each tax form to be
+filled in, the user provides the PDF file for the blank form and also the file
+of line item data. A program displays a graphical interface where the user can
+click on the blank spaces where each line item should be entered. The result of
+this is a second plain text data file that lists the coordinates of each of the
+form fields.
+
+The third phase is the actual filling of the forms. The user writes another
+short script that receives the data files from the first and second phases, and
+places the line items from the first-phase file into the PDF form. If any
+changes need to be made subsequently, the user may simply rerun the first-phase
+computation script and then rerun the third-phase filling script, thereby
+updating all of the tax forms automatically.
+
+
+
+

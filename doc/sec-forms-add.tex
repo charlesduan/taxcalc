@@ -1,0 +1,56 @@
+\section{Additions to Forms}
+
+\subsection{1095-B, -C}
+
+This is the health coverage form. No information other than the items listed
+below is needed.
+
+\begin{description}
+\item[hdhp?] Whether this plan was a high deductible plan that qualifies for HSA
+contributions.
+\item[coverage] ``individual'' or ``family''.
+\item[months] The months of coverage for this plan. (Currently it is assumed
+that all persons on the form are covered for the same months.) These should be
+all-lowercase three-letter abbreviations of months, or ``all'' to indicate all
+months.
+\end{description}
+
+\subsection{1098}
+
+\begin{description}
+\item[property] The name of the Real Estate form with which this 1098
+corresponds.
+\item[balance] The average mortgage balance on this loan. See Pub.\ 936.
+You can compute this by averaging the balances on January 1 and December 31, or
+you can multiply the interest paid by the lowest interest rate of the year.
+\end{description}
+
+\subsection{1099-DIV}
+
+\begin{description}
+\item[qexception?] If this form shows qualified dividends, this flag
+must be set to indicate whether an exception applies. See 1040 instructions for
+line 3a. The exceptions relate to unusual transactions.
+\end{description}
+
+
+\subsection{1099-G}
+
+\begin{description}
+\item[payer] The name of the payer (usually the state)
+\end{description}
+
+
+\subsection{1099-R}
+
+\begin{description}
+\item[2b.not\_determined?] The relevant checkbox under line 2b.
+\item[2b.total\_distribution?] The relevant checkbox under line 2b.
+\item[ira-sep-simple?] Whether the checkbox on the form with this name is
+checked.
+\item[destination] Where this distribution went. It can be ``roth''
+(currently the only one supported).
+\end{description}
+
+
+
