@@ -145,7 +145,7 @@ class Form1040 < TaxForm
     end
 
     # Wages, salaries, tips
-    line[1] = forms('W-2').lines(1, :sum)
+    line['1/wages'] = forms('W-2').lines(1, :sum)
 
     if has_form?(8958) && has_form?('Explanation of 8958')
       line['1*note'] = 'See attached explanation of line 1'
@@ -162,7 +162,7 @@ class Form1040 < TaxForm
     line['2a'] = forms('1099-INT').lines[8, :sum] + \
       forms('1099-DIV').lines[10, :sum]
     # Taxable interest
-    line['2b'] = sched_b.line[4]
+    line['2b/taxable_int'] = sched_b.line[4]
 
     # Qualified dividends
     line['3a/qualdiv'] = forms('1099-DIV') { |f|
@@ -175,34 +175,35 @@ class Form1040 < TaxForm
       f.line[:qexception?] ? 0 : f.line['1b']
     }.inject(:+) + forms('1065 Schedule K-1').lines('6b', :sum)
     # Ordinary dividends
-    line['3b'] = sched_b.line[6]
+    line['3b/taxable_div'] = sched_b.line[6]
 
     # IRAs, pensions, and annuities
     ira_analysis = compute_form(IraAnalysis)
     line['4a'] = ira_analysis.line_total_distribs
-    line['4b'] = ira_analysis.line_taxable_distribs
+    line['4b/taxable_ira'] = ira_analysis.line_taxable_distribs
 
     # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')
+    line['4d/taxable_pension'] = BlankZero
 
     # Capital gains/losses
     sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
     if sched_d
-      line[6] = sched_d.line[:fill!]
+      line['6/capgain'] = sched_d.line[:fill!]
     else
-      line[6] = BlankZero
+      line['6/capgain'] = BlankZero
     end
 
     # Other income, Schedule 1
     sched_1 = compute_form(Form1040_1)
-    line['7a'] = sched_1.line_9
+    line['7a/other_inc'] = sched_1.line_9
 
     # Total income
     line['7b'] = sum_lines(*%w(1 2b 3b 4b 5b 6 7a))
 
     # AGI
     sched_1.compute_adjustments
-    line['8a'] = sched_1.line_22
+    line['8a/adjustments'] = sched_1.line_22
     line['8b/agi'] = line_7b - line_8a
 
     # Standard or itemized deduction
@@ -319,6 +320,7 @@ class Form1040 < TaxForm
         line['21d'] = interview("Direct deposit account number:")
         box_line('21d', 17)
       end
+      line['22/refund_applied'] = BlankZero
     else
 
       # Amount owed

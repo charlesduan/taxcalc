@@ -1,3 +1,5 @@
+require 'tax_table'
+
 module TaxComputation
 
   def compute_tax
