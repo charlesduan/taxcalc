@@ -112,6 +112,10 @@ class EstimatedTax < TaxForm
     #
     line[:tax] = compute_tax_estimate(line[:taxable_income])
 
+    line[:credits] = @manager.submanager(:last_year).form(1040).line(
+      '13b', :opt
+    )
+
     # Self-employment tax estimation
     se_forms = forms('Estimated Income') { |x| x.line[:se?] }
     unless se_forms.empty?
@@ -126,7 +130,7 @@ class EstimatedTax < TaxForm
       line[:se_tax] = (0.029 * line[:se_projected_income]).round
     end
 
-    line[:total_tax] = sum_lines(:tax, :se_ss_tax, :se_tax)
+    line[:total_tax] = sum_lines(:tax, :se_ss_tax, :se_tax) - line[:credits]
 
     line[:withholding] = forms('Withholding').lines(:amount, :sum)
     line[:projected_withholding] = project(line[:withholding])
@@ -153,7 +157,7 @@ class EstimatedTax < TaxForm
   def compute_tax_estimate(amount)
     @status.estimated_tax_brackets.each do |b|
       next unless b[0].nil? || b[0] >= amount
-      return round(b[1] + b[2] * (amount - b[3]))
+      return (b[1] + b[2] * (amount - b[3])).round
     end
     raise "Should never reach here"
   end

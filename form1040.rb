@@ -270,9 +270,9 @@ class Form1040 < TaxForm
     compute_form(Form1040_3)
     with_or_without_form('1040 Schedule 3') do |f|
       if f
-        line['13b'] = line['13a'] + f.line[7]
+        line['13b/credits'] = line['13a'] + f.line[7]
       else
-        line['13b'] = line['13a']
+        line['13b/credits'] = line['13a']
       end
     end
 
