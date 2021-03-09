@@ -9,12 +9,10 @@ class AssetManager < TaxForm
   # Notice 2015-82. Look for "Tangible Property Regulations."
   SAFE_HARBOR_THRESHOLD = 2500
 
-  def name
-    'Asset Manager'
-  end
+  NAME = 'Asset Manager'
 
   def year
-    2019
+    2020
   end
 
   def compute

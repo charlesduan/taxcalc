@@ -2,9 +2,7 @@ require 'tax_form'
 
 # Additional Medicare Tax
 class Form8959 < TaxForm
-  def name
-    '8959'
-  end
+  NAME = '8959'
 
   def year
     2019

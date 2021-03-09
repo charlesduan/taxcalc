@@ -7,9 +7,7 @@ require 'date'
 #
 class Form8606 < TaxForm
 
-  def name
-    '8606'
-  end
+  NAME = '8606'
 
   def year
     2019

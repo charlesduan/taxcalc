@@ -2,9 +2,7 @@ require 'tax_form'
 
 class Form1040R < TaxForm
 
-  def name
-    '1040 Schedule R'
-  end
+  NAME = '1040 Schedule R'
 
   def year
     2019

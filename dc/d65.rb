@@ -4,9 +4,7 @@ require 'dc/d65_distrib'
 
 class FormD65 < TaxForm
 
-  def name
-    'D-65'
-  end
+  NAME = 'D-65'
 
   def year
     2019
@@ -149,7 +147,7 @@ class FormD65 < TaxForm
       'capital is not a material income-producing factor.',
     ]
 
-    compute_form(D65PassThroughDistribution)
+    compute_form('Schedule of Pass-Through Distribution of Income')
     line[:continuation!] = 'Schedule of Pass-Through Distribution of Income'
 
   end

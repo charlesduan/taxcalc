@@ -1,9 +1,7 @@
 require 'tax_form'
 
 class FormD2210 < TaxForm
-  def name
-    'D-2210'
-  end
+  NAME = 'D-2210'
 
   def compute
     d40 = form('D-40')

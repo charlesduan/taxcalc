@@ -2,6 +2,12 @@ require 'tax_form'
 
 class Form1065K1 < TaxForm
 
+  NAME = '1065 Schedule K-1'
+
+  def year
+    2020
+  end
+
   def initialize(manager, partner_form)
     super(manager)
     @partner_form = partner_form
@@ -10,11 +16,6 @@ class Form1065K1 < TaxForm
   def copy(manager)
     super(Form1065K1.new(manager, @partner_form.copy(manager)))
   end
-
-  def name
-    '1065 Schedule K-1'
-  end
-
 
   def compute
     f1065 = form(1065)
@@ -50,7 +51,16 @@ class Form1065K1 < TaxForm
     line['K.qualified.ending'] = "#{share * 100}%"
     line['K.recourse.beginning'] = "#{share * 100}%"
     line['K.recourse.ending'] = "#{share * 100}%"
+
+    # Item L need not be completed if Schedule B, question 4 is yes, which we
+    # confirmed in Form 1065.
+
     line['M.no'] = 'X'
+
+    # This needs to change if there are any investments in the capital accounts;
+    # currently there are not.
+    line['N.beginning'] = BlankZero
+    line['N.ending'] = BlankZero
 
     line[1] = (f1065.line['K1'] * share).round
     line[5] = (f1065.line['K5'] * share).round if f1065.line[:K5, :present]

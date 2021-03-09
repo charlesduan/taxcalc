@@ -52,16 +52,16 @@ module TaxComputation
   end
 
   def compute_tax_qdcgt
-    f = @manager.compute_form(QdcgtWorksheet)
+    f = @manager.compute_form(
+      'Qualified Dividends and Capital Gains Tax Worksheet'
+    )
     return f.line[27]
   end
 
 end
 
 class QdcgtWorksheet < TaxForm
-  def name
-    'Qualified Dividends and Capital Gains Tax Worksheet'
-  end
+  NAME = 'Qualified Dividends and Capital Gains Tax Worksheet'
 
   def year
     2019

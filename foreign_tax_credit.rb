@@ -5,9 +5,7 @@ require 'tax_form'
 
 class ForeignTaxCredit < TaxForm
 
-  def name
-    "Foreign Tax Credit"
-  end
+  NAME = "Foreign Tax Credit"
 
   def year
     2019

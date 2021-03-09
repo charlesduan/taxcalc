@@ -9,6 +9,8 @@ class NamedForm < TaxForm
     super(self.class.new(name, new_manager))
   end
 
+  NAME = 'Named Form (This Should Never Appear)'
+
   def name
     @name
   end

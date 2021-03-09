@@ -1,9 +1,7 @@
 require 'tax_form'
 
 class Pub590AWorksheet1_1 < TaxForm
-  def name
-    "Pub. 590-A Worksheet 1-1"
-  end
+  NAME = "Pub. 590-A Worksheet 1-1"
 
   def year
     2019

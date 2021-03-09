@@ -6,6 +6,24 @@ require 'date'
 require 'boxed_data'
 
 class TaxForm
+
+  #
+  # Register subclasses by their names.
+  #
+  FORM_TYPES = {}
+  def self.inherited(subclass)
+    name = subclass.const_get(:NAME).to_s
+    if FORM_TYPES[name]
+      raise "Duplicate TaxForm type #{name} (#{subclass})"
+    else
+      FORM_TYPES[name] = subclass
+    end
+  end
+
+  def self.by_name(name)
+    return FORM_TYPES[name.to_s]
+  end
+
   def initialize(manager)
 
     # The form lines in this form
@@ -46,7 +64,7 @@ class TaxForm
   end
 
   def name
-    raise "Abstract form class"
+    return self.class.const_get(:NAME)
   end
 
   def year
@@ -134,6 +152,10 @@ class TaxForm
     @manager.interview(prompt, self)
   end
 
+  def confirm(prompt)
+    @manager.confirm(prompt, self)
+  end
+
   def copy_line(l, form)
     line[l] = form.line[l] if form.line[l, :present]
   end
@@ -187,15 +209,15 @@ class TaxForm
     end
   end
 
-  def compute_form(form_class, *args)
-    @manager.compute_form(form_class, *args)
+  def compute_form(name, *args)
+    @manager.compute_form(name, *args)
   end
 
-  def find_or_compute_form(name, form_class)
+  def find_or_compute_form(name)
     if has_form?(name)
       return form(name)
     else
-      compute_form(form_class)
+      compute_form(name)
     end
   end
 

@@ -3,9 +3,7 @@ require 'tax_form'
 # Net Investment Income Tax
 class Form8960 < TaxForm
 
-  def name
-    '8960'
-  end
+  NAME = '8960'
 
   def year
     2019

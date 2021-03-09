@@ -21,9 +21,7 @@ require 'amt_test_worksheet'
 
 class Form1040 < TaxForm
 
-  def name
-    '1040'
-  end
+  NAME = '1040'
 
   def year
     2019
@@ -154,7 +152,7 @@ class Form1040 < TaxForm
       ] + form('Explanation of 8958').line[:explanation, :all]
     end
 
-    sched_b = compute_form(Form1040B)
+    sched_b = compute_form('1040 Schedule B')
 
     assert_no_forms('1099-OID')
 
@@ -178,7 +176,7 @@ class Form1040 < TaxForm
     line['3b/taxable_div'] = sched_b.line[6]
 
     # IRAs, pensions, and annuities
-    ira_analysis = compute_form(IraAnalysis)
+    ira_analysis = compute_form('IRA Analysis')
     line['4a'] = ira_analysis.line_total_distribs
     line['4b/taxable_ira'] = ira_analysis.line_taxable_distribs
 
@@ -187,7 +185,7 @@ class Form1040 < TaxForm
     line['4d/taxable_pension'] = BlankZero
 
     # Capital gains/losses
-    sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
+    sched_d = find_or_compute_form('1040 Schedule D')
     if sched_d
       line['6/capgain'] = sched_d.line[:fill!]
     else
@@ -195,7 +193,7 @@ class Form1040 < TaxForm
     end
 
     # Other income, Schedule 1
-    sched_1 = compute_form(Form1040_1)
+    sched_1 = compute_form('1040 Schedule 1')
     line['7a/other_inc'] = sched_1.line_9
 
     # Total income
@@ -229,7 +227,7 @@ class Form1040 < TaxForm
 
     # Compute itemized deduction
     if itemize || choose_itemize
-      sched_a = compute_form(Form1040A)
+      sched_a = compute_form('1040 Schedule A')
 
       if itemize || sched_a.line[17] > sd
         line['9/deduction'] = sched_a.line_total
@@ -244,7 +242,7 @@ class Form1040 < TaxForm
 
     # Qualified business income deduction
     taxable_income = line_agi - line_deduction; # AGI minus deduction
-    line['10/qbid'] = compute_form(QBIManager).line[:deduction]
+    line['10/qbid'] = compute_form('QBI Manager').line[:deduction]
 
     # Total deductions
     line['11a'] = sum_lines(9, 10)
@@ -258,7 +256,7 @@ class Form1040 < TaxForm
     # Tax
     line['12a/tax'] = compute_tax
 
-    sched_2 = compute_form(Form1040_2)
+    sched_2 = compute_form('1040 Schedule 2')
     if sched_2
       line['12b'] = line['12a'] + sched_2.line[3]
     else
@@ -266,8 +264,10 @@ class Form1040 < TaxForm
     end
 
     # Child tax credit and other credits
-    line['13a'] = @manager.compute_form(ChildTaxCreditWorksheet).line[:fill!]
-    compute_form(Form1040_3)
+    line['13a'] = @manager.compute_form(
+      'Child Tax Credit Worksheet'
+    ).line[:fill!]
+    compute_form('1040 Schedule 3')
     with_or_without_form('1040 Schedule 3') do |f|
       if f
         line['13b/credits'] = line['13a'] + f.line[7]
@@ -378,9 +378,7 @@ class Form1040 < TaxForm
 end
 
 class ChildTaxCreditWorksheet < TaxForm
-  def name
-    'Child Tax Credit Worksheet'
-  end
+  NAME = 'Child Tax Credit Worksheet'
 
   def year
     2019

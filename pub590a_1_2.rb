@@ -1,7 +1,5 @@
 class Pub590AWorksheet1_2 < TaxForm
-  def name
-    "Pub. 590-A Worksheet 1-2"
-  end
+  NAME = "Pub. 590-A Worksheet 1-2"
 
   def year
     2019
@@ -34,7 +32,7 @@ class Pub590AWorksheet1_2 < TaxForm
 
     # Determine whether the MAGI is between the limits. If it is below the lower
     # bound limit, then compute as if there were no limit.
-    magi = @manager.compute_form(Pub590AWorksheet1_1).line[8]
+    magi = @manager.compute_form('Pub. 590-A Worksheet 1-1').line[8]
     if magi <= ret_limits[0]
       compute_no_limit
       return

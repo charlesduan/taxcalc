@@ -3,9 +3,7 @@ require 'tax_form'
 # Education credits.
 class Form8863 < TaxForm
 
-  def name
-    '8863'
-  end
+  NAME = '8863'
 
   def year
     2019

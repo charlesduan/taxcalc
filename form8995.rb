@@ -2,9 +2,7 @@ require 'tax_form'
 
 class Form8995 < TaxForm
 
-  def name
-    '8995'
-  end
+  NAME = '8995'
 
   def year
     2019

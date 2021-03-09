@@ -9,9 +9,7 @@ class FormD40S < TaxForm
 
   include DcTaxTable
 
-  def name
-    'D-40 Schedule S'
-  end
+  NAME = 'D-40 Schedule S'
 
   def year
     2019

@@ -2,9 +2,7 @@ require 'tax_form'
 
 class Form1040_2 < TaxForm
 
-  def name
-    '1040 Schedule 2'
-  end
+  NAME = '1040 Schedule 2'
 
   def year
     2019
@@ -18,9 +16,11 @@ class Form1040_2 < TaxForm
     assert_no_forms('1095-A') # Line 2; advance health premium credit
     line[2] = BlankZero
 
-    amt_test = @manager.compute_form(AMTTestWorksheet)
+    amt_test = @manager.compute_form(
+      "Worksheet to See If You Should Fill In Form 6251"
+    )
     if amt_test.line[:fill_yes, :present]
-      line[1] = @manager.compute_form(Form6251).line[11]
+      line[1] = @manager.compute_form(6251).line[11]
     end
 
     place_lines(2)
@@ -30,7 +30,7 @@ class Form1040_2 < TaxForm
     #
     # Part II
     #
-    sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
+    sched_se = find_or_compute_form('1040 Schedule SE')
     if sched_se
       line[4] = sched_se.line[12]
     end
@@ -48,14 +48,14 @@ class Form1040_2 < TaxForm
 
     # Additional Medicare tax
     l8 = BlankZero
-    f8959 = compute_form(Form8959)
+    f8959 = compute_form(8959)
     if f8959
       line['8a'] = 'X'
       l8 += f8959.line[18]
     end
 
     if form(1040).line_agi > form(1040).status.niit_threshold
-      f8960 = @manager.compute_form(Form8960)
+      f8960 = @manager.compute_form(8960)
       line['8b'] = 'X'
       l8 += f8960.line[17]
     end

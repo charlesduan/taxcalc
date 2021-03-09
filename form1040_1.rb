@@ -6,9 +6,7 @@ require 'form1040_e'
 # form must be computed in two parts.
 class Form1040_1 < TaxForm
 
-  def name
-    '1040 Schedule 1'
-  end
+  NAME = '1040 Schedule 1'
 
   def year
     2019
@@ -37,7 +35,7 @@ class Form1040_1 < TaxForm
 
     # Line 4 must be zero because we assume no sole proprietorships
 
-    sched_e = @manager.compute_form(Form1040E)
+    sched_e = @manager.compute_form('1040 Schedule E')
     line[5] = sched_e.line[41]
 
     line[9] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
@@ -69,10 +67,10 @@ class Form1040_1 < TaxForm
   def compute_adjustments
 
     line[12] = forms('HSA Contribution').map { |f|
-      compute_form(Form8889, f).line[13]
+      compute_form(8889, f).line[13]
     }.inject(BlankZero, :+)
 
-    sched_se = find_or_compute_form('1040 Schedule SE', Form1040SE)
+    sched_se = find_or_compute_form('1040 Schedule SE')
     line[14] = sched_se.line[13] if sched_se
 
     ira_analysis = form('IRA Analysis')

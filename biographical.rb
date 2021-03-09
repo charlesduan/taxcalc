@@ -10,9 +10,7 @@ require 'filing_status'
 
 class Biographical < TaxForm
 
-  def name
-    'Biographical'
-  end
+  NAME = 'Biographical'
 
   FIELDS = {
     first_name: 'First name and initial:',
@@ -62,7 +60,7 @@ if __FILE__ == $0
   end
 
   m = FormManager.new
-  m.compute_form(Biographical)
+  m.compute_form('Biographical')
 
   open(ARGV[0], 'w') do |f|
     m.export_all(f)

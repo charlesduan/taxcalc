@@ -9,9 +9,7 @@ require 'form8863'
 #
 class Form1040_3 < TaxForm
 
-  def name
-    '1040 Schedule 3'
-  end
+  NAME = '1040 Schedule 3'
 
   def year
     2019
@@ -21,17 +19,17 @@ class Form1040_3 < TaxForm
     set_name_ssn
 
     # Foreign tax credit
-    ftc_form = find_or_compute_form('Foreign Tax Credit', ForeignTaxCredit)
+    ftc_form = find_or_compute_form('Foreign Tax Credit')
     line[1] = ftc_form.line[:fill!] if ftc_form
 
     # Child care expenses
-    compute_form(Form2441)
+    compute_form(2441)
     with_form(2441) do |f|
       line[2] = f.line[11]
     end
 
     # Education credits
-    compute_form(Form8863)
+    compute_form(8863)
     with_form(8863) do |f|
       line[3] = f.line[19]
     end
@@ -49,7 +47,7 @@ class Form1040_3 < TaxForm
     # - Form 8801: AMT credit only applies to depreciation or other deferrals.
     # - Mortgage interest credit: requires certificate.
     # - Schedule R is for people over 65.
-    compute_form(Form1040R) && raise("Can't handle Schedule R")
+    compute_form('1040 Schedule R') && raise("Can't handle Schedule R")
     # None of the other credits seem relevant.
 
     line[7] = sum_lines(*1..6)

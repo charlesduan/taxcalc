@@ -7,6 +7,10 @@ class Interviewer
   def initialize
     @fh = nil
     @answers = {}
+    @new_confirms = 0
+    at_exit do
+      review_new_confirms
+    end
   end
 
   attr_reader :answers
@@ -65,6 +69,23 @@ class Interviewer
     return parsed_resp
   end
 
+  def confirm(prompt, form)
+    unless @answers[prompt]
+      @answers[prompt] = "CONFIRM"
+      @new_confirms += 1
+    end
+  end
+
+  def review_new_confirms
+    return if @new_confirms == 0
+    if @new_confirms == 1
+      STDERR.puts "*** There is 1 new item to confirm. ***"
+    else
+      STDERR.puts "*** There are #@new_confirms new items to confirm. ***"
+    end
+    puts "Please review the interview file for items marked CONFIRM."
+  end
+
   def self.parse(question, data)
     if question =~ /\?$/
       return true if data =~ /^y(es)?|true/i
@@ -78,6 +99,7 @@ class Interviewer
       BoxedData.new($1, $2.to_i, parse(question, $3))
     when /^-?\d+$/ then data.to_i
     when /^-?\d*\.\d*$/ then data.to_f
+    when /^\d{4}-\d{1,2}-\d{1,2}$/ then Date.strptime(data, "%Y-%m-%d")
     when /^\d+\/\d+\/\d{4}$/ then Date.strptime(data, "%m/%d/%Y")
     when /^\[\s*(.*)\s*\]$/
       $1.split(/,\s*/).map { |x| parse(question, x.strip) }

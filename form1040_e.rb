@@ -3,9 +3,7 @@ require 'home_office'
 
 class Form1040E < TaxForm
 
-  def name
-    '1040 Schedule E'
-  end
+  NAME = '1040 Schedule E'
 
   def year
     2019
@@ -38,7 +36,7 @@ class Form1040E < TaxForm
     assert_question('Are any of your partnerships foreign?', false)
     assert_question('Were you active in all your partnerships?', true)
 
-    compute_form(Form4562)
+    compute_form(4562)
 
     k1s.each do |k1|
       raise 'Partnership losses not implemented' if k1.line[1] < 0

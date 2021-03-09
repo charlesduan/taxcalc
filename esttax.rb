@@ -4,9 +4,7 @@ require 'filing_status'
 
 class EstimatedTax < TaxForm
 
-  def name
-    'Estimated Tax'
-  end
+  NAME = 'Estimated Tax'
 
   def year
     2020

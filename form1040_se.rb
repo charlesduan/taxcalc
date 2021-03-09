@@ -1,8 +1,6 @@
 class Form1040SE < TaxForm
 
-  def name
-    '1040 Schedule SE'
-  end
+  NAME = '1040 Schedule SE'
 
   def year
     2019

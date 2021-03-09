@@ -113,6 +113,7 @@ class FormManager
   # computation to be present.
   #
   def compute_form(f, *args)
+    f = TaxForm.by_name(f) if f.is_a?(String)
     f = f.new(self, *args) if f.is_a?(Class)
     add_form(f)
     f.explain("Computing Form #{f.name} for #{name}")
@@ -261,6 +262,10 @@ class FormManager
 
   def interview(prompt, form = nil)
     @interviewer.ask(prompt, form)
+  end
+
+  def confirm(prompt, form)
+    @interviewer.confirm(prompt, form)
   end
 
   ########################################################################

@@ -7,9 +7,7 @@ require 'foreign_tax_credit'
 #
 class Form6251 < TaxForm
 
-  def name
-    '6251'
-  end
+  NAME = '6251'
 
   def year
     2019
@@ -157,11 +155,11 @@ class Form6251 < TaxForm
     # AMT computation
 
     # Several things depend on the foreign tax credit computation.
-    @ftc_form = compute_form(ForeignTaxCredit)
+    @ftc_form = compute_form('Foreign Tax Credit')
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
-      line[5] = @manager.compute_form(Line5ExemptionWorksheet).line[6]
+      line[5] = @manager.compute_form('Line 5 Exemption Worksheet').line[6]
     else
       line[5] = form(1040).status.amt_exemption
     end
@@ -341,9 +339,7 @@ end
 
 
 class Line5ExemptionWorksheet < TaxForm
-  def name
-    'Line 5 Exemption Worksheet'
-  end
+  NAME = 'Line 5 Exemption Worksheet'
 
   def year
     2019

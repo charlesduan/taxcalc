@@ -10,9 +10,7 @@ require 'pub590a_1_2'
 #
 class IraAnalysis < TaxForm
 
-  def name
-    'IRA Analysis'
-  end
+  NAME = 'IRA Analysis'
 
   def year
     2019
@@ -121,7 +119,7 @@ class IraAnalysis < TaxForm
   end
 
   def compute_contributions_only
-    @pub590a_w1_2 = @manager.compute_form(Pub590AWorksheet1_2)
+    @pub590a_w1_2 = @manager.compute_form("Pub. 590-A Worksheet 1-2")
     line[:deductible_contribs] = @pub590a_w1_2.line[7]
     line[:nondeductible_contribs] = @pub590a_w1_2.line[8]
     unless compute_8606_if_needed
@@ -138,7 +136,7 @@ class IraAnalysis < TaxForm
     # This follows the instructions in Pub. 590-B, "Contribution and
     # distribution in the same year".
     #
-    @pub590b_w1_1 = compute_form(Pub590BWorksheet1_1)
+    @pub590b_w1_1 = compute_form("Pub. 590-B Worksheet 1-1")
 
     line['8606_15a'] = @pub590b_w1_1.line[:taxable_distribs]
     line['8606_15b'] = BlankZero # Qualified disaster distributions
@@ -153,7 +151,7 @@ class IraAnalysis < TaxForm
 
   def compute_contributions_and_distributions_continuation
 
-    @pub590a_w1_2 = @manager.compute_form(Pub590AWorksheet1_2)
+    @pub590a_w1_2 = @manager.compute_form("Pub. 590-A Worksheet 1-2")
     line[:deductible_contribs] = @pub590a_w1_2.line[7]
     line[:nondeductible_contribs] = @pub590a_w1_2.line[8]
 
@@ -188,7 +186,7 @@ class IraAnalysis < TaxForm
       line['8606_13*note'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
     end
 
-    @form8606 = compute_form(Form8606)
+    @form8606 = compute_form(8606)
   end
 
   # Computes the values of lines 2-5 of Form 8606 (which are stored as lines in
@@ -248,7 +246,7 @@ class IraAnalysis < TaxForm
     if @manager.submanager(:last_year).has_form?(8606) || ndc != 0
       compute_8606_lines_2_to_5
       line[:compute_8606_rest?] = true
-      @form8606 = compute_form(Form8606)
+      @form8606 = compute_form(8606)
       line[:taxable_distribs] = @form8606.sum_lines('15c', 18, 25)
       return true
     else

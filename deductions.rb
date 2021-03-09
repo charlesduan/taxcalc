@@ -6,9 +6,7 @@ require 'tax_form'
 #
 
 class Deductions < TaxForm
-  def name
-    'Deductions'
-  end
+  NAME = 'Deductions'
 
   def year
     2019
@@ -39,7 +37,7 @@ class Deductions < TaxForm
     end
 
     # Add in the safe harbor assets.
-    @asset_manager = find_or_compute_form('Asset Manager', AssetManager)
+    @asset_manager = find_or_compute_form('Asset Manager')
     if @asset_manager.has_safe_harbor_expenses?
       line['Safe_Harbor'] = @asset_manager.safe_harbor_expense_total.round(2)
       total += line['Safe_Harbor']

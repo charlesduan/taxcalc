@@ -5,9 +5,7 @@ require 'form6251'
 # From 1040 instructions, Schedule 2 Line 1
 #
 class AMTTestWorksheet < TaxForm
-  def name
-    "Worksheet to See If You Should Fill In Form 6251"
-  end
+  NAME = "Worksheet to See If You Should Fill In Form 6251"
 
   def year
     2019

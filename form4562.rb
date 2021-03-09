@@ -4,9 +4,7 @@ require 'asset_manager'
 # Depreciation and amortization (and section 179 deduction)
 class Form4562 < TaxForm
 
-  def name
-    '4562'
-  end
+  NAME = '4562'
 
   def year
     2019
@@ -80,7 +78,7 @@ class Form4562 < TaxForm
 
     if for_partnership
       non_listed_179_assets = find_or_compute_form(
-        'Asset Manager', AssetManager
+        'Asset Manager'
       ).assets_179_nonlisted
       line['6a', :all] = non_listed_179_assets.lines(:description)
       line['6b', :all] = non_listed_179_assets.lines(:amount)

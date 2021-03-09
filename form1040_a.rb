@@ -3,9 +3,7 @@ require 'form8283'
 
 class Form1040A < TaxForm
 
-  def name
-    '1040 Schedule A'
-  end
+  NAME = '1040 Schedule A'
 
   def year
     2019
@@ -42,7 +40,7 @@ class Form1040A < TaxForm
     }.lines(:amount, :sum).round
 
     if line[12] > 500
-      compute_form(Form8283)
+      compute_form(8283)
     end
 
     line[14] = sum_lines(11, 12, 13)
@@ -62,7 +60,9 @@ class Form1040A < TaxForm
 
   def compute_mortgage_interest
     assert_question("Did you receive non-1098 mortgage interest?", false)
-    p936w = compute_form(Pub936Worksheet)
+    p936w = compute_form(
+      'Pub. 936 Home Mortgage Interest Worksheet'
+    )
     if p936w && p936w.line[16] != 0
       raise "Not able to handle mortgage interest deduction limit"
     end
@@ -88,9 +88,7 @@ end
 # as average mortgage balance, that could lower the computation.
 #
 class Pub936Worksheet < TaxForm
-  def name
-    'Pub. 936 Home Mortgage Interest Worksheet'
-  end
+  NAME = 'Pub. 936 Home Mortgage Interest Worksheet'
 
   def year
     2019
