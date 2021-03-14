@@ -143,7 +143,7 @@ if __FILE__ == $0
     warn("No blank PDF for Form #{@form_name}; trying to download.")
     uname = case @form_name
             when /^\d{4}$/ then "f#@form_name"
-            when /^(\d{4}) Schedule (\w+)/ then "f#$1s#$2"
+            when /^(\d{4}) Schedule (\w+)/ then "f#$1s#$2".downcase
             else raise "Can't determine form URL"
             end
     url = "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"
