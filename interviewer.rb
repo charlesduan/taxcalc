@@ -72,6 +72,7 @@ class Interviewer
   def confirm(prompt, form)
     unless @answers[prompt]
       @answers[prompt] = "CONFIRM"
+      persist(prompt, "CONFIRM")
       @new_confirms += 1
     end
   end

@@ -1,5 +1,6 @@
 require 'tax_form'
 require 'interviewer'
+require 'date'
 
 class FormManager
 
@@ -18,6 +19,14 @@ class FormManager
   attr_reader :name
   attr_reader :interviewer
   attr_accessor :year
+
+  def year
+    unless @year
+      @year = Date.today.year - 1
+      warn("Form Manager #@name: year not set; defaulting to #@year")
+    end
+    return @year
+  end
 
   def export_all(io = STDOUT, all = false)
     @ordered_forms.each do |f|

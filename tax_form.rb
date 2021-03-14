@@ -11,16 +11,22 @@ class TaxForm
   # Register subclasses by their names.
   #
   FORM_TYPES = {}
+  UNREGISTERED_FORMS = []
   def self.inherited(subclass)
-    name = subclass.const_get(:NAME).to_s
-    if FORM_TYPES[name]
-      raise "Duplicate TaxForm type #{name} (#{subclass})"
-    else
-      FORM_TYPES[name] = subclass
-    end
+    UNREGISTERED_FORMS.push(subclass)
   end
 
   def self.by_name(name)
+    UNREGISTERED_FORMS.each do |subclass|
+      n = subclass.const_get(:NAME).to_s
+      if FORM_TYPES[n]
+        raise "Duplicate TaxForm type #{n} (#{subclass})"
+      else
+        FORM_TYPES[n] = subclass
+      end
+    end
+    UNREGISTERED_FORMS.clear
+
     return FORM_TYPES[name.to_s]
   end
 

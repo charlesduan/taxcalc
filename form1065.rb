@@ -1,6 +1,6 @@
 require 'tax_form'
 require 'form4562'
-require 'deductions'
+require 'expense_manager'
 require 'asset_manager'
 
 class Form1065 < TaxForm
@@ -62,9 +62,9 @@ class Form1065 < TaxForm
 
     @asset_manager.attach_safe_harbor_election(self)
 
-    line[20] = @manager.compute_form('Deductions').line[:fill!]
+    line[20] = @manager.compute_form('Business Expense Manager').line[:fill!]
     if line[20] > 0
-      form('Deductions').make_continuation(
+      form('Business Expense Manager').make_continuation(
         self, 'Line 20 Statement of Business Expenses'
       )
     end
