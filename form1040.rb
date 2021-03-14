@@ -21,9 +21,7 @@ require 'amt_test_worksheet'
 
 class Form1040 < TaxForm
 
-  def name
-    '1040'
-  end
+  NAME = '1040'
 
   def year
     2019
@@ -145,16 +143,16 @@ class Form1040 < TaxForm
     end
 
     # Wages, salaries, tips
-    line[1] = forms('W-2').lines(1, :sum)
+    line['1/wages'] = forms('W-2').lines(1, :sum)
 
     if has_form?(8958) && has_form?('Explanation of 8958')
-      line['1.note'] = 'See attached explanation of line 1'
+      line['1*note'] = 'See attached explanation of line 1'
       line['1.explanation!', :all] = [
         'Explanation of Line 1 based on Form 8958'
       ] + form('Explanation of 8958').line[:explanation, :all]
     end
 
-    sched_b = compute_form(Form1040B)
+    sched_b = compute_form('1040 Schedule B')
 
     assert_no_forms('1099-OID')
 
@@ -162,10 +160,12 @@ class Form1040 < TaxForm
     line['2a'] = forms('1099-INT').lines[8, :sum] + \
       forms('1099-DIV').lines[10, :sum]
     # Taxable interest
-    line['2b'] = sched_b.line[4]
+    line['2b/taxable_int'] = sched_b.line[4]
 
     # Qualified dividends
-    line['3a'] = forms('1099-DIV') { |f| f.line['1b', :present] }.map { |f|
+    line['3a/qualdiv'] = forms('1099-DIV') { |f|
+      f.line['1b', :present]
+    }.map { |f|
       unless f.line[:qexception?, :present]
         raise "Indicate that no exception applies to 1099-DIV " + \
           "with qualified dividends, using the qexception? line"
@@ -173,35 +173,36 @@ class Form1040 < TaxForm
       f.line[:qexception?] ? 0 : f.line['1b']
     }.inject(:+) + forms('1065 Schedule K-1').lines('6b', :sum)
     # Ordinary dividends
-    line['3b'] = sched_b.line[6]
+    line['3b/taxable_div'] = sched_b.line[6]
 
     # IRAs, pensions, and annuities
-    ira_analysis = compute_form(IraAnalysis)
-    line['4a'] = ira_analysis.line_distribs
-    line['4b'] = ira_analysis.line_taxable
+    ira_analysis = compute_form('IRA Analysis')
+    line['4a'] = ira_analysis.line_total_distribs
+    line['4b/taxable_ira'] = ira_analysis.line_taxable_distribs
 
     # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')
+    line['4d/taxable_pension'] = BlankZero
 
     # Capital gains/losses
-    sched_d = find_or_compute_form('1040 Schedule D', Form1040D)
+    sched_d = find_or_compute_form('1040 Schedule D')
     if sched_d
-      line[6] = sched_d.line[:fill!]
+      line['6/capgain'] = sched_d.line[:fill!]
     else
-      line[6] = BlankZero
+      line['6/capgain'] = BlankZero
     end
 
     # Other income, Schedule 1
-    sched_1 = compute_form(Form1040_1)
-    line['7a'] = sched_1.line_9
+    sched_1 = compute_form('1040 Schedule 1')
+    line['7a/other_inc'] = sched_1.line_9
 
     # Total income
     line['7b'] = sum_lines(*%w(1 2b 3b 4b 5b 6 7a))
 
     # AGI
     sched_1.compute_adjustments
-    line['8a'] = sched_1.line_22
-    line['8b'] = line_7b - line_8a
+    line['8a/adjustments'] = sched_1.line_22
+    line['8b/agi'] = line_7b - line_8a
 
     # Standard or itemized deduction
     choose_itemize = false
@@ -226,36 +227,36 @@ class Form1040 < TaxForm
 
     # Compute itemized deduction
     if itemize || choose_itemize
-      sched_a = compute_form(Form1040A)
+      sched_a = compute_form('1040 Schedule A')
 
       if itemize || sched_a.line[17] > sd
-        line[9] = sched_a.line[17]
+        line['9/deduction'] = sched_a.line_total
       else
         @manager.remove_form(sched_a)
-        line[9] = sd
+        line['9/deduction'] = sd
       end
 
     else
-      line[9] = sd
+      line['9/deduction'] = sd
     end
 
     # Qualified business income deduction
-    taxable_income = line_8b - line_9; # AGI minus deduction
-    line[10] = compute_form(QBIManager).line[:deduction]
+    taxable_income = line_agi - line_deduction; # AGI minus deduction
+    line['10/qbid'] = compute_form('QBI Manager').line[:deduction]
 
     # Total deductions
     line['11a'] = sum_lines(9, 10)
     # Taxable income
-    line['11b'] = [ line_8b - line_11a, 0 ].max
+    line['11b/taxinc'] = [ line_8b - line_11a, 0 ].max
 
     #
     # PAGE 2
     #
 
     # Tax
-    line['12a'] = compute_tax
+    line['12a/tax'] = compute_tax
 
-    sched_2 = compute_form(Form1040_2)
+    sched_2 = compute_form('1040 Schedule 2')
     if sched_2
       line['12b'] = line['12a'] + sched_2.line[3]
     else
@@ -263,13 +264,15 @@ class Form1040 < TaxForm
     end
 
     # Child tax credit and other credits
-    line['13a'] = @manager.compute_form(ChildTaxCreditWorksheet).line[:fill!]
-    compute_form(Form1040_3)
+    line['13a'] = @manager.compute_form(
+      'Child Tax Credit Worksheet'
+    ).line[:fill!]
+    compute_form('1040 Schedule 3')
     with_or_without_form('1040 Schedule 3') do |f|
       if f
-        line['13b'] = line['13a'] + f.line[7]
+        line['13b/credits'] = line['13a'] + f.line[7]
       else
-        line['13b'] = line['13a']
+        line['13b/credits'] = line['13a']
       end
     end
 
@@ -278,7 +281,11 @@ class Form1040 < TaxForm
     line[15] = sched_2.line_10 if sched_2
 
     line[16] = sum_lines(14, 15)
-    line[17] = forms('W-2').lines(2, :sum)
+    withholdings = forms('W-2').lines(2, :sum)
+    with_or_without_form(8959) do |f|
+      withholdings += f.line[24, :opt] if f
+    end
+    line[17] = withholdings
 
     # 18a: earned income credit. Inapplicable for mfs status.
     # 18b: child credit.
@@ -313,6 +320,7 @@ class Form1040 < TaxForm
         line['21d'] = interview("Direct deposit account number:")
         box_line('21d', 17)
       end
+      line['22/refund_applied'] = BlankZero
     else
 
       # Amount owed
@@ -328,63 +336,12 @@ class Form1040 < TaxForm
 
   end
 
-
-  def compute_tax
-
-    # Form for rich kids (under 24)
-    if age < 24
-      raise "Form 8615 is not implemented"
-    end
-
-    with_or_without_form('1040 Schedule D') do |sched_d|
-      if sched_d
-        if sched_d.line['20no', :present]
-          line[:tax_method!] = 'Sch D'
-          return compute_tax_schedule_d # Not implemented; raises error
-        elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
-          line[:tax_method!] = 'QDCGTW'
-          return compute_tax_qdcgt
-        end
-      elsif line['3a', :present] or line[6, :opt] != 0
-        line[:tax_method!] = 'QDCGTW'
-        return compute_tax_qdcgt
-      end
-    end
-
-    # Default computation method
-    return compute_tax_standard(line[10])
-  end
-
-  def compute_tax_standard(income)
-    if income < 100000
-      line[:tax_method!] = 'Table' unless line[:tax_method!, :present]
-      return compute_tax_table(income, status)
-    else
-      line[:tax_method!] = 'TCW' unless line[:tax_method!, :present]
-      return compute_tax_worksheet(income)
-    end
-  end
-
-  include TaxTable # This adds compute_tax_table
-
-  def compute_tax_worksheet(income)
-    raise 'Worksheet not applicable for less than $100,000' if income < 100000
-    brackets = @status.tax_brackets
-    raise "Cannot compute tax worksheet for your filing status" unless brackets
-    brackets.each do |limit, rate, subtract|
-      next if limit && income > limit
-      return (income * rate - subtract).round
-    end
-    raise "No suitable tax bracket found"
-  end
-
-  def compute_tax_qdcgt
-    f = @manager.compute_form(QdcgtWorksheet)
-    return f.line[27]
-  end
+  include TaxComputation
 
   def compute_penalty
-    assert_no_forms(8828, 4137, 5329, 8885, 8919)
+    [ 8828, 4137, 5329, 8885, 8919 ].each do |f|
+      raise "Penalty with form #{f} not implemented" if has_form?(f)
+    end
     tax_shown = line[16] - sum_lines(*%w(18a 18b 18c))
     with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(9, 12) end
 
@@ -420,67 +377,8 @@ class Form1040 < TaxForm
 
 end
 
-class QdcgtWorksheet < TaxForm
-  def name
-    'Qualified Dividends and Capital Gains Tax Worksheet'
-  end
-
-  def year
-    2019
-  end
-
-  def compute
-    f1040 = form(1040)
-    assert_question("Did you have any foreign income?", false)
-    line[1] = f1040.line_11b
-    line[2] = f1040.line_3a
-    if has_form?('1040 Schedule D')
-      sched_d = form('1040 Schedule D')
-      line['3yes'] = 'X'
-      line[3] = [ 0, [ sched_d.line[15], sched_d.line[16] ].min ].max
-    else
-      line['3no'] = 'X'
-      line[3] = f1040.line_6
-    end
-
-    line[4] = line[2] + line[3]
-    if has_form?(4952)
-      line[5] = form(4952).line['4g']
-    else
-      line[5] = 0
-    end
-    line[6] = [ 0, line[4] - line[5] ].max
-    line[7] = [ 0, line[1] - line[6] ].max
-    line[8] = f1040.status.qdcgt_exemption
-    line[9] = [ line[1], line[8] ].min
-    line[10] = [ line[7], line[9] ].min
-    line[11] = line[9] - line[10]
-
-    line[12] = [ line[1], line[6] ].min
-    line[13] = line[11]
-    line[14] = line[12] - line[13]
-
-    line[15] = f1040.status.qdcgt_cap
-    line[16] = [ line[1], line[15] ].min
-    line[17] = sum_lines(7, 11)
-    line[18] = [ 0, line[16] - line[17] ].max
-    line[19] = [ line[14], line[18] ].min
-    line[20] = (line[19] * 0.15).round
-    line[21] = sum_lines(11, 19)
-    line[22] = line[12] - line[21]
-    line[23] = (line[22] * 0.2).round
-
-    line[24] = form(1040).compute_tax_standard(line[7])
-    line[25] = sum_lines(20, 23, 24)
-    line[26] = form(1040).compute_tax_standard(line[1])
-    line[27] = [ line[25], line[26] ].min
-  end
-end
-
 class ChildTaxCreditWorksheet < TaxForm
-  def name
-    'Child Tax Credit Worksheet'
-  end
+  NAME = 'Child Tax Credit Worksheet'
 
   def year
     2019
@@ -505,7 +403,7 @@ class ChildTaxCreditWorksheet < TaxForm
     end
 
     # Income limits
-    line[4] = f1040.line['8b']
+    line[4] = f1040.line_agi
     line[5] = f1040.status.double_mfj(200_000)
     if line[4] > line[5]
       line['6.yes'] = 'X'
@@ -577,26 +475,4 @@ end
 
 FilingStatus.set_param('standard_deduction',
                        12_200, 24_400, :single, 18_350, :mfj)
-
-FilingStatus.set_param('qdcgt_exemption', 39_375, 78_750, :single, 52_750, :mfj)
-FilingStatus.set_param('qdcgt_cap', 434_550, 488_850, 244_425, 461_700, :mfj)
-
-# A one-liner that will convert the tables of the tax brackets worksheet into
-# the appropriate forms below:
-#
-# perl -ne 's/,//g; /(?:not over \$(\d+).*)? \((0\.\d+)\).*\$ *([\d.]+)/; $a = $1 || 'nil'; print "[ $a, $2, $3 ],\n"'
-#
-FilingStatus.set_param(
-  'tax_brackets',
-  nil,
-  nil,
-  [
-    [ 160725, 0.24, 5825.50 ],
-    [ 204100, 0.32, 18683.50 ],
-    [ 306175, 0.35, 24806.50 ],
-    [ nil, 0.37, 30930.00 ],
-  ],
-  nil,
-  nil
-)
 

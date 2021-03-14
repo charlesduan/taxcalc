@@ -38,7 +38,7 @@ class PdfFileParser
   def pages
     return @pages if @pages
 
-    popen(CPDF, '-pages', @file) do |io|
+    popen(CPDF, '-pages', @file, :err => '/dev/null') do |io|
       io.each do |line|
         if line =~ /^(\d+)$/
           @pages = $1.to_i
@@ -76,7 +76,7 @@ class PdfFileParser
     end
     command.push("AND", "-pad-multiple", "2") if @even_pages
     command.push("-o", new_file)
-    popen(*command) do |io|
+    popen(*command, :err => '/dev/null') do |io|
       io.each do |line|
         puts line
       end
@@ -90,7 +90,7 @@ class PdfFileParser
     command = [ CPDF, '-merge', '-i', filename, '-i', "#{tempdir}/ct.pdf" ]
     command.push('AND', '-pad-multiple', '2') if @even_pages
     command.push('-o', filename)
-    popen(*command) do |io|
+    popen(*command, :err => "/dev/null") do |io|
       puts io.read
     end
   end

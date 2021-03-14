@@ -2,9 +2,7 @@ require 'tax_form'
 require 'form8949'
 
 class Form1040D < TaxForm
-  def name
-    '1040 Schedule D'
-  end
+  NAME = '1040 Schedule D'
 
   def year
     2018

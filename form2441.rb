@@ -3,9 +3,7 @@ require 'tax_form'
 # Childcare expense credit
 class Form2441 < TaxForm
 
-  def name
-    '2441'
-  end
+  NAME = '2441'
 
   def year
     2019

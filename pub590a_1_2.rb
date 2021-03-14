@@ -1,18 +1,12 @@
 class Pub590AWorksheet1_2 < TaxForm
-  def name
-    "Pub. 590-A Worksheet 1-2"
-  end
+  NAME = "Pub. 590-A Worksheet 1-2"
 
   def year
     2019
   end
 
-  def initialize(manager, ira_analysis)
-    super(manager)
-    @ira_analysis = ira_analysis
-  end
-
   def compute
+    @ira_analysis = form('IRA Analysis')
 
     status = form(1040).status
 
@@ -38,7 +32,7 @@ class Pub590AWorksheet1_2 < TaxForm
 
     # Determine whether the MAGI is between the limits. If it is below the lower
     # bound limit, then compute as if there were no limit.
-    magi = @ira_analysis.pub590a_w1_1.line[8]
+    magi = @manager.compute_form('Pub. 590-A Worksheet 1-1').line[8]
     if magi <= ret_limits[0]
       compute_no_limit
       return
@@ -78,10 +72,10 @@ class Pub590AWorksheet1_2 < TaxForm
     line[5] = line5
 
     # IRA contributions for this year
-    line[6] = [
-      @ira_analysis.line[:this_year_contrib],
-      @over50 ? 6500 : 5500
-    ].min
+    line[6] = @ira_analysis.line[:this_year_contrib]
+    if line[6] > (@over50 ? 7000 : 6000)
+      raise "Excess contributions to traditional IRA not implemented"
+    end
   end
 
   def compute_no_limit

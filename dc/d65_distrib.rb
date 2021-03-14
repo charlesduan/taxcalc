@@ -1,9 +1,7 @@
 require 'tax_form'
 
 class D65PassThroughDistribution < TaxForm
-  def name
-    'Schedule of Pass-Through Distribution of Income'
-  end
+  NAME = 'Schedule of Pass-Through Distribution of Income'
 
   def year
     2019

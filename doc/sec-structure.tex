@@ -1,0 +1,240 @@
+\section{Object Classes and Data Structures}
+
+The tax computation system is written in Ruby and is organized around two main
+classes: the TaxForm and the FormManager.
+
+
+\subsection{The TaxForm API}
+
+Generally, each tax form is represented as an instance of a Ruby class for that
+form, a subclass of TaxForm. A TaxForm has four essential methods:
+\begin{description}
+\item[name] The name of this form. The word ``Form'' should not precede names.
+\item[year] The tax year for which this form has been updated. This is used to
+check whether the form has been updated yet. (An out-of-date form will still
+be executed; it will just produce a warning.)
+\item[compute] Compute the form. This method should fill in all the lines of the
+form.
+\item[needed?] Whether the tax form is ultimately needed for inclusion in the
+return. This method should be called after compute, and it should inspect the
+results of the lines of the form to determine if the form needs to be filed.
+\end{description}
+
+A form is essentially a hash table that maps line numbers to data values. Line
+numbers may be any strings so long as they contain no spaces. Values may be
+atomic values (numbers, strings, dates), or may be arrays of those atomic
+values. The order of lines is remembered (and can be altered manually).
+
+
+\subsubsection{Referring to Lines in a Form}
+
+The TaxForm has several methods with the name ``line'' for getting and setting
+lines:
+\begin{itemize}
+\item line[\#] returns the value of that line. If the value is an array or is
+unset, an error is raised.
+\item line[\#, :opt] returns the value of the line, or if the line is
+unset it returns BlankZero.
+\item line[\#, :all] returns an array for this line's values. It always returns
+an array, even if the line only has an atomic value.
+\item line[\#, :sum] returns the sum of this line's values.
+\item line[\#, :present] returns true or false depending on whether the line is
+set.
+\item line[\#] = x will set the line to an atomic value; it will raise an error
+if given an array. If the line is already set, a warning will be raised.
+\item line[\#, :all] = [ x, y, z ] will set the line to an array value.
+\item line[\#, :add] = x will force the line to be an array and then will append
+the given value to that array.
+\item line[\#, :overwrite] = x will set the line to an atomic value, and will
+not warn if the line was already set.
+\end{itemize}
+As a shortcut, the ``method\_missing'' method for TaxForm will infer line
+numbers from methods named ``line\_\#''.
+
+Every TaxForm is associated with a FormManager. Many of the methods of TaxForm
+are delegated to its FormManager as a matter of convenience.
+
+\subsubsection{Line Name Aliases}
+
+A line may be given multiple ``names,'' or aliases, separated with a slash. Each
+portion separated by slashes becomes an alias for the same line. For example, a
+line named ``8b/agi'' would have two aliases ``8b'' and ``agi'' that could both
+be used to refer to the same line.
+
+The purpose of aliases is to provide a stable name for key lines in forms, when
+the numbering may change across years. As a result, the non-numeric alias is
+preferable for use as a line name, especially when referring to the line from
+different forms. A warning will be given when the numeric alias (assumed to be
+the first alias from the line's full name) is used alone in another form.
+
+\subsubsection{How Tables Are Stored in Forms}
+
+Consider a form that requires input like so:
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Line 1a} & \textbf{1b} & \textbf{1c} \\
+\textbf{Business name} & \textbf{Income} & \textbf{Expenses} \\
+\hline
+Acme Enterprises & 5000 & 400 \\
+\hline
+Foobar Inc. & 10000 & \\
+\hline
+Big Corp. & 15000 & 600 \\
+\hline
+\end{tabular}
+\end{center}
+This would be stored in a TaxForm as three lines named 1a, 1b, and 1c as
+follows:
+\begin{itemize}
+\item Line 1a: [ ``Acme Enterprises'', ``Foobar Inc.'', ``Big Corp.'' ]
+\item Line 1b: [ 5000, 10000, 15000 ]
+\item Line 1c: [ 400, --, 600 ]
+\end{itemize}
+It may appear transposed from what one ordinarily thinks of as ``lines,'' but it
+corresponds better to the line numbering that tax forms tend to use. It also
+makes for somewhat easier processing since the usual situation is that a form
+calls for summation over a column, which can be easily obtained (e.g.,
+``line[`1b', :sum]'').
+
+A method ``add\_table\_row'' takes a hash mapping line numbers to values for a
+single row, and updates each line in a manner that reflects a ``row'' being
+added to a table of those lines.
+
+\subsubsection{Special Line Names}
+
+Generally line names in a form may be any text that has no spaces. But several
+line names will receive special treatment.
+
+\paragraph{Lines ending with an exclamation mark.} Such lines are meant for
+storing metadata or informative data for a form, when there is no space for
+entering the data. A common use is to create a line for transferring data to
+another form. Consider, for example, a worksheet that instructs to copy line 7
+to a schedule if line 7 is greater than zero, but to copy line 15 otherwise.
+Instead of having to put logic into the schedule to choose between copying line
+7 and line 15, the worksheet can designate a line ``fill!\@'' and the schedule
+can take the value from that line.
+
+\paragraph{Lines ending with the text ``\ldots explanation!''.} This is for
+explanations that should appear on a continuation sheet. The value should be an
+array where the first item is the title of the explanation and the subsequent
+items are the text of the explanation, in troff format.
+
+\paragraph{Line ``continuation!''.} The value of this line is the name of a form
+found elsewhere in the output; that form will be attached as a continuation
+sheet in the form of a table. (Currently, only one form can be attached to a
+given form as a continuation sheet in this manner.)
+
+\paragraph{Lines ending with ``*note''.} These lines indicate a footnote to a
+line (e.g., line 15*note would be a footnote to line 15). When the form is
+filled in, a footnote mark (currently one or more asterisks) will be placed
+after the value in the specified line and in front of the value of the line's
+note.
+
+
+
+\subsection{The TaxForm File Format}
+
+As described above, data for tax computation is presented in TaxForm objects.
+These objects are serialized to plain text files in the following format.
+A form begins with a line starting with the word ``Form'', a space, and the
+name of the form. Lines of the form follow; they must be indented with
+whitespace, and the line number should be separated from the value with
+whitespace. For example:
+\begin{quote}
+\ttfamily\obeylines\obeyspaces
+Form W-2
+\     first\_name          John
+\     last\_name           Doe
+\     a                   123-45-6789
+\     b                   98-7654321
+\     c                   Acme Widgets Co.
+\     1                   50000
+\     2                   15000
+\end{quote}
+Further forms may be included in the same file, delineated with the start word
+``Form'' at the beginning of a line.
+
+The line value may be any of the following:
+\begin{description}
+\item[blank zero] A single dash, representing a zero value.
+\item[number] A number, possibly with a decimal point and possibly led with a
+minus sign.
+\item[date] Formatted as mm/dd/yyyy.
+\item[array] A list of values, each of which is one of the above types. Arrays
+may be specified in two forms: A comma-separated list surrounded by square
+brackets, or another way described below.
+\item[boxed data] Formatted as
+$<$\emph{delim}|\emph{num}|\emph{data}$>$, where \emph{num} is a
+number of boxes (usually the length of \emph{data}), \emph{delim} is a separator
+for the boxes (usually a null string for splitting per character, but a social
+security number would take a hyphen to fit it into a three-box unit), and
+\emph{data} is a number or text string.
+\item[text string] Anything else.
+\end{description}
+
+An array may be constructed by placing each array element on a separate line in
+the file, replacing the line number with a double quote mark. For example:
+\begin{quote}
+\ttfamily\obeylines\obeyspaces
+A   15
+"   18
+"   20
+\end{quote}
+is identical to ``\texttt{A [15, 18, 20]}''.
+
+When forms are read in from a file, they are instantiated as objects of class
+NamedForm, even if a class specific to the form exists. This helps to
+distinguish forms read from input from those that were computed. Generally it
+should be unnecessary to use any of the methods specific to particular forms on
+forms read from files, since those forms have already been fully computed.
+
+\paragraph{No Form.} If there are no forms of a certain type, the directive ``No
+Form [\#]'' may be included in the import file. This avoids a warning that is
+produced when the FormManager tries to find a form that is not present. (The
+purpose of the warning is to avoid accidental omissions of forms.)
+
+\paragraph{Table.} If there are many TaxForm objects of the same type (e.g.,
+Charity Gift), you can save some typing by entering them in a tabular format:
+\begin{quote}
+\ttfamily\obeylines\frenchspacing\obeyspaces
+Table Charity Gift
+\    amount   cash?   name
+\    500      yes     Red Cross
+\    30       no      Salvation Army
+\    1000     yes     NPR
+\end{quote}
+The last of these columns may contain values with spaces in them; the earlier
+ones may not.
+
+
+\subsection{The FormManager}
+
+The FormManager maintains a complete tax return and manages the forms in that
+return. Its methods mostly deal with adding, computing, and querying forms.
+
+One interesting feature is that a FormManager has a method ``forms(name)'' that
+returns an array of forms with the given name. The returned object is an Array
+delegate that has an additional method ``lines'' for querying all the lines of
+all the returned forms.
+
+\paragraph{Submanagers.}
+A FormManager for an entity may contain ``submanagers,'' namely
+references to other FormManager objects for different entities or tax years.
+This is a convenient way to draw information from a related filing.
+
+Submanagers are added using the add\_submanager method, which requires a name
+for identifying the submanager. Common names are :last\_year and :spouse. The
+add\_submanager\_from\_file method creates a new FormManager, imports data from
+the file, and adds a new submanager.
+
+\paragraph{The Interviewer.} A FormManager maintains an Interviewer that allows
+for TaxForms to query the user for information during execution. The Interviewer
+can also store the responses to a file so that the questions need not be asked
+again.
+
+I'm generally trying to move away from Interviewer questions, instead putting
+all information into informational TaxForm structures described in the Appendix.
+
+
+

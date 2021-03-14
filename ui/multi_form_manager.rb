@@ -4,10 +4,12 @@ class MultiFormManager
     @form_data = {}
     import(filename)
     @continuation_display = :show
+    @even_pages = true
   end
 
   attr_accessor :continuation_bio
   attr_accessor :continuation_display
+  attr_accessor :even_pages
 
   def import(filename)
     @filename = filename
@@ -59,13 +61,13 @@ class MultiFormManager
     lpd.show_ui
   end
 
-  def fill_form(form, filename, no_even_pages = false)
+  def fill_form(form, filename)
     lpd = @form_data[form.name]
     unless lpd
       warn("No form data for filling in #{form.name}")
       return
     end
-    lpd.no_even_pages if no_even_pages
+    lpd.no_even_pages unless @even_pages
     lpd.start_fill
 
     form.line.each do |l, v|

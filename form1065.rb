@@ -5,12 +5,10 @@ require 'asset_manager'
 
 class Form1065 < TaxForm
 
-  def name
-    1065
-  end
+  NAME = 1065
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -25,13 +23,15 @@ class Form1065 < TaxForm
     line['D'] = bio.line('ein')
     line['E'] = bio.line(:start)
 
-    assert_question(
-      "Does this partnership meet the 4 conditions in Schedule B, line 4?",
-      true
+    # Line F need not be filled in if the below condition is true.
+    confirm(
+      "Partnership #{line_name} meets the 4 conditions " \
+      "in Form 1065 Schedule B, line 4.",
     )
 
-    assert_question(
-      "Does any box in line G need to be checked?", false
+    confirm(
+      "For partnership #{line_name}, no box in Form 1065 line G " \
+      "needs to be checked."
     )
 
     case bio.line('accounting')
@@ -44,19 +44,25 @@ class Form1065 < TaxForm
 
     line['I'] = forms('Partner').count
 
+    # Line J need not be filled for partnerships with less than $35M in total
+    # receipts or $10M in assets, and which has no reportable entity partner (a
+    # 50% partner that must file Schedule M-3).
+    #
+    # Line K only applies if the partnership claims losses.
+
     line['1a'] = forms('1099-MISC').lines(7, :sum)
     line['1c'] = line['1a'] - line['1b', :opt]
     line[3] = line['1c'] - line[2, :opt]
     line[8] = sum_lines(3, 4, 5, 6, 7)
 
-    @asset_manager = @manager.compute_form(AssetManager)
+    @asset_manager = @manager.compute_form('Asset Manager')
     if @asset_manager.has_current_assets?
-      @manager.compute_form(Form4562)
+      @manager.compute_form(4562)
     end
 
     @asset_manager.attach_safe_harbor_election(self)
 
-    line[20] = @manager.compute_form(Deductions).line[:fill!]
+    line[20] = @manager.compute_form('Deductions').line[:fill!]
     if line[20] > 0
       form('Deductions').make_continuation(
         self, 'Line 20 Statement of Business Expenses'
@@ -65,28 +71,26 @@ class Form1065 < TaxForm
     line[21] = sum_lines(9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20)
     line[22] = line[8] - line[21]
 
-    {
-      'B1a' => 'domestic general partnership',
-      'B1b' => 'domestic limited partnership',
-      'B1c' => 'domestic LLC',
-      'B1d' => 'domestic LLP',
-      'B1e' => 'foreign partnership',
-      'B1f' => 'other'
-    }.each do |lineno, desc|
-      if desc == 'other'
-        line[lineno] = 'X'
-        line["#{lineno}.text"] = interview("Entity type:")
-        break
-      elsif interview("Is the filing entity a #{desc}?")
-        line[lineno] = 'X'
-        break
-      end
+    # The taxes on lines 23-24 appear to apply only to partnerships that aren't
+    # closely held. Line 25 applies to "administrative adjustment requests"
+    # under the Bipartisan Budget Act of 2015, which appears to occur only when
+    # the partnership seeks to adjust a previous filing.
+
+    case bio.line(:type)
+    when 'general' then line['B1a'] = 'X'
+    when 'limited' then line['B1b'] = 'X'
+    when 'llc' then line['B1c'] = 'X'
+    when 'llp' then line['B1d'] = 'X'
+    when 'foreign' then line['B1e'] = 'X'
+    when /^other: /
+      line['B1f'] = 'X'
+      line['B1f.text'] = $'
+    else
+      raise "Invalid partnership type #{bio.line['type']}"
     end
 
-    assert_question(
-      "Is the answer to any question on Schedule B `yes' " + \
-      "(other than 2 and 4)?",
-      false
+    confirm(
+      "The answer to every question on Schedule B (other than 2 and 4) is `no'"
     )
 
     big_indiv, big_inst = forms('Partner').map { |f|
@@ -112,6 +116,8 @@ class Form1065 < TaxForm
     line['B10c.no'] = 'X'
     line['B12.no'] = 'X'
 
+    # Line 13 is unfilled
+
     if forms('Partner').lines('nationality', :all).any? { |x| x != 'domestic' }
       raise "Foreign partners not currently handled"
     end
@@ -130,9 +136,8 @@ class Form1065 < TaxForm
     # Line 24, in 2019, was reversed so the answer is now no.
     line['B24.no'] = 'X'
 
-    assert_question(
-      "Do you want to opt out of the centralized partnership audit regime?",
-      false
+    confirm(
+      "You do not want to opt out of the centralized partnership audit regime"
     )
     line['B25.no'] = 'X'
 
@@ -155,6 +160,7 @@ class Form1065 < TaxForm
     line['B26.no'] = 'X'
     line['B27'] = '0'
     line['B28.no'] = 'X'
+    line['B29.no'] = 'X'
 
     line['K1'] = line[22]
     line['K5'] = forms('1099-INT').lines(1, :sum)

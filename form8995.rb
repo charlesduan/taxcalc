@@ -2,9 +2,7 @@ require 'tax_form'
 
 class Form8995 < TaxForm
 
-  def name
-    '8995'
-  end
+  NAME = '8995'
 
   def year
     2019
@@ -48,7 +46,7 @@ class Form8995 < TaxForm
     end
 
     line[13] = [ line_11 - line_12, 0 ].max
-    line[14] = (0.2 + line_13).round
+    line[14] = (0.2 * line_13).round
     line[15] = [ line[10], line[14] ].min
     line[16] = [ sum_lines(2, 3), BlankZero ].min
     line[17] = [ sum_lines(6, 7), BlankZero ].min

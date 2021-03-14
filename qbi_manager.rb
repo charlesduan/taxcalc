@@ -4,9 +4,7 @@ require 'form8995a'
 
 class QBIManager < TaxForm
 
-  def name
-    'QBI Manager'
-  end
+  NAME = 'QBI Manager'
 
   def year
     2019
@@ -55,7 +53,7 @@ class QBIManager < TaxForm
     )
 
     # Exclude SSTB (consulting income) if the income threshold is exceeded
-    line[:taxable_income] = f1040.line_8b - f1040.line_9;
+    line[:taxable_income] = f1040.line_agi - f1040.line_deduction;
     if line[:taxable_income] > f1040.status.qbi_max
       line[:sstb_excluded?] = true
       @qbi.reject!(&:sstb)
@@ -69,9 +67,9 @@ class QBIManager < TaxForm
     # 
     puts "Income is #{line[:taxable_income]}"
     if line[:taxable_income] <= form(1040).status.qbi_threshold
-      line[:deduction] = compute_form(Form8995).line_15
+      line[:deduction] = compute_form(8995).line_15
     else
-      line[:deduction] = compute_form(Form8995A).line_39
+      line[:deduction] = compute_form('8995-A').line_39
     end
 
   end

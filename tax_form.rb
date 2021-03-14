@@ -6,6 +6,24 @@ require 'date'
 require 'boxed_data'
 
 class TaxForm
+
+  #
+  # Register subclasses by their names.
+  #
+  FORM_TYPES = {}
+  def self.inherited(subclass)
+    name = subclass.const_get(:NAME).to_s
+    if FORM_TYPES[name]
+      raise "Duplicate TaxForm type #{name} (#{subclass})"
+    else
+      FORM_TYPES[name] = subclass
+    end
+  end
+
+  def self.by_name(name)
+    return FORM_TYPES[name.to_s]
+  end
+
   def initialize(manager)
 
     # The form lines in this form
@@ -46,7 +64,7 @@ class TaxForm
   end
 
   def name
-    raise "Abstract form class"
+    return self.class.const_get(:NAME)
   end
 
   def year
@@ -134,6 +152,10 @@ class TaxForm
     @manager.interview(prompt, self)
   end
 
+  def confirm(prompt)
+    @manager.confirm(prompt, self)
+  end
+
   def copy_line(l, form)
     line[l] = form.line[l] if form.line[l, :present]
   end
@@ -187,15 +209,15 @@ class TaxForm
     end
   end
 
-  def compute_form(form_class, *args)
-    @manager.compute_form(form_class, *args)
+  def compute_form(name, *args)
+    @manager.compute_form(name, *args)
   end
 
-  def find_or_compute_form(name, form_class)
+  def find_or_compute_form(name)
     if has_form?(name)
       return form(name)
     else
-      compute_form(form_class)
+      compute_form(name)
     end
   end
 
@@ -347,6 +369,7 @@ class TaxForm; class Lines
     @lines_data = {}
     @lines_order = []
     @boxed_lines = {}
+    @aliases = {}
   end
 
   include Enumerable
@@ -359,7 +382,37 @@ class TaxForm; class Lines
     end
   end
 
+  def resolve_alias(line)
+    line = line.to_s
+    if @aliases[line]
+      res = @aliases[line]
+      if @form != @form.manager.currently_computing && res.start_with?(line)
+        warn("In #{@form.manager.currently_computing.name}, use alias for " +
+             "Form #{@form.name}, line #{res}")
+      end
+      return res
+    end
+    return @aliases[line] if @aliases[line]
+    return line
+  end
+
+  def assign_aliases(line)
+    parts = line.split('/')
+    # If any of the parts are already aliases to anything other than this line
+    # itself, there's an ambiguity that raises an error.
+    parts.each do |p|
+      if @aliases[p] && @aliases[p] != line
+        raise "Ambiguous line alias #{line}"
+      end
+    end
+    return unless parts.length > 1
+    parts.each do |p|
+      @aliases[p] = line
+    end
+  end
+
   def line_name(line)
+    line = resolve_alias(line)
     "Form #{@form.name}, line #{line}"
   end
 
@@ -383,11 +436,11 @@ class TaxForm; class Lines
     @lines_order.push(line) unless @lines_data[line]
     form.explain("    #{line}:  #{value.inspect}")
     @lines_data[line] = value
+    assign_aliases(line)
   end
 
   def [](line, type = nil)
-    line = line.to_s
-    raise "Reached unimplemented value" if line == '-1'
+    line = resolve_alias(line)
 
     unless @lines_data.include?(line)
       return false if type == :present
@@ -409,19 +462,19 @@ class TaxForm; class Lines
   end
 
   def box(line, count, split = "")
-    @boxed_lines[line.to_s] = [ count, split ]
+    @boxed_lines[resolve_alias(line)] = [ count, split ]
   end
 
   def boxed?(line)
-    @boxed_lines.include?(line.to_s)
+    @boxed_lines.include?(resolve_alias(line))
   end
 
   def box_data(line)
-    @boxed_lines[line.to_s]
+    @boxed_lines[resolve_alias(line)]
   end
 
   def embox(line)
-    line = line.to_s
+    line = resolve_alias(line)
     raise "Not a boxed line" unless boxed?(line)
     data = self[line]
     bld = @boxed_lines[line]
@@ -458,7 +511,7 @@ class TaxForm; class Lines
 
   def place_lines(*nums)
     nums.each do |num|
-      num = num.to_s
+      num = resolve_alias(num)
       if @lines_order.include?(num)
         @lines_order.delete(num)
         @lines_order.push(num)

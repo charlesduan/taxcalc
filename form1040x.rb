@@ -3,9 +3,7 @@ require 'filing_status'
 
 class Form1040X < TaxForm
 
-  def name
-    '1040X'
-  end
+  NAME = '1040X'
 
   def initialize(manager, orig_1040, new_1040)
     super(manager)

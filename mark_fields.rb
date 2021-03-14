@@ -105,7 +105,8 @@ if __FILE__ == $0
           next if l.end_with?('!')
           all_lines = [ l ]
           if v.is_a?(Array) && v.count > 1
-            all_lines.push(*(2..v.count).map { |x| "#{l}##{x}" })
+            # Anything over 3 lines and we can assume a continuation can be used
+            all_lines.push(*(2..([ v.count, 3 ].min)).map { |x| "#{l}##{x}" })
           end
           all_lines.each do |line|
             unless @mfm.has_form_line?(form.name, line)

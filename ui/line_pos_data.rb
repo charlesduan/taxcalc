@@ -6,6 +6,8 @@ class LinePosData
     @line_order = []
     @line_data = {}
 
+    @notes = {}
+
     if tax_form.is_a?(TaxForm)
       @form_name = tax_form.name
       merge_lines(tax_form)
@@ -167,11 +169,32 @@ class LinePosData
     end
   end
 
-  def textify(value)
+  def note_symbol(line)
+    line = line.sub(/\*note$/, '')
+    @notes[line] ||= '*' * (@notes.count + 1)
+    return @notes[line]
+  end
+
+  def textify(line, value)
+    offset = 0
     if value.is_a?(Float) && (value - value.round(2)).abs < 0.0000001
-      return "%.2f" % value
+      res = "%.2f" % value
+    else
+      res = value.to_s.gsub("\n", "\\n")
     end
-    return value.to_s.gsub("\n", "\\n")
+    if res.is_a?(Numeric) && res < 0
+      res = "(#{res.sub(/^-/, '')})"
+      offset += 1
+    end
+    if line =~ /\*note$/
+      sym = note_symbol(line)
+      res = sym + res
+    elsif @line_data.include?("#{line}*note")
+      sym = note_symbol(line)
+      res += sym
+      offset += sym.length
+    end
+    return [res, offset]
   end
 
   def fill(line, value)
@@ -181,17 +204,15 @@ class LinePosData
 
     page, x, y, w, h = *self[line]
     ypos = [ 0, h - 9, 3 ].sort[1] + y
+    text, offset = textify(line, value)
     res = [
-      "-add-text", textify(value),
+      "-add-text", text,
       "-font", "Courier", "-font-size", "10",
       "-range", "#{page}"
     ]
     if value.is_a?(Numeric) or value.is_a?(BlankNum)
       xpos = w - [ 0, w - 8, 6 ].sort[1] + x
-      if value < 0
-        res[1] = "(#{-value})"
-        xpos += 6
-      end
+      xpos += 6 * offset
       res.push("-pos-right")
     elsif value == "X"
       xpos, ypos = x + w / 2, y + h / 2

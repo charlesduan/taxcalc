@@ -67,11 +67,19 @@ class FilingStatus
   end
 
   def self.set_param(key, single, mfj, mfs, hoh, qw)
+    key = key.to_s
     Single.set_param(key, single)
     MarriedFilingJointly.set_param(key, mfj)
     MarriedFilingSeparately.set_param(key, mfs)
     HeadOfHousehold.set_param(key, hoh)
     QualifyingWidow.set_param(key, qw)
+  end
+
+  def self.from_form(form1040)
+    All.each do |name, obj|
+      return obj if form1040.line["status.#{name}", :opt] == 'X'
+    end
+    raise "Status not found"
   end
 
 end

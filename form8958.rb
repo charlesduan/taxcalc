@@ -11,9 +11,7 @@ require 'form1040_se'
 
 class Form8958 < TaxForm
 
-  def name
-    '8958'
-  end
+  NAME = '8958'
 
   def year
     2019
@@ -98,11 +96,11 @@ class Form8958 < TaxForm
     }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
     enter_split(5, '1065 Schedule K-1', split_k1, 14)
 
-    my_se = my_manager.compute_form(Form1040SE)
-    spouse_se = spouse_manager.compute_form(Form1040SE)
+    my_se = my_manager.compute_form('1040 Schedule SE')
+    spouse_se = spouse_manager.compute_form('1040 Schedule SE')
 
-    my_manager.compute_form(Form1040D)
-    spouse_manager.compute_form(Form1040D)
+    my_manager.compute_form('1040 Schedule D')
+    spouse_manager.compute_form('1040 Schedule D')
 
     line[6, :all] = my_manager.forms(8949).lines('II.1a', :all) + \
       spouse_manager.forms(8949).lines('II.1a', :all)

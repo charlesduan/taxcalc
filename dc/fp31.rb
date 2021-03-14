@@ -3,9 +3,7 @@ require 'date'
 
 class FormFP31 < TaxForm
 
-  def name
-    'FP-31'
-  end
+  NAME = 'FP-31'
 
   def compute
 
@@ -33,7 +31,7 @@ class FormFP31 < TaxForm
     line[:name_p2] = line[:name]
     line[:ein_p2] = line[:ein]
 
-    sched = @manager.compute_form(FormFP31ABCD1D2)
+    sched = @manager.compute_form('FP-31 Schedules A through D-2')
     line['1.A'] = sched.line['_A4.reference']
     line['1.B'] = sched.line['_A6.reference']
     line['2.A'] = sched.line['_A4.fixed']

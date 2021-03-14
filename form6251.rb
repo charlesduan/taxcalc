@@ -7,9 +7,7 @@ require 'foreign_tax_credit'
 #
 class Form6251 < TaxForm
 
-  def name
-    '6251'
-  end
+  NAME = '6251'
 
   def year
     2019
@@ -25,20 +23,20 @@ class Form6251 < TaxForm
       end
     end
 
-    line[1] = form(1040).line_11b
+    line[1] = form(1040).line_taxinc
 
     # Schedule A tax deduction, or 1040 standard deduction.
     with_or_without_form('1040 Schedule A') do |f|
       if f
-        line['2a'] = f.line[7]
+        line['2a'] = f.line_salt
       else
-        line['2a'] = form(1040).line[9]
+        line['2a'] = form(1040).line_deduction
       end
     end
 
     with_form('1040 Schedule 1') do |f|
       # 2b: undoing income attributed to state/local income tax refunds
-      if f.line[1, :present]
+      if f.line[:taxrefund, :present]
         # It is assumed that all amounts in Schedule 1, line 1 relate to income
         # taxes, because that is all that is presently implemented. There is a
         # comment in that form as a reminder to update this computation if that
@@ -48,7 +46,7 @@ class Form6251 < TaxForm
           raise "AMT adjustment for Schedule 1, line 8 not implemented"
           # This is also relevant to line 2e below
         end
-        line['2b'] = -f.line[1]
+        line['2b'] = -f.line_taxrefund
       end
     end
 
@@ -106,8 +104,8 @@ class Form6251 < TaxForm
 
     # 2k: adjustments for disposition of property.
     #
-    %w(4797 4684 6251 8949).each do |f|
-      raise "Line 2k not implemented" if has_form?(f)
+    %w(4797 4684 8949).each do |f|
+      raise "Line 2k not implemented with form #{f}" if has_form?(f)
     end
 
     # 2l: depreciation adjustments.
@@ -157,11 +155,11 @@ class Form6251 < TaxForm
     # AMT computation
 
     # Several things depend on the foreign tax credit computation.
-    @ftc_form = compute_form(ForeignTaxCredit)
+    @ftc_form = compute_form('Foreign Tax Credit')
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
-      line[5] = @manager.compute_form(Line5ExemptionWorksheet).line[6]
+      line[5] = @manager.compute_form('Line 5 Exemption Worksheet').line[6]
     else
       line[5] = form(1040).status.amt_exemption
     end
@@ -178,7 +176,7 @@ class Form6251 < TaxForm
     # Line 7
     assert_question("Did you have any foreign income?", false)
     l7test = false
-    if form(1040).line['3a'] > 0
+    if form(1040).line_qualdiv > 0
       l7test = true
     else
       with_form(1040) do |f|
@@ -218,7 +216,7 @@ class Form6251 < TaxForm
   end
 
   def compute_line_10
-    l10 = form(1040).line['12a']
+    l10 = form(1040).line_tax
     with_form(4972) do |f|
       if f.line[30, :present]
         l10 -= f.line[30]
@@ -301,7 +299,7 @@ class Form6251 < TaxForm
 
   def check_line_13_conds
     cond1 = (line['2l', :opt] != 0 || line['2i', :opt] != 0)
-    cond2 = (form(1040).line[10] == 0)
+    cond2 = (form(1040).line_taxinc == 0)
     cond3 = false
     with_form('1041 Schedule K-1') do |f|
       cond3 = true if !(line['12.code', :all] & %w(B C D E F)).empty?
@@ -341,9 +339,7 @@ end
 
 
 class Line5ExemptionWorksheet < TaxForm
-  def name
-    'Line 5 Exemption Worksheet'
-  end
+  NAME = 'Line 5 Exemption Worksheet'
 
   def year
     2019

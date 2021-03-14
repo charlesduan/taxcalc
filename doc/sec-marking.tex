@@ -1,0 +1,42 @@
+\section{Phase Two: Form Field Marking}
+
+The program that operates this phase is ``mark\_fields.rb''. It must be supplied
+with the tax form data produced in phase 1, using the ``-i'' argument. With no
+further arguments, the program lists the forms for which the fields have not
+been marked yet.
+
+To mark fields in a form, enter the form name as the first non-option argument
+to the command. If the form has not been marked yet, you must provide the name
+of the PDF file for the form as a second command line argument.
+
+The program will automatically save the location of the PDF file and the
+coordinates of the marked fields to a file, which by default is named
+``pos-data.txt''. This file name may be changed using the ``-p'' argument.
+
+
+
+
+\subsection{Boxed Data}
+
+In some cases, the PDF form will have individual boxes for each character or
+portion of text, rather than a single field for all the text. The ``boxed data''
+feature enables filling in these form fields correctly.
+
+To use this feature, the relevant TaxForm should call the method
+``box\_line(line, count, split)'' where line is the line number to be placed
+in boxes, count is the number of boxes available, and split is how to separate
+the line's data into segments (the default is an empty string, which means each
+character is separated individually). All this does is mark the relevant line in
+the form as a boxed-data line; computation proceeds unchanged.
+
+The format of boxed data in a tax form file is described above.
+
+When the form field marking program is invoked, it will detect boxed-data lines
+and treat them like arrays. Thus, each box will need to be marked individually.
+However, if there are more letters than boxes available, the program will
+truncate data values to fit.
+
+
+
+
+

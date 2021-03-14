@@ -2,9 +2,7 @@ require 'tax_form'
 
 # Qualified business income deduction, high-income form
 class Form8995A < TaxForm
-  def name
-    '8995-A'
-  end
+  NAME = '8995-A'
 
   def year
     2019

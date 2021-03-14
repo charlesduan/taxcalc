@@ -5,9 +5,7 @@ require 'tax_form'
 #
 class Form8949 < TaxForm
 
-  def name
-    '8949'
-  end
+  NAME = '8949'
 
   def initialize(manager, term, reported, forms)
     raise 'Invalid term' unless %w(short long).include?(term)
