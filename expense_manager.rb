@@ -5,11 +5,11 @@ require 'tax_form'
 # of Publication 535, under Other Expenses.
 #
 
-class Deductions < TaxForm
-  NAME = 'Deductions'
+class ExpenseManager < TaxForm
+  NAME = 'Business Expense Manager'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -24,7 +24,14 @@ class Deductions < TaxForm
     end
 
     # For each of these categories, the deduction value is divided by two.
-    %w(Meals Utilities).each do |half_cat|
+    half_cats = %w(Meals Utilities)
+
+    # 100% deduction for business meals in 2021 and 2022
+    if year == 2021 or year == 2022
+      half_cats.delete("Meals")
+    end
+
+    half_cats.each do |half_cat|
       deds[half_cat] /= 2 if deds[half_cat]
     end
 
@@ -60,7 +67,7 @@ class Deductions < TaxForm
   end
 
   CAT_NAMES = {
-    'Meals' => 'Meals and Entertainment',
+    'Meals' => 'Business Meals',
     'License' => 'Professional Memberships',
     'Safe_Harbor' => '1.263(a)-1(f) Safe Harbor',
   }
