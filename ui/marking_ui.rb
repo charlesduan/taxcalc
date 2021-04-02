@@ -204,17 +204,37 @@ class MarkingUI
     return [ lx, ty, rx, by ]
   end
 
+  #
+  # Given an array of coordinates and an increment vector, advance each
+  # coordinate in the array by the increment vector until one of them falls on a
+  # changed color. Returns a three-element array of the first changed coordinate
+  # and the new color.
+  #
+  # coords is an array of coordinates (or a single coordinate that is
+  # immediately converted to a one-element array. dx and dy are how much to
+  # increment the x and y coordinates in the array at each step, up to max_steps
+  # steps.
+  #
   def find_change(coords, dx, dy, max_steps)
     coords = [ coords ] unless coords[0].is_a?(Enumerable)
 
+    # First, to each of the coordinates, add a third element that is the color
+    # at that coordinate.
     coords.each do |coord|
       coord.push(@image.get(*coord)) unless coord.count == 3
     end
 
+    # Iterate through the maximum number of steps.
     1.upto(max_steps) do |i|
+
+      # Test each coordinate in the list:
       coords.each do |x, y, color|
+
+        # Advance the coordinate by the increment vector times the current step.
         tx, ty = x + dx * i, y + dy * i
         begin
+
+          # Get the color and see if it is the same as the original color.
           new_color = @image.get(tx, ty)
           return tx, ty, new_color unless color == new_color
         rescue RuntimeError
