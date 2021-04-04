@@ -3,7 +3,7 @@ const fs = require("fs");
 const pdfjs = require("pdfjs-dist/es5/build/pdf.js");
 
 const formgui = require("./formgui.js");
-
+const boxcalc = require("./boxcalc.js");
 
 
 
@@ -39,6 +39,7 @@ async function selectPage(page) {
         viewport,
     }).promise
     console.log("Done rendering");
+    boxcalc.setCanvasContext(theCanvas.getContext("2d"));
     formgui.setPdfPage(theCanvas.toBuffer());
 }
 

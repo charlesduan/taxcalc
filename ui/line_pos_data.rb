@@ -220,7 +220,7 @@ class LinePosData
     else
       xpos = [ 0, w - 8, 6 ].sort[1] + x
       res.push("-pos-left")
-      ypos = y + h - 10 if value =~ /\n/
+      ypos = y + h - 10 if text =~ /\\n/
     end
     res.push("#{xpos} #{ypos}")
     @fill_data.push(res)
@@ -258,7 +258,7 @@ class LinePosData
 
     @explanation_lines.each do |explanation|
       text << "\\f[B]#{explanation[0]}\\f[]\n.PP\n"
-      text << explanation[1..-1].join("\n") + "\n.PP\n\n"
+      text << explanation[1..-1].join("\n") + "\n.PP\n"
     end
 
     @continuation_lines.each do |options, lines|
@@ -267,34 +267,65 @@ class LinePosData
         text << "\\f[B]#{options[:title]}\\f[]\n.PP\n"
       end
 
-      if lines.count == 1
+      if lines.count == 1 && !lines[0][1].is_a?(Array)
         l, v = *lines[0]
         text << "Line #{l}: #{v}\n\n"
+
+      elsif lines.none? { |l, v| v.is_a?(Array) }
+        # TODO Should output line numbers in left column, values in right
+
       else
 
-        flat_lines = lines.map { |l, v| [ l, v ].flatten.map { |x| x.to_s } }
-        flat_lines[0][0] = "#{flat_lines[0][0]}"
-        widths = flat_lines.map { |col| col.map { |x| x.length }.max }
-        big_cols = widths.map { |x| x > 8 }
-        big_col_width = (75 - 9 * widths.count) / big_cols.count { |x| x } + 9
-        tbl_string = big_cols.map { |x|
-          x ? "lw(#{big_col_width})" : "l"
-        }.join(" ") + ".\n"
-        fmt_string = big_cols.map { |x|
-          x ? "T{\n%s\nT}" : "%s"
-        }.join("\t") + "\n_\n"
-        max_rows = flat_lines.map { |col| col.length }.max
+        # Each line is assumed to contain an array of values. The table will be
+        # shown with line numbers at the top and values for each line in
+        # columns.
+        #
+        # First, review each line to figure out its alignment and to convert all
+        # the values to text. Each item in the elements array contains [0] the
+        # line number, [1] the alignment, and [2] the array of values.
+        elements = lines.map { |l, v|
+          v = [ v ].flatten
+          align = (v.all? { |x| x.is_a?(Numeric) }) ? 'R' : 'L'
+          [ l.to_s, align, v.map { |x| textify(l, x)[0] } ]
+        }
 
-        text << ".TS\nexpand;\n"
-        text << "lfB " * widths.count + "\n"
-        text << tbl_string
-
-        (0...max_rows).each do |row|
-          text << (
-            fmt_string % flat_lines.map { |col| col[row] || '' }
-          )
+        #
+        # The longest element of each line will be the metric for the column
+        # width. (Presumably the alignment value isn't the longest.) Then
+        # generate the string tabs line; see
+        # https://www.schaffter.ca/mom/momdoc/typesetting.html#string-tabs
+        #
+        text << ".SILENT\n"
+        text << ".PAD \""
+        1.upto(elements.length) do |i|
+          longest = elements[i - 1].flatten.max_by(&:length)
+          text << "\\*[FWD 1p]" if i > 1
+          text << "\\*[ST#{i}]#{longest}#\\*[ST#{i}X]"
         end
-        text << ".TE\n"
+        text << "\"\n"
+        text << ".SILENT OFF\n"
+
+        #
+        # Generate the tab definition lines.
+        #
+        1.upto(elements.length) do |i|
+          text << ".ST #{i} #{elements[i - 1][1]} QUAD\n"
+        end
+
+        # Generate the header
+        text << ".TAB 1\n" << elements.map { |e|
+          "\\f[B]#{e[0]}\\f[]"
+        }.join("\\*[TB+]\n") << "\n"
+
+        # Compute the number of rows in the table and print out each row.
+        0.upto(elements.map { |x| x[2].count }.max - 1) do |i|
+          text << ".TAB 1\n" << elements.map { |e|
+            e[2][i] || ''
+          }.join("\\*[TB+]\n") << "\n"
+        end
+
+        text << ".TQ"
+
       end
     end
     return text

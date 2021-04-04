@@ -151,12 +151,9 @@ if __FILE__ == $0
     @form_file = "blank/#{uname}.pdf"
     system('curl', '--output', @form_file, url)
   end
-end
-require 'tk'
-require 'tkextlib/tkimg/png'
-require 'tkextlib/bwidget'
-
-if __FILE__ == $0
+  require 'tk'
+  require 'tkextlib/tkimg/png'
+  require 'tkextlib/bwidget'
   @mfm.mark_form(@mgr.forms(@form_name), @form_file)
   open(@pos_data, 'w') do |f|
     @mfm.export(f)

@@ -26,7 +26,7 @@ class Form1065K1 < TaxForm
       f1065.line[:address],
       f1065.line[:city_zip]
     ].join("\n")
-    line['C'] = f1065.line(:send_to!)
+    line['C'] = f1065.line(:send_to!).sub(/\s+\d{5}(?:-\d{4})?$/, '')
     line['D'] = 'X' if f1065.line('B7.yes', :present)
     line['E'] = @partner_form.line['ssn']
     line['F'] = @partner_form.line['name']
@@ -45,12 +45,14 @@ class Form1065K1 < TaxForm
     line['J.loss.ending'] = "#{share * 100}%"
     line['J.capital.beginning'] = "#{@partner_form.line['capital'] * 100}%"
     line['J.capital.ending'] = "#{@partner_form.line['capital'] * 100}%"
-    line['K.nonrecourse.beginning'] = "#{share * 100}%"
-    line['K.nonrecourse.ending'] = "#{share * 100}%"
-    line['K.qualified.beginning'] = "#{share * 100}%"
-    line['K.qualified.ending'] = "#{share * 100}%"
-    line['K.recourse.beginning'] = "#{share * 100}%"
-    line['K.recourse.ending'] = "#{share * 100}%"
+
+    confirm("Partnership #{f1065.line_name} has no liabilities.")
+    line['K.nonrecourse.beginning'] = BlankZero
+    line['K.nonrecourse.ending'] = BlankZero
+    line['K.qualified.beginning'] = BlankZero
+    line['K.qualified.ending'] = BlankZero
+    line['K.recourse.beginning'] = BlankZero
+    line['K.recourse.ending'] = BlankZero
 
     # Item L need not be completed if Schedule B, question 4 is yes, which we
     # confirmed in Form 1065.
