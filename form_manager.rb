@@ -1,5 +1,5 @@
-require 'tax_form'
-require 'interviewer'
+require_relative 'tax_form'
+require_relative 'interviewer'
 require 'date'
 
 class FormManager

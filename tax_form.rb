@@ -1,9 +1,10 @@
 require 'delegate'
-require 'form_manager'
-require 'interviewer'
-require 'blank_zero'
 require 'date'
-require 'boxed_data'
+
+require_relative 'form_manager'
+require_relative 'interviewer'
+require_relative 'blank_zero'
+require_relative 'boxed_data'
 
 class TaxForm
 
@@ -528,5 +529,5 @@ class TaxForm; class Lines
 end; end
 
 
-require 'multi_form'
-require 'named_form'
+require_relative 'multi_form'
+require_relative 'named_form'

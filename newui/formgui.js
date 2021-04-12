@@ -137,7 +137,6 @@ function setPdfPage(buffer) {
 }
 
 function addLineBox(text, xmin, ymin, xmax, ymax) {
-    console.log("HERE");
     const label = new gui.QPushButton(pdfContainer);
     label.setText(text);
     label.setProperty("line", true);

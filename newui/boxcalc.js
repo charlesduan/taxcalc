@@ -4,11 +4,16 @@
 
 var context;
 
-var maxdx = 72;
-var maxdy = 144 * 3;
+var maxdx = 144 * 3;
+var maxdy = 72;
 
 var imageData;
 var startColor;
+
+function setBoxBounds(dx, dy) {
+    maxdx = dx;
+    maxdy = dy;
+}
 
 function setCanvasContext(ctx) {
     context = ctx;
@@ -18,6 +23,31 @@ function computeBoxAtPoint(x, y) {
     imageData = context.getImageData(x - maxdx, y - maxdy, 2 * maxdx + 1,
         2 * maxdy + 1);
     startColor = colorAtPoint(0, 0);
+
+    // Find the bottom edge. The number of steps taken will be coincidentally
+    // equal to the y coordinate of the bottom edge.
+    let ymax = advanceLine(0, 0, 0, 0, 0, 1, maxdy);
+
+    // Find the right edge. Again the returned number of steps will equal the x
+    // coordinate.
+    let xmax = advanceLine(0, 0, 0, ymax, 1, 0, maxdx);
+
+    // Find the left edge.
+    let xmin = -advanceLine(0, 0, 0, ymax, -1, 0, maxdx);
+
+    // Find the top edge.
+    let ymin = -advanceLine(xmin, 0, xmax, 0, 0, -1, maxdy);
+
+    // Convert back to absolute coordinates
+    let res = [ x + xmin, y + ymin, x + xmax, y + ymax ];
+
+    // Sanity checks
+    if (res[0] < 0) { res[0] = 0; }
+    if (res[1] < 0) { res[1] = 0; }
+    if (res[2] >= context.canvas.width) { res[2] = context.canvas.width - 1; }
+    if (res[3] >= context.canvas.height) { res[3] = context.canvas.height - 1; }
+
+    return res;
 }
 
 /*
@@ -33,9 +63,11 @@ function colorAtPoint(xrel, yrel) {
  * Tests if the color of the given point matches the color at the origin.
  */
 function sameColorAtPoint(xrel, yrel) {
-    var color = colorAtPoint(xrel, yrel);
+    const color = colorAtPoint(xrel, yrel);
     for (let i = 0; i < color.length; i++) {
-        if (Math.abs(color[i] - startColor[i]) > 20) { return false; }
+        if (Math.abs(color[i] - startColor[i]) > 20) {
+            return false;
+        }
     }
     return true;
 }
@@ -59,34 +91,24 @@ function sameColorForLine(xrelMin, yrelMin, xrelMax, yrelMax) {
 
 /*
  * Starting from the given line, which is assumed to match startColor, advance
- * the line in a perpendicular direction given by dir, until the line's color
- * fails to match.
+ * the line by (dx, dy) until the line fails to match.
  *
- * Returns the value of the coordinate that moved as the line advanced.
+ * Returns the number of steps advanced before the color changed, or maxSteps if
+ * it never does.
  */
-function advanceLine(xrelMin, yrelMin, xrelMax, yrelMax, dir, maxSteps) {
-    if (xrelMin == xrelMax) {
-        xrel = xrelMin;
-        for (let i = 0; i < maxSteps; i++) {
-            xrel += dir;
-            if (!sameColorForLine(xrel, yrelMin, xrel, yrelMax)) {
-                return xrel - dir;
-            }
+function advanceLine(xrelMin, yrelMin, xrelMax, yrelMax, dx, dy, maxSteps) {
+    for (let i = 1; i <= maxSteps; i++) {
+        let same = sameColorForLine(xrelMin + i * dx, yrelMin + i * dy,
+            xrelMax + i * dx, yrelMax + i * dy);
+        if (!same) {
+            return i - 1;
         }
-        return xrel;
-    } else {
-        yrel = yrelMin;
-        for (let i = 0; i < maxSteps; i++) {
-            yrel += dir;
-            if (!sameColorForLine(xrelMin, yrel, xrelMax, yrel)) {
-                return yrel - dir;
-            }
-        }
-        return yrel;
     }
+    return maxSteps;
 }
 
 module.exports = {
     setCanvasContext,
     computeBoxAtPoint,
+    setBoxBounds,
 };

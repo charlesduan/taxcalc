@@ -1,6 +1,7 @@
-require 'tax_form'
 require 'date'
-require 'boxed_data'
+
+require_relative 'tax_form'
+require_relative 'boxed_data'
 
 class Interviewer
 

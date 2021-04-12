@@ -19,6 +19,10 @@ var theCanvas;
 
 var thePdfDoc;
 
+let resolution = 2;
+
+formgui.setBoxBounds(72 * resolution * 3, 72 * resolution / 2);
+
 
 loadingTask.promise.then(pdfDoc => {
     console.log("Loaded document.");
@@ -31,7 +35,7 @@ async function selectPage(page) {
     console.log("Loading page " + page);
     const pageData = await thePdfDoc.getPage(page);
     console.log("Loaded page " + page);
-    const viewport = pageData.getViewport({ scale: 2 });
+    const viewport = pageData.getViewport({ scale: resolution });
     theCanvas = Canvas.createCanvas(viewport.width, viewport.height);
 
     await pageData.render({
@@ -47,16 +51,9 @@ async function removeLineBox(text) {
     console.log("Removing line box " + text);
 }
 
-function get_color_at(x, y) {
-    return theCanvas.getContext('2d').getImageData(x, y, 1, 1).data;
-}
-
-function findChange(coords, dx, dy, max_steps) {
-}
-
 function computeBoxAtPoint(text, x, y) {
-    var data = theCanvas.getContext('2d').getImageData(x, y, 1, 1).data;
-    console.log(`(${x}, ${y}) => rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3] / 255})`);
+    var points = boxcalc.computeBoxAtPoint(x, y);
+    formgui.addLineBox(text, ...points);
 }
 
 formgui.setEventHandlers({
