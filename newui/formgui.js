@@ -281,6 +281,7 @@ const lineBoxes = {};
 
 function drawLineBox(text, id, rect) {
     const label = new gui.QPushButton(pdfContainer);
+    label.setFlat(true);
     label.setText(text);
     label.setProperty("line", true);
     rect.setWidgetPos(label);
