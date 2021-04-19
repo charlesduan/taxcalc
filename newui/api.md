@@ -29,12 +29,18 @@ Load initial metadata
 Load PDF file
 * PDF name
 * Form name
-* Structure of lines and positions for that form
 
+Load page
+* Page number
 
 Remove box
-* Line number
-* For boxed lines, index of box removed
+* ID of box
+
+Draw box
+* ID of box
+* Coordinates (absolute in points) of box
+
+Set toolbar
 
 
 ## Commands from Node to Ruby

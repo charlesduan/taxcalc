@@ -1,6 +1,16 @@
 const gui = require("@nodegui/nodegui");
+const pdfloader = require("./pdfloader");
+const boxcalc = require("./boxcalc");
+const { Point, Rectangle } = require("./point");
+const bridge = require("./apibridge");
 
-var handlers;
+let resolution;
+
+function setResolution(res) {
+    resolution = res;
+    boxcalc.setBoxBounds(72 * resolution * 3, 72 * resolution / 2);
+}
+setResolution(2);
 
 
 /*
@@ -36,10 +46,17 @@ rootView.setStyleSheet(`
 #container *[line="true"] {
     background-color: yellow;
     position: absolute;
+    border: 0px;
+}
+
+#container #dragWidget {
+    background-color: green;
+    position: absolute;
 }
 
 #toolBar QLabel {
-    padding: 6px;
+    margin-right: 3px;
+    margin-left: 12px;
 }
 `);
 
@@ -51,30 +68,96 @@ toolBar.setObjectName("toolBar");
 rootView.layout.addWidget(toolBar);
 toolBar.setLayout(new gui.FlexLayout());
 
-var w = new gui.QLabel();
-w.setText("File Name");
+const formNameLabel = new gui.QLabel();
+formNameLabel.setText("(No form loaded)");
+toolBar.layout.addWidget(formNameLabel);
+
+let w = new gui.QLabel();
+w.setText("Page");
 toolBar.layout.addWidget(w);
 
 const pageBox = new gui.QComboBox();
 toolBar.layout.addWidget(pageBox);
 
-pageBox.addEventListener('currentIndexChanged', index => {
-    // TODO: Should invalidate the current image
-    makeContainer();
-    handlers.selectPage(index + 1);
-});
-
-
-
 w = new gui.QLabel();
-w.setText("Form Name");
+w.setText("Line");
 toolBar.layout.addWidget(w);
 
 const lineBox = new gui.QComboBox();
-lineBox.addItem(undefined, "Line 1");
-lineBox.addItem(undefined, "Line 2");
-lineBox.addItem(undefined, "Line 3");
 toolBar.layout.addWidget(lineBox);
+
+w = new gui.QLabel();
+w.setText("Boxed line?");
+toolBar.layout.addWidget(w);
+
+const boxLineCheck = new gui.QCheckBox();
+toolBar.layout.addWidget(boxLineCheck);
+
+const separatorLabel = new gui.QLabel();
+separatorLabel.setText("Separator");
+toolBar.layout.addWidget(separatorLabel);
+
+const separatorEditor = new gui.QLineEdit();
+toolBar.layout.addWidget(separatorEditor);
+
+function hideBoxLineEditor() {
+    boxLineCheck.setChecked(false);
+    separatorEditor.setText("");
+    separatorLabel.hide();
+    separatorEditor.hide();
+}
+
+function showBoxLineEditor(text) {
+    boxLineCheck.setChecked(true);
+    separatorEditor.setText(text);
+    separatorLabel.show();
+    separatorEditor.show();
+}
+
+showBoxLineEditor();
+
+
+/*
+ * Helper functions for converting the toolbar information to an API exportable
+ * object.
+ */
+
+function toolbarInfo() {
+    const res = {
+        line: lineBox.currentText(),
+        boxed: boxLineCheck.isChecked(),
+        separator: separatorEditor.text(),
+    };
+    return res;
+}
+
+let updatingToolbar = false;
+
+function setToolbarInfo(obj) {
+    updatingToolbar = true;
+    lineBox.setCurrentText(obj.line);
+    if (obj.boxed) {
+        showBoxLineEditor(obj.separator);
+    } else {
+        hideBoxLineEditor();
+    }
+    updatingToolbar = false;
+}
+
+/*
+ * Event handlers for toolbar
+ */
+
+function sendToolbarUpdate() {
+    if (updatingToolbar) { return; }
+    bridge.send("toolbarUpdate", toolbarInfo());
+}
+lineBox.addEventListener("currentTextChanged", (evt) => sendToolbarUpdate());
+boxLineCheck.addEventListener("clicked", (evt) => sendToolbarUpdate());
+separatorEditor.addEventListener("textChanged", (evt) => sendToolbarUpdate());
+
+pageBox.addEventListener('currentIndexChanged',
+    async index => selectPage(index + 1));
 
 
 
@@ -88,100 +171,154 @@ rootView.layout.addWidget(scrollArea);
 var pdfContainer;
 
 function makeContainer() {
+    let startPoint, endPoint, dragWidget;
     pdfContainer = new gui.QWidget();
-
     pdfContainer.setLayout(new gui.FlexLayout(0));
     pdfContainer.setObjectName("container");
-    pdfContainer.addEventListener(
-        gui.WidgetEventTypes.MouseButtonPress,
-        (evt) => processMouseClick("button press", evt)
-    );
-    pdfContainer.addEventListener(
-        gui.WidgetEventTypes.MouseButtonRelease,
-        (evt) => processMouseClick("button release", evt)
-    );
+
+    scrollArea.setWidget(pdfContainer);
+
+    /*
+     * Event handlers for the scroll area, to respond to double-clicks and
+     * drags.
+     */
+
     pdfContainer.addEventListener(
         gui.WidgetEventTypes.MouseButtonDblClick,
         (evt) => {
-            processMouseClick("double click", evt);
             const mouseEvt = new gui.QMouseEvent(evt);
-            const x = mouseEvt.x(), y = mouseEvt.y();
-            handlers.computeBoxAtPoint(lineBox.currentText(), x, y);
+            addLineBox(boxcalc.computeBoxAtPoint(mouseEvt.x(), mouseEvt.y()));
         }
     );
 
-    scrollArea.setWidget(pdfContainer);
-}
+    pdfContainer.addEventListener(
+        gui.WidgetEventTypes.MouseButtonPress,
+        (evt) => {
+            const mouseEvt = new gui.QMouseEvent(evt);
+            if (mouseEvt.button() != 1) {
+                startPoint = undefined;
+                return;
+            }
+            startPoint = new Point(mouseEvt.x(), mouseEvt.y());
+        }
+    );
 
+    pdfContainer.addEventListener(
+        gui.WidgetEventTypes.MouseMove,
+        (evt) => {
+            if (startPoint === undefined) { return; }
+            const mouseEvt = new gui.QMouseEvent(evt);
+            endPoint = new Point(mouseEvt.x(), mouseEvt.y());
+            if (dragWidget === undefined) {
+                dragWidget = new gui.QLabel();
+                dragWidget.setObjectName("dragWidget");
+                pdfContainer.layout.addWidget(dragWidget);
+            }
+            const rect = new Rectangle(startPoint, endPoint);
+            rect.setWidgetPos(dragWidget);
+        }
+    );
+
+    pdfContainer.addEventListener(
+        gui.WidgetEventTypes.MouseButtonRelease,
+        (evt) => {
+            if (dragWidget === undefined) { return; }
+            const mouseEvt = new gui.QMouseEvent(evt);
+            endPoint = new Point(mouseEvt.x(), mouseEvt.y());
+            const rect = new Rectangle(startPoint, endPoint);
+            pdfContainer.layout.removeWidget(dragWidget);
+            dragWidget.hide();
+            dragWidget = undefined;
+            addLineBox(rect);
+        }
+    );
+
+}
 
 /*
  * Functions
  */
 
-function setNumPages(num) {
+async function loadPdf(filename, formname, lines) {
+    numPages = await pdfloader.loadPdf(filename);
     pageBox.clear();
-    for (var i = 1; i <= num; i++) {
+    formNameLabel.setText('' + formname + " (" + filename + ")")
+    for (var i = 1; i <= numPages; i++) {
         pageBox.addItem(undefined, "Page " + i.toString());
     }
+    lineBox.clear();
+    lineBox.addItems(lines);
 }
 
-function setPdfPage(buffer) {
+async function selectPage(page) {
+    // TODO: Should invalidate the current image
+    makeContainer();
+    const canvas = await pdfloader.selectPage(page, resolution);
+    const buffer = canvas.toBuffer();
+    boxcalc.setCanvasContext(canvas.getContext('2d'));
     const image = new gui.QPixmap();
     const pdfDisplay = new gui.QLabel();
     image.loadFromData(buffer, "PNG");
     pdfDisplay.setPixmap(image);
     pdfContainer.layout.addWidget(pdfDisplay);
     pdfContainer.resize(image.width() + 50, image.height() + 50);
-
-
+    bridge.send("selectPage", { page });
 }
 
-function addLineBox(text, xmin, ymin, xmax, ymax) {
+function addLineBox(rect) {
+    bridge.send("addLineBox", {
+        toolbar: toolbarInfo(),
+        pos: rect.toJSON(),
+    });
+}
+
+const lineBoxes = {};
+
+function drawLineBox(text, id, rect) {
     const label = new gui.QPushButton(pdfContainer);
     label.setText(text);
     label.setProperty("line", true);
-    label.setInlineStyle(
-        "left: " + xmin + "px; " +
-        "top: " + ymin + "px; " +
-        "min-width: " + (xmax - xmin) + "px; " +
-        "max-width: " + (xmax - xmin) + "px; " +
-        "min-height: " + (ymax - ymin) + "px; " +
-        "max-height: " + (ymax - ymin) + "px; "
-    );
+    rect.setWidgetPos(label);
     label.addEventListener(
         gui.WidgetEventTypes.MouseButtonDblClick,
-        (evt) => {
-            receiveLabelClick(label, text);
-        },
-    )
+        (evt) => bridge.send("removeLine", { id })
+    );
     pdfContainer.layout.addWidget(label);
+    lineBoxes[id] = label;
 }
 
-function setEventHandlers(obj) {
-    handlers = obj;
+function removeLineBox(id) {
+    const label = lineBoxes[id];
+    if (label) {
+        pdfContainer.layout.removeWidget(label);
+        label.hide();
+    }
 }
 
-function processMouseClick(type, evt) {
-    const mouseEvt = new gui.QMouseEvent(evt);
-    console.log(type + " (" + mouseEvt.x() + ", " + mouseEvt.y() + ")");
+function execute(command, payload) {
+    console.log("Recv: " + command + ", " + JSON.stringify(payload, null, 2));
+    switch (command) {
+        case "drawLineBox":
+            drawLineBox(payload.line, payload.id,
+                new Rectangle(...payload.pos));
+            break;
+        case "removeLineBox":
+            removeLineBox(payload.id);
+            break;
+        case "setToolbarInfo":
+            setToolbarInfo(payload);
+            break;
+    }
 }
-
-function receiveLabelClick(label, text) {
-    pdfContainer.layout.removeWidget(label);
-    handlers.removeLineBox(text);
-    label.hide();
-}
-
+bridge.setHandler(execute);
 
 /*
  * Export modules
  */
 
 module.exports = {
-    setNumPages,
-    setPdfPage,
-    setEventHandlers,
-    addLineBox,
+    loadPdf,
+    setToolbarInfo,
 }
 
 /*

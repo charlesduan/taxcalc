@@ -1,6 +1,7 @@
 /*
  * Computes box dimensions by expanding from a selected point.
  */
+const { Point, Rectangle, Origin } = require("./point");
 
 var context;
 
@@ -26,17 +27,18 @@ function computeBoxAtPoint(x, y) {
 
     // Find the bottom edge. The number of steps taken will be coincidentally
     // equal to the y coordinate of the bottom edge.
-    let ymax = advanceLine(0, 0, 0, 0, 0, 1, maxdy);
+    let ymax = advanceLine(Origin, Origin, 0, 1, maxdy);
 
     // Find the right edge. Again the returned number of steps will equal the x
     // coordinate.
-    let xmax = advanceLine(0, 0, 0, ymax, 1, 0, maxdx);
+    let xmax = advanceLine(Origin, new Point(0, ymax), 1, 0, maxdx);
 
     // Find the left edge.
-    let xmin = -advanceLine(0, 0, 0, ymax, -1, 0, maxdx);
+    let xmin = -advanceLine(Origin, new Point(0, ymax), -1, 0, maxdx);
 
     // Find the top edge.
-    let ymin = -advanceLine(xmin, 0, xmax, 0, 0, -1, maxdy);
+    let ymin = -advanceLine(new Point(xmin, 0), new Point(xmax, 0),
+        0, -1, maxdy);
 
     // Convert back to absolute coordinates
     let res = [ x + xmin, y + ymin, x + xmax, y + ymax ];
@@ -47,7 +49,7 @@ function computeBoxAtPoint(x, y) {
     if (res[2] >= context.canvas.width) { res[2] = context.canvas.width - 1; }
     if (res[3] >= context.canvas.height) { res[3] = context.canvas.height - 1; }
 
-    return res;
+    return new Rectangle(new Point(res[0], res[1]), new Point(res[2], res[3]));
 }
 
 /*
@@ -96,10 +98,10 @@ function sameColorForLine(xrelMin, yrelMin, xrelMax, yrelMax) {
  * Returns the number of steps advanced before the color changed, or maxSteps if
  * it never does.
  */
-function advanceLine(xrelMin, yrelMin, xrelMax, yrelMax, dx, dy, maxSteps) {
+function advanceLine(pMin, pMax, dx, dy, maxSteps) {
     for (let i = 1; i <= maxSteps; i++) {
-        let same = sameColorForLine(xrelMin + i * dx, yrelMin + i * dy,
-            xrelMax + i * dx, yrelMax + i * dy);
+        let same = sameColorForLine(pMin.x + i * dx, pMin.y + i * dy,
+            pMax.x + i * dx, pMax.y + i * dy);
         if (!same) {
             return i - 1;
         }
