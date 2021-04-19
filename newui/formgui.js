@@ -284,6 +284,12 @@ function drawLineBox(text, id, rect) {
         (evt) => bridge.send("removeLine", { id })
     );
     pdfContainer.layout.addWidget(label);
+
+    // Should not happen in production; the box should already have been removed
+    if (lineBoxes[id]) {
+        console.log(`Adding line box ${id} that already exists`);
+        removeLineBox(id);
+    }
     lineBoxes[id] = label;
 }
 
@@ -292,6 +298,7 @@ function removeLineBox(id) {
     if (label) {
         pdfContainer.layout.removeWidget(label);
         label.hide();
+        delete lineBoxes[id];
     }
 }
 

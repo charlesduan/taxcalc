@@ -3,6 +3,40 @@ class Point {
         this.x = x;
         this.y = y;
     }
+
+    plus(x, y) {
+        if (y === undefined) {
+            return new Point(this.x + x.x, this.y + x.y);
+        } else {
+            return new Point(this.x + x, this.y + y);
+        }
+    }
+
+    times(s) {
+        return new Point(this.x * s, this.y * s);
+    }
+
+    leq(x, y) {
+        if (y === undefined) {
+            return (this.x <= x.x && this.y <= x.y);
+        } else {
+            return (this.x <= x && this.y <= y);
+        }
+    }
+
+    /*
+     * Computes the next point toward a point greater than or equal to this one,
+     * first by incrementing the x coordinate and then by incrementing the y.
+     */
+    nextToward(p) {
+        if (p.x > this.x) { return new Point(this.x + 1, this.y); }
+        if (p.y > this.y) { return new Point(this.x, this.y + 1); }
+        return null;
+    }
+
+    toString() {
+        return `(${this.x}, ${this.y})`;
+    }
 }
 
 class Rectangle {

@@ -9,7 +9,6 @@ var maxdx = 144 * 3;
 var maxdy = 72;
 
 var imageData;
-var startColor;
 
 function setBoxBounds(dx, dy) {
     maxdx = dx;
@@ -18,30 +17,39 @@ function setBoxBounds(dx, dy) {
 
 function setCanvasContext(ctx) {
     context = ctx;
+    imageData = context.getImageData(0, 0,
+        context.canvas.width, context.canvas.height);
 }
 
 function computeBoxAtPoint(x, y) {
-    imageData = context.getImageData(x - maxdx, y - maxdy, 2 * maxdx + 1,
-        2 * maxdy + 1);
-    startColor = colorAtPoint(0, 0);
+
+    console.log(`Starting at (${x}, ${y})`);
+
+
+    let origin = new Point(x, y);
+    console.log(`Color at ${origin} is ${colorAt(origin)}`);
 
     // Find the bottom edge. The number of steps taken will be coincidentally
     // equal to the y coordinate of the bottom edge.
-    let ymax = advanceLine(Origin, Origin, 0, 1, maxdy);
+    let ymax = origin.plus(advanceLine(origin, origin, new Point(0, 1), maxdy));
+    console.log(`ymax is ${ymax}`);
+    ymax = ymax.plus(0, 1); // Collect the bottom line for testing too
 
     // Find the right edge. Again the returned number of steps will equal the x
     // coordinate.
-    let xmax = advanceLine(Origin, new Point(0, ymax), 1, 0, maxdx);
+    let xmax = origin.plus(advanceLine(origin, ymax, new Point(1, 0), maxdx));
+    console.log(`xmax is ${xmax}`);
 
     // Find the left edge.
-    let xmin = -advanceLine(Origin, new Point(0, ymax), -1, 0, maxdx);
+    let xmin = origin.plus(advanceLine(origin, ymax, new Point(-1, 0), maxdx));
+    console.log(`xmin is ${xmin}`);
 
     // Find the top edge.
-    let ymin = -advanceLine(new Point(xmin, 0), new Point(xmax, 0),
-        0, -1, maxdy);
+    let ymin = origin.plus(advanceLine(xmin, xmax, new Point(0, -1), maxdy));
+    console.log(`ymin is ${ymin}`);
 
     // Convert back to absolute coordinates
-    let res = [ x + xmin, y + ymin, x + xmax, y + ymax ];
+    let res = [ xmin.x, ymin.y, xmax.x, ymax.y - 1 ];
 
     // Sanity checks
     if (res[0] < 0) { res[0] = 0; }
@@ -56,18 +64,22 @@ function computeBoxAtPoint(x, y) {
  * Returns the color at the given point. The point is given relative to an
  * origin that is the user's specified point.
  */
-function colorAtPoint(xrel, yrel) {
-    const index = ((yrel + maxdy) * imageData.width + xrel + maxdx) * 4;
+function colorAt(p) {
+    if (p.x < 0 || p.y < 0
+        || p.x >= imageData.width || p.y >= imageData.height) {
+        return [ -100, -100, -100, -100 ];
+    }
+    const index = (p.y * imageData.width + p.x) * 4;
     return imageData.data.subarray(index, index + 3);
 }
 
 /*
- * Tests if the color of the given point matches the color at the origin.
+ * Tests if the colors of two given points match.
  */
-function sameColorAtPoint(xrel, yrel) {
-    const color = colorAtPoint(xrel, yrel);
-    for (let i = 0; i < color.length; i++) {
-        if (Math.abs(color[i] - startColor[i]) > 20) {
+function sameColor(p1, p2) {
+    const c1 = colorAt(p1), c2 = colorAt(p2);
+    for (let i = 0; i < 3; i++) {
+        if (Math.abs(c1[i] - c2[i]) > 20) {
             return false;
         }
     }
@@ -75,38 +87,21 @@ function sameColorAtPoint(xrel, yrel) {
 }
 
 /*
- * Determines if the color for each point on the given line matches the
- * startColor. The line must be horizontal or vertical.
- */
-function sameColorForLine(xrelMin, yrelMin, xrelMax, yrelMax) {
-    if (xrelMin == xrelMax) {
-        for (let yrel = yrelMin; yrel <= yrelMax; yrel++) {
-            if (!sameColorAtPoint(xrelMin, yrel)) { return false; }
-        }
-    } else {
-        for (let xrel = xrelMin; xrel <= xrelMax; xrel++) {
-            if (!sameColorAtPoint(xrel, yrelMin)) { return false; }
-        }
-    }
-    return true;
-}
-
-/*
- * Starting from the given line, which is assumed to match startColor, advance
- * the line by (dx, dy) until the line fails to match.
+ * Starting from the given line, advance the line by delta until the line
+ * fails to match the original line.
  *
- * Returns the number of steps advanced before the color changed, or maxSteps if
- * it never does.
+ * Returns the total displacement found (delta * number of steps taken).
  */
-function advanceLine(pMin, pMax, dx, dy, maxSteps) {
+function advanceLine(pMin, pMax, delta, maxSteps) {
     for (let i = 1; i <= maxSteps; i++) {
-        let same = sameColorForLine(pMin.x + i * dx, pMin.y + i * dy,
-            pMax.x + i * dx, pMax.y + i * dy);
-        if (!same) {
-            return i - 1;
+        let totalDelta = delta.times(i);
+        for (let pIter = pMin; pIter !== null; pIter = pIter.nextToward(pMax)) {
+            if (!sameColor(pIter, pIter.plus(totalDelta))) {
+                return delta.times(i - 1);
+            }
         }
     }
-    return maxSteps;
+    return delta.times(i);
 }
 
 module.exports = {

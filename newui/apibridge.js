@@ -31,6 +31,7 @@ function selectPage(page) {
     if (page == 1) {
         handle("drawLineBox", {
             line: "1",
+            id: "1",
             pos: [ 72, 72, 144, 144 ],
         });
     }
