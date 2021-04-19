@@ -1,11 +1,21 @@
+const readline = require('readline');
+const fs = require('fs');
+
 let handle;
 function setHandler(h) {
     handle = h;
 }
 
+function processLine(line) {
+    console.log("Processing " + line);
+    obj = JSON.parse(line);
+    handle(obj.command, obj.payload);
+}
+
 function send(command, payload) {
-    const obj = { command, payload };
-    console.log("Send: " + JSON.stringify(obj, null, 2));
+    console.log("Send: " + JSON.stringify({ command, payload }, null, 2));
+    writeStream.write(JSON.stringify({ command, payload }) + "\n");
+    return;
     switch (command) {
         case "selectPage":
             selectPage(payload.page);
@@ -37,7 +47,20 @@ function selectPage(page) {
     }
 }
 
+let readStream, writeStream;
+
+function setfd(read, write) {
+    readStream = readline.createInterface({
+        input: fs.createReadStream(null, { fd: read }),
+        crlfDelay: Infinity
+    });
+    writeStream = fs.createWriteStream(null, { fd: write });
+
+    readStream.on('line', processLine);
+}
+
 module.exports = {
     send,
     setHandler,
+    setfd,
 };

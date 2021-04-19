@@ -47,6 +47,8 @@ rootView.setStyleSheet(`
     background-color: yellow;
     position: absolute;
     border: 0px;
+    margin: 0px;
+    padding: 0px;
 }
 
 #container #dragWidget {
@@ -114,7 +116,7 @@ function showBoxLineEditor(text) {
     separatorEditor.show();
 }
 
-showBoxLineEditor();
+hideBoxLineEditor();
 
 
 /*
@@ -148,13 +150,16 @@ function setToolbarInfo(obj) {
  * Event handlers for toolbar
  */
 
-function sendToolbarUpdate() {
+function sendToolbarUpdate(cmd) {
     if (updatingToolbar) { return; }
-    bridge.send("toolbarUpdate", toolbarInfo());
+    bridge.send(cmd, toolbarInfo());
 }
-lineBox.addEventListener("currentTextChanged", (evt) => sendToolbarUpdate());
-boxLineCheck.addEventListener("clicked", (evt) => sendToolbarUpdate());
-separatorEditor.addEventListener("textChanged", (evt) => sendToolbarUpdate());
+lineBox.addEventListener("currentTextChanged",
+    (evt) => sendToolbarUpdate("lineChanged"));
+boxLineCheck.addEventListener("clicked",
+    (evt) => sendToolbarUpdate("boxLineChanged"));
+separatorEditor.addEventListener("textChanged",
+    (evt) => sendToolbarUpdate("separatorChanged"));
 
 pageBox.addEventListener('currentIndexChanged',
     async index => selectPage(index + 1));
@@ -305,6 +310,8 @@ function removeLineBox(id) {
 function execute(command, payload) {
     console.log("Recv: " + command + ", " + JSON.stringify(payload, null, 2));
     switch (command) {
+        case "loadPdf":
+            loadPdf(payload.filename, payload.formname, payload.lines);
         case "drawLineBox":
             drawLineBox(payload.line, payload.id,
                 new Rectangle(...payload.pos));
