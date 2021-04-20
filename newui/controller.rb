@@ -10,41 +10,70 @@ class Marking; class Controller
     @node_io = node_io
   end
 
+  def add_form(form)
+    raise "Invalid form" unless form.is_a?(Form)
+    @current_form = @forms[form.name] = form
+  end
+
+  def start
+    send_cmd('loadPdf', {
+      'form' => @current_form.name,
+      'file' => @current_form.file,
+      'lines' => @current_form.line_names,
+    })
+  end
+
   def send_cmd(cmd, args)
-    @node_io.puts(JSON.generate({ 'cmd' => cmd, 'args' => args}))
+    @node_io.puts(JSON.generate({ 'command' => cmd, 'payload' => args}))
   end
 
-  def load(filename)
-    open(filename) do |io| JSON.parse(io.read) end.each do |d|
-      @forms[d['name']] = Form.new(d)
+  def cmd_addLineBox(args)
+    line = args['toolbar']['line']
+    page = args['page']
+    pos = Position.new(page, args['pos'])
+
+    line_obj = @current_form.line(line)
+    if line_obj.nil?
+      warn("Line #{line} not found in form #{@current_form.name}")
+      line_obj = @current_form.add_line(line)
     end
-  end
 
-  def add_forms(filename)
-    fm = FormManager.new('')
-    fm.import(filename)
-  end
+    if line_obj.split? && args['toolbar']['split']
+      new_id = line_obj.add_pos(pos)
+      send_cmd('drawLineBox', {
+        'id' => new_id, 'page' => page, 'pos' => pos.to_a
+      })
+      send_cmd('findNextSplitBox', {
+        'line' => line, 'page' => page, 'pos' => pos.to_a
+      })
+    elsif !line_obj.split? && !args['toolbar']['split']
 
-  def select(form)
-    raise "No form #{form}" unless @forms[form]
-    @current_form = @forms[form]
-  end
-
-  def add_line(obj)
-    @current_form.update(obj)
-  end
-
-  def remove_line(obj)
-    @current_form.remove(obj['name']) do |removed_name|
-      send_cmd('remove', :name => removed_name)
+      # A split box is neither expected nor present
+      send_cmd('removeLineBox', { 'id' => line }) unless line_obj.pos.nil?
+      line_obj.add_pos(pos)
+      send_cmd('drawLineBox', {
+        'id' => line, 'page' => page, 'pos' => pos.to_a
+      })
+    else
+      warn("Box and toolbar are out of sync as to split for line #{line}")
     end
+
   end
 
-  def save(filename)
-    open(filename, 'w') do |io|
-      io.puts(JSON.pretty_generate(@forms.values.map(&:to_obj)))
-    end
+  def cmd_selectPage(args)
   end
 
+  def cmd_removeLine(args)
+    send_cmd('removeLineBox', { 'id' => args['id'] })
+  end
+
+  def cmd_lineChanged(args)
+  end
+
+  def cmd_splitChanged(args)
+  end
+
+  def cmd_splitSepChanged(args)
+  end
 
 end end

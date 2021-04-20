@@ -21,32 +21,27 @@ function setCanvasContext(ctx) {
         context.canvas.width, context.canvas.height);
 }
 
-function computeBoxAtPoint(x, y) {
+function computeBoxAtPoint(p) {
 
-    console.log(`Starting at (${x}, ${y})`);
-
-
-    let origin = new Point(x, y);
-    console.log(`Color at ${origin} is ${colorAt(origin)}`);
+    if (p.x < 0 || p.y < 0
+        || p.x >= context.canvas.width || p.y >= context.canvas.height) {
+        return undefined;
+    }
 
     // Find the bottom edge. The number of steps taken will be coincidentally
     // equal to the y coordinate of the bottom edge.
-    let ymax = origin.plus(advanceLine(origin, origin, new Point(0, 1), maxdy));
-    console.log(`ymax is ${ymax}`);
+    let ymax = p.plus(advanceLine(p, p, new Point(0, 1), maxdy));
     ymax = ymax.plus(0, 1); // Collect the bottom line for testing too
 
     // Find the right edge. Again the returned number of steps will equal the x
     // coordinate.
-    let xmax = origin.plus(advanceLine(origin, ymax, new Point(1, 0), maxdx));
-    console.log(`xmax is ${xmax}`);
+    let xmax = p.plus(advanceLine(p, ymax, new Point(1, 0), maxdx));
 
     // Find the left edge.
-    let xmin = origin.plus(advanceLine(origin, ymax, new Point(-1, 0), maxdx));
-    console.log(`xmin is ${xmin}`);
+    let xmin = p.plus(advanceLine(p, ymax, new Point(-1, 0), maxdx));
 
     // Find the top edge.
-    let ymin = origin.plus(advanceLine(xmin, xmax, new Point(0, -1), maxdy));
-    console.log(`ymin is ${ymin}`);
+    let ymin = p.plus(advanceLine(xmin, xmax, new Point(0, -1), maxdy));
 
     // Convert back to absolute coordinates
     let res = [ xmin.x, ymin.y, xmax.x, ymax.y - 1 ];
@@ -57,7 +52,11 @@ function computeBoxAtPoint(x, y) {
     if (res[2] >= context.canvas.width) { res[2] = context.canvas.width - 1; }
     if (res[3] >= context.canvas.height) { res[3] = context.canvas.height - 1; }
 
-    return new Rectangle(new Point(res[0], res[1]), new Point(res[2], res[3]));
+    const r = new Rectangle(...res);
+    // Ensure that the rectangle returned is of reasonable size. This should be
+    // determined in terms of the resolution of the image.
+    if (r.width < 5 || r.height < 5) { return undefined; }
+    return r;
 }
 
 /*
@@ -101,7 +100,7 @@ function advanceLine(pMin, pMax, delta, maxSteps) {
             }
         }
     }
-    return delta.times(i);
+    return delta.times(maxSteps);
 }
 
 module.exports = {

@@ -12,6 +12,11 @@ function setResolution(res) {
 }
 setResolution(2);
 
+/*
+ * Cache of all the boxes on the current page.
+ */
+let lineBoxes = {};
+
 
 /*
  * Construct the GUI
@@ -20,6 +25,9 @@ setResolution(2);
 
 const win = new gui.QMainWindow();
 win.resize(612 * 2 + 20, 792 * 2);
+
+win.addEventListener(gui.WidgetEventTypes.Close,
+    (evt) => { bridge.shutdown(); });
 
 const rootView = new gui.QWidget();
 rootView.setLayout(new gui.FlexLayout());
@@ -78,45 +86,53 @@ let w = new gui.QLabel();
 w.setText("Page");
 toolBar.layout.addWidget(w);
 
-const pageBox = new gui.QComboBox();
-toolBar.layout.addWidget(pageBox);
+const prevPageButton = new gui.QPushButton();
+prevPageButton.setText("<");
+toolBar.layout.addWidget(prevPageButton);
+
+const pageSelector = new gui.QComboBox();
+toolBar.layout.addWidget(pageSelector);
+
+const nextPageButton = new gui.QPushButton();
+nextPageButton.setText(">");
+toolBar.layout.addWidget(nextPageButton);
 
 w = new gui.QLabel();
 w.setText("Line");
 toolBar.layout.addWidget(w);
 
-const lineBox = new gui.QComboBox();
-toolBar.layout.addWidget(lineBox);
+const lineSelector = new gui.QComboBox();
+toolBar.layout.addWidget(lineSelector);
 
 w = new gui.QLabel();
-w.setText("Boxed line?");
+w.setText("Split line?");
 toolBar.layout.addWidget(w);
 
-const boxLineCheck = new gui.QCheckBox();
-toolBar.layout.addWidget(boxLineCheck);
+const splitLineCheck = new gui.QCheckBox();
+toolBar.layout.addWidget(splitLineCheck);
 
-const separatorLabel = new gui.QLabel();
-separatorLabel.setText("Separator");
-toolBar.layout.addWidget(separatorLabel);
+const splitSepLabel = new gui.QLabel();
+splitSepLabel.setText("Split Separator");
+toolBar.layout.addWidget(splitSepLabel);
 
-const separatorEditor = new gui.QLineEdit();
-toolBar.layout.addWidget(separatorEditor);
+const splitSepEditor = new gui.QLineEdit();
+toolBar.layout.addWidget(splitSepEditor);
 
-function hideBoxLineEditor() {
-    boxLineCheck.setChecked(false);
-    separatorEditor.setText("");
-    separatorLabel.hide();
-    separatorEditor.hide();
+function hideSplitEditor() {
+    splitLineCheck.setChecked(false);
+    splitSepEditor.setText("");
+    splitSepEditor.hide();
+    splitSepLabel.hide();
 }
 
-function showBoxLineEditor(text) {
-    boxLineCheck.setChecked(true);
-    separatorEditor.setText(text);
-    separatorLabel.show();
-    separatorEditor.show();
+function showSplitEditor(text) {
+    splitLineCheck.setChecked(true);
+    splitSepEditor.setText(text);
+    splitSepEditor.show();
+    splitSepLabel.show();
 }
 
-hideBoxLineEditor();
+hideSplitEditor();
 
 
 /*
@@ -126,9 +142,9 @@ hideBoxLineEditor();
 
 function toolbarInfo() {
     const res = {
-        line: lineBox.currentText(),
-        boxed: boxLineCheck.isChecked(),
-        separator: separatorEditor.text(),
+        line: lineSelector.currentText(),
+        split: splitLineCheck.isChecked(),
+        separator: splitSepEditor.text(),
     };
     return res;
 }
@@ -137,11 +153,13 @@ let updatingToolbar = false;
 
 function setToolbarInfo(obj) {
     updatingToolbar = true;
-    lineBox.setCurrentText(obj.line);
-    if (obj.boxed) {
-        showBoxLineEditor(obj.separator);
-    } else {
-        hideBoxLineEditor();
+    if ('line' in obj) { lineBox.setCurrentText(obj.line); }
+    if ('split' in obj) {
+        if (obj.split) {
+            showSplitEditor(obj.separator);
+        } else {
+            hideSplitEditor();
+        }
     }
     updatingToolbar = false;
 }
@@ -154,15 +172,30 @@ function sendToolbarUpdate(cmd) {
     if (updatingToolbar) { return; }
     bridge.send(cmd, toolbarInfo());
 }
-lineBox.addEventListener("currentTextChanged",
+lineSelector.addEventListener("currentTextChanged",
     (evt) => sendToolbarUpdate("lineChanged"));
-boxLineCheck.addEventListener("clicked",
-    (evt) => sendToolbarUpdate("boxLineChanged"));
-separatorEditor.addEventListener("textChanged",
-    (evt) => sendToolbarUpdate("separatorChanged"));
+splitLineCheck.addEventListener("clicked",
+    (evt) => sendToolbarUpdate("splitChanged"));
+splitSepEditor.addEventListener("textChanged",
+    (evt) => sendToolbarUpdate("splitSepChanged"));
 
-pageBox.addEventListener('currentIndexChanged',
-    async index => selectPage(index + 1));
+pageSelector.addEventListener('currentIndexChanged',
+    async index => displayPage());
+prevPageButton.addEventListener('clicked', (evt) => {
+    try {
+        const newPage = Math.max(0, pageSelector.currentIndex() - 1)
+        pageSelector.setCurrentIndex(newPage);
+    } catch (e) { console.log(e); }
+});
+nextPageButton.addEventListener('clicked', (evt) => {
+    try {
+        const newPage = Math.min(
+            pageSelector.currentIndex() + 1, pdfloader.numPages() - 1
+        );
+        pageSelector.setCurrentIndex(newPage);
+    } catch (e) { console.log(e); }
+});
+
 
 
 
@@ -190,27 +223,30 @@ function makeContainer() {
 
     pdfContainer.addEventListener(
         gui.WidgetEventTypes.MouseButtonDblClick,
-        (evt) => {
+        (evt) => { try {
             const mouseEvt = new gui.QMouseEvent(evt);
-            addLineBox(boxcalc.computeBoxAtPoint(mouseEvt.x(), mouseEvt.y()));
-        }
+            const boxRect = boxcalc.computeBoxAtPoint(
+                new Point(mouseEvt.x(), mouseEvt.y())
+            );
+            if (boxRect) { addLineBox(boxRect); }
+        } catch (e) { console.log(e); } }
     );
 
     pdfContainer.addEventListener(
         gui.WidgetEventTypes.MouseButtonPress,
-        (evt) => {
+        (evt) => { try {
             const mouseEvt = new gui.QMouseEvent(evt);
             if (mouseEvt.button() != 1) {
                 startPoint = undefined;
                 return;
             }
             startPoint = new Point(mouseEvt.x(), mouseEvt.y());
-        }
+        } catch (e) { console.log(e); } }
     );
 
     pdfContainer.addEventListener(
         gui.WidgetEventTypes.MouseMove,
-        (evt) => {
+        (evt) => { try {
             if (startPoint === undefined) { return; }
             const mouseEvt = new gui.QMouseEvent(evt);
             endPoint = new Point(mouseEvt.x(), mouseEvt.y());
@@ -221,12 +257,12 @@ function makeContainer() {
             }
             const rect = new Rectangle(startPoint, endPoint);
             rect.setWidgetPos(dragWidget);
-        }
+        } catch (e) { console.log(e); } }
     );
 
     pdfContainer.addEventListener(
         gui.WidgetEventTypes.MouseButtonRelease,
-        (evt) => {
+        (evt) => { try {
             if (dragWidget === undefined) { return; }
             const mouseEvt = new gui.QMouseEvent(evt);
             endPoint = new Point(mouseEvt.x(), mouseEvt.y());
@@ -235,7 +271,7 @@ function makeContainer() {
             dragWidget.hide();
             dragWidget = undefined;
             addLineBox(rect);
-        }
+        } catch (e) { console.log(e); } }
     );
 
 }
@@ -244,47 +280,69 @@ function makeContainer() {
  * Functions
  */
 
-async function loadPdf(filename, formname, lines) {
-    numPages = await pdfloader.loadPdf(filename);
-    pageBox.clear();
+async function loadPdf(formname, filename, lines) {
+    await pdfloader.loadPdf(filename);
+    const numPages = pdfloader.numPages();
+    pageSelector.clear();
     formNameLabel.setText('' + formname + " (" + filename + ")")
     for (var i = 1; i <= numPages; i++) {
-        pageBox.addItem(undefined, "Page " + i.toString());
+        pageSelector.addItem(undefined, i.toString());
     }
-    lineBox.clear();
-    lineBox.addItems(lines);
+    lineSelector.clear();
+    lineSelector.addItems(lines);
 }
 
-async function selectPage(page) {
-    // TODO: Should invalidate the current image
-    makeContainer();
-    const canvas = await pdfloader.selectPage(page, resolution);
-    const buffer = canvas.toBuffer();
-    boxcalc.setCanvasContext(canvas.getContext('2d'));
-    const image = new gui.QPixmap();
-    const pdfDisplay = new gui.QLabel();
-    image.loadFromData(buffer, "PNG");
-    pdfDisplay.setPixmap(image);
-    pdfContainer.layout.addWidget(pdfDisplay);
-    pdfContainer.resize(image.width() + 50, image.height() + 50);
-    bridge.send("selectPage", { page });
+/*
+ * Returns the number of the currently selected page, 1-indexed.
+ */
+function currentPage() {
+    return pageSelector.currentIndex() + 1;
 }
 
-function addLineBox(rect) {
+/*
+ * Changes the scroll UI element to display the currently selected page. Also
+ * notifies the API bridge of the page change, so that the controller can inform
+ * the UI which boxes to draw on the page.
+ *
+ * This method is called when the page selector changes.
+ */
+async function displayPage() {
+    try {
+        const page = currentPage();
+        lineBoxes = {}; // Invalidate all the current boxes
+        makeContainer();
+        const canvas = await pdfloader.selectPage(page, resolution);
+        const buffer = canvas.toBuffer();
+        boxcalc.setCanvasContext(canvas.getContext('2d'));
+        const image = new gui.QPixmap();
+        const pdfDisplay = new gui.QLabel();
+        image.loadFromData(buffer, "PNG");
+        pdfDisplay.setPixmap(image);
+        pdfContainer.layout.addWidget(pdfDisplay);
+        pdfContainer.resize(image.width(), image.height());
+
+        bridge.send("selectPage", { page });
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+function addLineBox(rect, info = null) {
     bridge.send("addLineBox", {
-        toolbar: toolbarInfo(),
-        pos: rect.toJSON(),
+        toolbar: info || toolbarInfo(),
+        page: currentPage(),
+        pos: rect.times(1 / resolution).toJSON(),
     });
 }
 
-const lineBoxes = {};
-
-function drawLineBox(text, id, rect) {
+function drawLineBox(id, page, pos) {
+    if (page != currentPage()) { return; } // Avoid synchronization issue
     const label = new gui.QPushButton(pdfContainer);
     label.setFlat(true);
-    label.setText(text);
+    label.setText(id);
     label.setProperty("line", true);
-    rect.setWidgetPos(label);
+    const rect = new Rectangle(...pos);
+    rect.times(resolution).setWidgetPos(label);
     label.addEventListener(
         gui.WidgetEventTypes.MouseButtonDblClick,
         (evt) => bridge.send("removeLine", { id })
@@ -299,6 +357,21 @@ function drawLineBox(text, id, rect) {
     lineBoxes[id] = label;
 }
 
+/*
+ * Given a split line and the position of the last added box, looks for the
+ * subsequent box. If found, attempts to add it to the line.
+ */
+function findNextSplitBox(line, page, pos) {
+    if (page != currentPage()) { return; } // Avoid synchronization issue
+    const rect = new Rectangle(...pos);
+    const newRect = boxcalc.computeBoxAtPoint(rect.nextSplitStartPoint());
+    if (newRect) {
+        // Have to manually provide the toolbar info because theoretically the
+        // toolbar could have changed by this point
+        addLineBox(boxRect, { line, split: true });
+    }
+}
+
 function removeLineBox(id) {
     const label = lineBoxes[id];
     if (label) {
@@ -310,31 +383,28 @@ function removeLineBox(id) {
 
 function execute(command, payload) {
     console.log("Recv: " + command + ", " + JSON.stringify(payload, null, 2));
-    switch (command) {
-        case "loadPdf":
-            loadPdf(payload.filename, payload.formname, payload.lines);
-        case "drawLineBox":
-            drawLineBox(payload.line, payload.id,
-                new Rectangle(...payload.pos));
-            break;
-        case "removeLineBox":
-            removeLineBox(payload.id);
-            break;
-        case "setToolbarInfo":
-            setToolbarInfo(payload);
-            break;
-    }
+    try {
+        switch (command) {
+            case "loadPdf":
+                loadPdf(payload.form, payload.file, payload.lines);
+            case "drawLineBox":
+                drawLineBox(payload.id, payload.page, payload.pos);
+                break;
+            case "findNextSplitBox":
+                findNextSplitBox(payload.line, payload.page, payload.pos);
+                break;
+            case "removeLineBox":
+                removeLineBox(payload.id);
+                break;
+            case "setToolbarInfo":
+                setToolbarInfo(payload);
+                break;
+            default:
+                console.log("Unknown command");
+        }
+    } catch (e) { console.log(e); }
 }
 bridge.setHandler(execute);
-
-/*
- * Export modules
- */
-
-module.exports = {
-    loadPdf,
-    setToolbarInfo,
-}
 
 /*
  * Show the window

@@ -48,19 +48,29 @@ function selectPage(page) {
 }
 
 let readStream, writeStream;
+let rawReadStream;
 
 function setfd(read, write) {
+
+    rawReadStream = fs.createReadStream(null, { fd: read });
     readStream = readline.createInterface({
-        input: fs.createReadStream(null, { fd: read }),
-        crlfDelay: Infinity
+        input: rawReadStream,
+        crlfDelay: Infinity,
     });
     writeStream = fs.createWriteStream(null, { fd: write });
 
     readStream.on('line', processLine);
 }
 
+function shutdown() {
+    readStream.close();
+    rawReadStream.close();
+    writeStream.close();
+}
+
 module.exports = {
     send,
     setHandler,
     setfd,
+    shutdown,
 };

@@ -14,6 +14,9 @@ async function loadPdf(filename) {
         cMapPacked: true,
     }).promise;
     console.log("Loaded document");
+}
+
+function numPages() {
     return pdfDoc.numPages;
 }
 
@@ -36,4 +39,5 @@ async function selectPage(page, resolution) {
 module.exports = {
     loadPdf,
     selectPage,
+    numPages,
 }

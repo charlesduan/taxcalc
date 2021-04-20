@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require_relative 'controller'
+
 require('json')
 
 @rubyRd, @nodeWr = IO.pipe
@@ -11,17 +13,10 @@ def transmit(command, payload)
 end
 
 def dispatch(command, payload)
-  case command
-  when 'addLineBox'
-    transmit('drawLineBox', {
-      'line' => payload['toolbar']['line'],
-      'id' => payload['toolbar']['line'],
-      'pos' => payload['pos'],
-    })
-  when 'removeLine'
-    transmit('removeLineBox', { 'id' => payload['id'] })
-  when 'boxLineChanged'
-    transmit('setToolbarInfo', payload)
+  if @controller.respond_to?("cmd_#{command}")
+    @controller.send("cmd_#{command}", payload)
+  else
+    warn("Unknown command #{command}")
   end
 end
 
@@ -37,6 +32,17 @@ end
 
 @nodeRd.close
 @nodeWr.close
+
+@controller = Marking::Controller.new(@rubyWr)
+
+# Initialize controller's data here
+form = Marking::Form.new('1040', 'f1040.pdf')
+%w(1 2a 2b 3a 3b 4a 4b 5a 5b 6a 6b).each do |l|
+  form.add_line(l)
+end
+
+@controller.add_form(form)
+@controller.start
 
 @rubyRd.each do |line|
   puts "Ruby: #{line}"

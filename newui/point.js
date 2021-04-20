@@ -59,6 +59,21 @@ class Rectangle {
         return this.max.y - this.min.y;
     }
 
+    times(s) {
+        return new Rectangle(this.min.times(s), this.max.times(s));
+    }
+
+    /*
+     * For a split line, the box that follows this is assumed to contain the
+     * point returned by this method.
+     */
+    nextSplitStartPoint() {
+        return new Point(
+            this.max.x + this.width() / 3,
+            (this.min.y + this.max.y) / 2
+        );
+    }
+
     setWidgetPos(widget) {
         widget.setInlineStyle(
             "left: " + this.min.x + "px; " +

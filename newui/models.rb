@@ -1,17 +1,23 @@
+require 'open-uri'
+
 class Marking
 
   #
   # A tax form's line position data. The form is identified by name, associated
-  # with a PDF file, and contains an array of Line objects.
+  # with a PDF file, and contains an array of Line objects initially empty.
   class Form
 
-    def initialize(obj = {})
-      @name = obj['name']
-      @file = obj['file']
-      @lines = (obj['lines'] || []).map { |line_obj| Line.new(line_obj) }
+    def initialize(formname, filename)
+      @name = formname
+      @file = filename
+      @lines = []
     end
 
     attr_accessor :name, :file
+
+    def line_names
+      @lines.map(&:name)
+    end
 
     #
     # Upon setting the file, clear @lines because the data is not valid.
@@ -22,12 +28,43 @@ class Marking
     end
 
     #
+    # Downloads the form to the cache directory if it is not there already.
+    #
+    def download_form(cache_dir)
+      uname = case @name
+              when /^\d{4}$/ then "f#@name"
+              when /^(\d{4}) Schedule (\w+)/ then "f#$1s#$2".downcase
+              else raise "Can't determine form URL"
+              end
+      filename = File.join(cache_dir, uname)
+      unless File.exist?(filename)
+        url = "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"
+        URI.open(url) do |url_io|
+          File.open(filename, 'w') do |file_io|
+            file_io.write(url_io.read)
+          end
+        end
+      end
+      self.file = filename
+    end
+
+    def line(num)
+      return @lines.find { |l| l.name == num }
+    end
+
+    def add_line(num)
+      line = Line.new(num)
+      @lines.push(line)
+      return line
+    end
+
+    #
     # Given a TaxForm object, add lines in that form to this object so that
     # their positions can be marked.
     #
     def merge_lines(tax_form)
       unless tax_form.name == @name
-        raise "Wrong form #{tax_form.name} for Marking::Form #@name"
+        raise "Wrong form #{tax_form.name} for #{self.class} #@name"
       end
 
       new_lines = form.line.map { |l, v|
@@ -88,85 +125,57 @@ class Marking
       return insert_pos
     end
 
-    #
-    # Receives line data from the UI and updates the Form.
-    #
-    def update(obj)
-      name = obj['name']
-
-      if name =~ /\[(\d+)\]\z/
-        name, boxnum = $`, $1.to_i
-        pos = @lines.find_index { |l| l.name == name }
-        if pos
-          if @lines[pos].is_a?(BoxLine)
-            bl = @lines[pos]
-          else
-            bl = @lines[pos] = BoxLine.new('name' => name)
-          end
-        else
-          bl = BoxLine.new('name' => name)
-          @lines.push(bl)
-        end
-        bl.update(obj)
-
-      else
-        pos = @lines.find_index { |l| l.name == name }
-        if pos
-          @lines[pos] = Line.new(obj)
-        else
-          @lines.push(Line.new(obj))
-        end
-      end
-    end
-
-    #
-    # Removes a line's position data from this form.
-    #
-    def remove(name, &block)
-      thename = name =~ /\[(\d+)\]\z/ ? $` : name
-      line = @lines.find { |l| l.name == thename }
-      line.remove(name, &block)
-    end
-
-    #
-    # Exports this object in a proto-JSON format.
-    #
-    def to_obj
-      return {
-        'name' => @name,
-        'file' => @file,
-        'lines' => @lines.map { |line| line.to_obj }
-      }
-    end
-
   end
 
   class Line
-    def initialize(obj = {})
-      @name = obj['name']
-      @pos = obj['pos'] && Position.new(obj['pos'])
-    end
-
-    def to_obj
-      res = { 'name' => @name }
-      res['pos'] = @pos.to_obj if @pos
-      return res
-    end
-
-    def remove(name)
+    def initialize(name)
+      @name = name
       @pos = nil
-      yield(@name)
+      @separator = nil
     end
 
+    def split?
+      return !@separator.nil?
+    end
+
+    attr_reader :name
+
+    def pos
+      raise "Cannot call pos on line #@name; it is split" if split?
+      return @pos
+    end
+
+    def add_pos(pos)
+      unless pos.is_a?(Position)
+        warn("Invalid Position #{pos} for Line #@name")
+        return
+      end
+      if split?
+        @pos.push(pos)
+        return "#@name[#{@pos.count}]"
+      else
+        @pos = pos
+      end
+    end
+
+    def ids_to_remove
+      if split?
+      else
+        return @name
+      end
+    end
   end
 
-  class BoxLine < Line
+  class SplitLine < Line
 
-    def initialize(obj = {})
-      @name = obj['name']
-      @pos = (obj['pos'] || []).map { |pos| Position.new(pos) }
-      @split = obj['split'] || ''
+    def initialize(name)
+      @name = name
+      @pos = []
+      @separator = ""
     end
+
+    attr_reader :name
+    attr_accessor :separator
 
     def to_obj
       return {
@@ -176,45 +185,18 @@ class Marking
       }
     end
 
-    def update(obj)
-      raise "Invalid BoxLine update name" unless obj.name =~ /\[(\d+)\]\z/
-      name, num = $`, $1.to_i
-      unless num > 0 && num - 1 <= @pos.count
-        raise "Invalid BoxLine update number"
-      end
-      @pos[(num - 1)..-1] = Position.new(obj['pos'])
-      @split = obj['split'] if obj['split']
-    end
-
-    def remove(name)
-      raise "Invalid BoxLine update name" unless obj.name =~ /\[(\d+)\]\z/
-      range = ($1.to_i)..(@pos.count)
-      @pos[range] = []
-      range.each do |i|
-        yield("#@name[#{i}]")
-      end
-    end
-
   end
 
   class Position
-    def initialize(obj = {})
-      @page = obj['p']
-      @x = obj['x']
-      @y = obj['y']
-      @width = obj['w']
-      @height = obj['h']
+    def initialize(page, pos)
+      @page = page
+      @min_x, @min_y, @max_x, @max_y = *pos
     end
 
-    def to_obj
-      return {
-        'p' => @page,
-        'x' => @x,
-        'y' => @y,
-        'w' => @width,
-        'h' => @height,
-      }
+    def to_a
+      [ @min_x, @min_y, @max_x, @max_y ]
     end
+
   end
 
 end
