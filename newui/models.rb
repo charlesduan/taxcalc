@@ -13,7 +13,7 @@ class Marking
       @lines = []
     end
 
-    attr_accessor :name, :file
+    attr_reader :name, :file, :lines
 
     def line_names
       @lines.map(&:name)
@@ -134,17 +134,73 @@ class Marking
       @separator = nil
     end
 
+    attr_reader :name, :separator
+
     def split?
       return !@separator.nil?
     end
 
-    attr_reader :name
-
-    def pos
-      raise "Cannot call pos on line #@name; it is split" if split?
-      return @pos
+    def make_split(sep)
+      raise "Invalid separator #{sep}" unless sep.is_a?(String)
+      @separator = sep
+      if @pos
+        @pos = [ @pos ]
+      else
+        @pos = []
+      end
     end
 
+    def make_not_split
+      @separator = nil
+      @pos = @pos[0]
+    end
+
+    def separator=(sep)
+      raise "Cannot set separator on non-split line" unless split?
+      raise "Invalid separator #{sep}" unless sep.is_a?(String)
+      @separator = sep
+    end
+
+    def split_count
+      raise "Cannot call split_count on non-split line" unless split?
+      return @pos.count
+    end
+
+    def split_id(i)
+      raise "Cannot call split_id on non-split line" unless split?
+      return "#{name}[#{i}]"
+    end
+
+    def page
+      if split?
+        return @pos[0] && @pos[0].page
+      else
+        return @pos && @pos.page
+      end
+    end
+
+    def pos(index = nil)
+      if split?
+        return @pos[index - 1]
+      else
+        raise "pos for non-split line takes no index" unless index.nil?
+        return @pos
+      end
+    end
+
+    def no_pos?
+      if split?
+        return @pos.empty?
+      else
+        return @pos.nil?
+      end
+    end
+
+    #
+    # Adds a position for this line. If this is a split line, then the position
+    # is added as the next split box, and the ID of the newly created box is
+    # returned. Otherwise, sets the position for the line.
+    #
     def add_pos(pos)
       unless pos.is_a?(Position)
         warn("Invalid Position #{pos} for Line #@name")
@@ -152,37 +208,27 @@ class Marking
       end
       if split?
         @pos.push(pos)
-        return "#@name[#{@pos.count}]"
+        return split_id(@pos.count)
       else
         @pos = pos
       end
     end
 
-    def ids_to_remove
+    #
+    # Removes position data from this line. For a split line, removes all boxes
+    # greater than or equal to the given index, and returns a reversed list of
+    # the box IDs removed. Otherwise, returns a single-element array of the line
+    # number itself.
+    #
+    def remove_pos(index = nil)
       if split?
+        old_count = split_count
+        @pos[(index - 1)..-1] = []
+        return (index..old_count).to_a.reverse.map { |i| split_id(i) }
       else
-        return @name
+        @pos = nil
+        return [ @name ]
       end
-    end
-  end
-
-  class SplitLine < Line
-
-    def initialize(name)
-      @name = name
-      @pos = []
-      @separator = ""
-    end
-
-    attr_reader :name
-    attr_accessor :separator
-
-    def to_obj
-      return {
-        'name' => @name,
-        'pos' => @pos.map { |p| p.to_obj },
-        'split' => @split,
-      }
     end
 
   end
@@ -192,6 +238,8 @@ class Marking
       @page = page
       @min_x, @min_y, @max_x, @max_y = *pos
     end
+
+    attr_accessor :page
 
     def to_a
       [ @min_x, @min_y, @max_x, @max_y ]

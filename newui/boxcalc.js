@@ -21,7 +21,9 @@ function setCanvasContext(ctx) {
         context.canvas.width, context.canvas.height);
 }
 
-function computeBoxAtPoint(p) {
+function computeBoxAtPoint(point) {
+
+    const p = new Point(Math.round(point.x), Math.round(point.y));
 
     if (p.x < 0 || p.y < 0
         || p.x >= context.canvas.width || p.y >= context.canvas.height) {

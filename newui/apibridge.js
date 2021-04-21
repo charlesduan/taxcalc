@@ -7,13 +7,11 @@ function setHandler(h) {
 }
 
 function processLine(line) {
-    console.log("Processing " + line);
     obj = JSON.parse(line);
     handle(obj.command, obj.payload);
 }
 
 function send(command, payload) {
-    console.log("Send: " + JSON.stringify({ command, payload }, null, 2));
     writeStream.write(JSON.stringify({ command, payload }) + "\n");
     return;
     switch (command) {

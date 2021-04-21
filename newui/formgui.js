@@ -153,7 +153,7 @@ let updatingToolbar = false;
 
 function setToolbarInfo(obj) {
     updatingToolbar = true;
-    if ('line' in obj) { lineBox.setCurrentText(obj.line); }
+    if ('line' in obj) { lineSelector.setCurrentText(obj.line); }
     if ('split' in obj) {
         if (obj.split) {
             showSplitEditor(obj.separator);
@@ -363,12 +363,15 @@ function drawLineBox(id, page, pos) {
  */
 function findNextSplitBox(line, page, pos) {
     if (page != currentPage()) { return; } // Avoid synchronization issue
-    const rect = new Rectangle(...pos);
-    const newRect = boxcalc.computeBoxAtPoint(rect.nextSplitStartPoint());
+    const rect = new Rectangle(...pos).times(resolution);
+    const nextPoint = rect.nextSplitStartPoint();
+    console.log(`From ${rect}, starting at ${nextPoint}`);
+    const newRect = boxcalc.computeBoxAtPoint(nextPoint);
+    console.log(`Computed ${newRect}`);
     if (newRect) {
         // Have to manually provide the toolbar info because theoretically the
         // toolbar could have changed by this point
-        addLineBox(boxRect, { line, split: true });
+        addLineBox(newRect, { line, split: true });
     }
 }
 
@@ -382,7 +385,6 @@ function removeLineBox(id) {
 }
 
 function execute(command, payload) {
-    console.log("Recv: " + command + ", " + JSON.stringify(payload, null, 2));
     try {
         switch (command) {
             case "loadPdf":

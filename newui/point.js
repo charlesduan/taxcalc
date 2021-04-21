@@ -69,7 +69,7 @@ class Rectangle {
      */
     nextSplitStartPoint() {
         return new Point(
-            this.max.x + this.width() / 3,
+            this.max.x + this.width / 3,
             (this.min.y + this.max.y) / 2
         );
     }
@@ -87,6 +87,10 @@ class Rectangle {
 
     toJSON(key) {
         return [ this.min.x, this.min.y, this.max.x, this.max.y ]
+    }
+
+    toString() {
+        return `${this.min}--${this.max}`;
     }
 }
 
