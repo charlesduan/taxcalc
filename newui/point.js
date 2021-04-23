@@ -74,6 +74,10 @@ class Rectangle {
         );
     }
 
+    center() {
+        return this.max.plus(this.min).times(1/2);
+    }
+
     setWidgetPos(widget) {
         widget.setInlineStyle(
             "left: " + this.min.x + "px; " +

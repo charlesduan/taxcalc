@@ -365,9 +365,9 @@ function findNextSplitBox(line, page, pos) {
     if (page != currentPage()) { return; } // Avoid synchronization issue
     const rect = new Rectangle(...pos).times(resolution);
     const nextPoint = rect.nextSplitStartPoint();
-    console.log(`From ${rect}, starting at ${nextPoint}`);
+    if (!boxcalc.sameColor(rect.center(), nextPoint)) { return; }
+
     const newRect = boxcalc.computeBoxAtPoint(nextPoint);
-    console.log(`Computed ${newRect}`);
     if (newRect) {
         // Have to manually provide the toolbar info because theoretically the
         // toolbar could have changed by this point

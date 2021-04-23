@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 
+require 'yaml'
+require 'json'
+
 require_relative 'controller'
 
-require('json')
 
 @rubyRd, @nodeWr = IO.pipe
 @nodeRd, @rubyWr = IO.pipe
@@ -35,13 +37,8 @@ end
 
 @controller = Marking::Controller.new(@rubyWr)
 
-# Initialize controller's data here
-form = Marking::Form.new('1040', 'f1040.pdf')
-%w(1 2a 2b 3a 3b 4a 4b 5a 5b 6a 6b).each do |l|
-  form.add_line(l)
-end
-
-@controller.add_form(form)
+@controller.cmd_load('file' => 'posdata.yaml')
+@controller.select_form('1040')
 @controller.start
 
 @rubyRd.each do |line|
@@ -49,6 +46,8 @@ end
   obj = JSON.parse(line)
   dispatch(obj['command'], obj['payload'])
 end
+
+@controller.cmd_save('file' => 'posdata.yaml')
 
 @rubyRd.close
 @rubyWr.close

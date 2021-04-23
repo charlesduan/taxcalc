@@ -10,9 +10,17 @@ class Marking; class Controller
     @node_io = node_io
   end
 
+  def cmd_load(args)
+    @forms = YAML.load(open(args['file'], &:read))
+  end
+
   def add_form(form)
     raise "Invalid form" unless form.is_a?(Form)
     @current_form = @forms[form.name] = form
+  end
+
+  def select_form(name)
+    @current_form = @forms[name]
   end
 
   def start
@@ -151,6 +159,13 @@ class Marking; class Controller
       return
     end
     line_obj.separator = args['separator']
+  end
+
+  def cmd_save(args)
+    file = args['file']
+    open(file, 'w') do |io|
+      io.write(@forms.to_yaml)
+    end
   end
 
 end end

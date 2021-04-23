@@ -109,4 +109,5 @@ module.exports = {
     setCanvasContext,
     computeBoxAtPoint,
     setBoxBounds,
+    sameColor,
 };
