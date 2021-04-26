@@ -68,8 +68,10 @@ class ExpenseManager < TaxForm
 
   CAT_NAMES = {
     'Meals' => 'Business Meals',
-    'License' => 'Professional Memberships',
+    'Licenses' => 'Taxes and Licenses',
     'Safe_Harbor' => '1.263(a)-1(f) Safe Harbor',
+    'Rent_Equipment' => 'Rented Vehicles, Machinery, and Equipment',
+    'Rent_Property' => 'Rented Business Property',
   }
 
 end

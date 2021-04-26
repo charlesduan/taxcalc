@@ -1,23 +1,25 @@
-require 'tax_table'
-require 'tax_form'
-require 'filing_status'
-require 'form1040_1'
-require 'form1040_2'
-require 'form1040_3'
-require 'form1040_a'
-require 'form1040_b'
-require 'form1040_d'
-require 'form1040_e'
-require 'form1040_se'
-require 'form6251'
-require 'form8959'
-require 'form8960'
-require 'form8995'
-require 'form8995a'
-require 'ira_analysis'
 require 'date'
-require 'qbi_manager'
-require 'amt_test_worksheet'
+
+require_relative 'tax_table'
+require_relative 'tax_form'
+require_relative 'filing_status'
+require_relative 'form1040_1'
+require_relative 'form1040_2'
+require_relative 'form1040_3'
+require_relative 'form1040_a'
+require_relative 'form1040_b'
+require_relative 'form1040_c'
+require_relative 'form1040_d'
+require_relative 'form1040_e'
+require_relative 'form1040_se'
+require_relative 'form6251'
+require_relative 'form8959'
+require_relative 'form8960'
+require_relative 'form8995'
+require_relative 'form8995a'
+require_relative 'ira_analysis'
+require_relative 'qbi_manager'
+require_relative 'amt_test_worksheet'
 
 class Form1040 < TaxForm
 
@@ -62,7 +64,6 @@ class Form1040 < TaxForm
     copy_line(:last_name, @bio)
 
     line[:ssn] = @bio.line[:ssn]
-    box_line(:ssn, 3, '-')
 
     if @status.is('mfj')
       copy_line(:first_name, @sbio)

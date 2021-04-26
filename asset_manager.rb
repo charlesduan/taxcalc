@@ -34,6 +34,14 @@ class AssetManager < TaxForm
 
   end
 
+  def depreciation_total
+    if @current_assets.empty?
+      return BlankZero
+    else
+      raise "Depreciation computation not implemented"
+    end
+  end
+
   def assets_179_nonlisted
     if @current_assets.any? { |x| x.line['listed?'] }
       raise "No support for listed property"
