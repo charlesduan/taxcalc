@@ -1,5 +1,13 @@
 module HomeOfficeManager
 
+  def home_office_sole_proprietorship
+    forms('Home Office') { |f|
+      f.line['type'] == 'sole proprietorship'
+    }.each do |f|
+      raise "Home office for sole proprietorship not implemented"
+    end
+  end
+
   def home_office_partnership
     forms('Home Office') { |f| f.line['type'] == 'partnership' }.each do |f|
       unless f.line['method'] == 'simplified'

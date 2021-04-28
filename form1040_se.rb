@@ -29,7 +29,7 @@ class Form1040SE < TaxForm
       return
     end
 
-    line[6] = sum_lines('4c', '5b')
+    line['6/se_inc'] = sum_lines('4c', '5b')
     line[7] = 132900 # Maximum social security wages, 2019
 
     line['8a'] = forms('W-2').lines(3, :sum) + forms('W-2').lines(7, :sum)

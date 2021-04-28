@@ -14,7 +14,7 @@ class Form8958 < TaxForm
   NAME = '8958'
 
   def year
-    2019
+    2020
   end
 
   attr_accessor :my_manager, :spouse_manager
@@ -28,6 +28,20 @@ class Form8958 < TaxForm
 
   def compute
 
+    compute_split_forms
+
+    @my_manager.compute(1040)
+    @spouse_manager.compute(1040)
+
+    compute_8958_lines
+    update_managers
+  end
+
+  #
+  # Splits up the input forms. The instance variable @splits records all the
+  # forms as split.
+  #
+  def compute_split_forms
     # Accounting for No Form records
     @manager.copy_no_forms(@my_manager)
     @manager.copy_no_forms(@spouse_manager)
@@ -40,28 +54,30 @@ class Form8958 < TaxForm
 
     @itemize = interview('Do you want to itemize deductions?')
 
-    split_w2 = split_forms('W-2')
-    split_1099int = split_forms('1099-INT')
-    split_1099div = split_forms('1099-DIV')
-    split_1099g = split_forms('1099-G')
-    split_1099b = split_forms('1099-B')
-    split_k1 = split_forms('1065 Schedule K-1')
-    split_1098 = split_forms('1098')
-    split_state_tax = split_forms('State Tax')
-    split_charity = split_forms('Charity Gift')
-    split_est_tax = split_forms('Estimated Tax')
-
-    # These get split but don't show up on the form
-    split_forms('Dependent')
-    split_forms('Home Office')
+    # A table of all split_forms outputs
+    @splits = {}
+    %w(
+      W-2 1099-INT 1099-DIV 1099-MISC 1099-G 1099-B
+      1065\ Schedule\ K-1 1098
+      State\ Tax Charity\ Gift Estimated\ Tax
+      Dependent Home\ Office
+    ).each do |name|
+      @splits[name] = split_forms(name)
+    end
 
     unless @all_forms.empty?
       warn "These forms were not accounted for in Form 8958 computation:"
       @all_forms.each do |f| warn(f.name) end
       raise "Unaccounted forms in 8958 processing"
     end
-      
 
+  end
+
+  #
+  # Computes the Form 8958 contents. This is done after both spouses' 1040
+  # returns have been computed.
+  def compute_8958_lines
+      
     # Form 8958 biographical information
     copy_line(:first_name, @my_bio)
     copy_line(:last_name, @my_bio)
@@ -77,30 +93,17 @@ class Form8958 < TaxForm
 
     line['B.ssn'] = line[:ssn]
     line['C.ssn'] = line[:spouse_ssn]
-    box_line('B.ssn', 3, '-')
-    box_line('C.ssn', 3, '-')
-    line[1, :all] = forms('W-2').lines('c')
-    enter_split(1, 'W-2', split_w2, 1)
 
-    line[2, :all] = forms('1099-INT').lines('name')
-    enter_split(2, '1099-INT', split_1099int, 1)
-
-    line[3, :all] = forms('1099-DIV').lines('name')
-    enter_split(3, '1099-DIV', split_1099div, '1a')
-
-    line[4, :all] = forms('1099-G').lines('payer')
-    enter_split(4, '1099-G', split_1099g, 2)
+    enter_split(1, 'W-2', 1, :c)
+    enter_split(2, '1099-INT', 1, :name)
+    enter_split(3, '1099-DIV', '1a', :name)
+    enter_split(4, '1099-G', 2, :payer)
 
     line[5, :all] = forms('1065 Schedule K-1').lines('B').map { |x|
       x.split("\n")[0]
     }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
-    enter_split(5, '1065 Schedule K-1', split_k1, 14)
-
-    my_se = my_manager.compute_form('1040 Schedule SE')
-    spouse_se = spouse_manager.compute_form('1040 Schedule SE')
-
-    my_manager.compute_form('1040 Schedule D')
-    spouse_manager.compute_form('1040 Schedule D')
+    enter_split(5, '1065 Schedule K-1', 14)
+    enter_split(5, '1099-MISC', 3, :payer)
 
     line[6, :all] = my_manager.forms(8949).lines('II.1a', :all) + \
       spouse_manager.forms(8949).lines('II.1a', :all)
@@ -114,7 +117,7 @@ class Form8958 < TaxForm
     line[8, :all] = forms('1065 Schedule K-1').lines('B').map { |x|
       x.split("\n")[0]
     }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
-    enter_split(8, '1065 Schedule K-1', split_k1, 1)
+    enter_split(8, '1065 Schedule K-1', 1)
 
     #
     # Page 2
@@ -122,62 +125,63 @@ class Form8958 < TaxForm
 
     line['B.ssn_2'] = line[:ssn]
     line['C.ssn_2'] = line[:spouse_ssn]
-    box_line('B.ssn_2', 3, '-')
-    box_line('C.ssn_2', 3, '-')
 
-    if my_se && my_se.line[12] > 0
-      line[9, :add] = "Deduction for #{my_name}"
-      line['9A', :add] = my_se.line[13]
-      line['9B', :add] = my_se.line[13]
-      line['9C', :add] = BlankZero
-      line[10, :add] = "Tax for #{my_name}"
-      line['10A', :add] = my_se.line[12]
-      line['10B', :add] = my_se.line[12]
-      line['10C', :add] = BlankZero
+    if @my_manager.has_form?('1040 Schedule SE')
+      my_se = @my_manager.form('1040 Schedule SE')
+      if my_se && my_se.line[12] > 0
+        line[9, :add] = "Deduction for #{my_name}"
+        line['9A', :add] = my_se.line[13]
+        line['9B', :add] = my_se.line[13]
+        line['9C', :add] = BlankZero
+        line[10, :add] = "Tax for #{my_name}"
+        line['10A', :add] = my_se.line[12]
+        line['10B', :add] = my_se.line[12]
+        line['10C', :add] = BlankZero
+      end
     end
 
-    if spouse_se && spouse_se.line[12] > 0
-      line[9, :add] = "Deduction for #{spouse_name}"
-      line['9A', :add] = spouse_se.line[13]
-      line['9B', :add] = BlankZero
-      line['9C', :add] = spouse_se.line[13]
-      line[10, :add] = "Tax for #{spouse_name}"
-      line['10A', :add] = spouse_se.line[12]
-      line['10B', :add] = BlankZero
-      line['10C', :add] = spouse_se.line[12]
+    if @spouse_manager.has_form?('1040 Schedule SE')
+      spouse_se = @spouse_manager.form('1040 Schedule SE')
+      if spouse_se && spouse_se.line[12] > 0
+        line[9, :add] = "Deduction for #{spouse_name}"
+        line['9A', :add] = spouse_se.line[13]
+        line['9B', :add] = BlankZero
+        line['9C', :add] = spouse_se.line[13]
+        line[10, :add] = "Tax for #{spouse_name}"
+        line['10A', :add] = spouse_se.line[12]
+        line['10B', :add] = BlankZero
+        line['10C', :add] = spouse_se.line[12]
+      end
     end
 
-    line[11, :all] = forms('W-2').lines('c')
-    enter_split(11, 'W-2', split_w2, 2)
+    enter_split(11, 'W-2', 2, :c)
 
     line[12, :add] = forms('W-2').lines('c').map { |x| "State tax: #{x}" }
-    enter_split(12, 'W-2', split_w2, 17)
+    enter_split(12, 'W-2', 17)
     line[12, :add] = forms('State Tax').lines('name').map { |x|
       "State tax: #{x}"
     }
-    enter_split(12, 'State Tax', split_state_tax, 'amount')
+    enter_split(12, 'State Tax', 'amount')
 
     line[12, :add] = forms('1098').lines('lender').map { |x|
       "Home mortgage interest:\n#{x}"
     }
-    enter_split(12, '1098', split_1098, 1)
+    enter_split(12, '1098', 1)
 
     line[12, :add] = forms('1098').lines('lender').map { |x|
       "Real estate taxes:\n#{x}"
     }
-    enter_split(12, '1098', split_1098, 10)
+    enter_split(12, '1098', 10)
 
     line[12, :add] = forms('Charity Gift').lines('name').map { |x|
       "Gifts to charity:\n#{x}"
     }
-    enter_split(12, 'Charity Gift', split_charity, 'amount')
+    enter_split(12, 'Charity Gift', 'amount')
 
     line[12, :add] = forms('Estimated Tax').lines('confirm').map { |x|
       "Estimated tax, confirmation #{x}"
     }
-    enter_split(12, 'Estimated Tax', split_est_tax, 'amount')
-
-    update_managers
+    enter_split(12, 'Estimated Tax', 'amount')
 
   end
 
@@ -219,6 +223,15 @@ class Form8958 < TaxForm
     @all_forms.delete(@spouse_bio)
   end
 
+  #
+  # Finds all forms of the given name, runs split_form on them, and returns an
+  # array of the results. The return value is thus an array of two-element
+  # arrays of forms.
+  #
+  # As a side effect, removes any identified forms from @all_forms, and if no
+  # forms of the given type are created for one of the spouses, no_form is
+  # called to indicate that no form of that type is present for that spouse.
+  #
   def split_forms(form_name)
     res = forms(form_name).map { |f|
       @all_forms.delete(f)
@@ -233,7 +246,17 @@ class Form8958 < TaxForm
     return res
   end
 
-  def enter_split(this_line, form_name, split_forms, form_line)
+  #
+  # Enters values for the A, B, and C columns. this_line is the line on Form
+  # 8958; form_name is the form from which values are to be drawn; form_line is
+  # the line from which values are to be drawn. If name_line is given, then
+  # values under that line are used as the identifier in the leftmost column.
+  #
+  def enter_split(this_line, form_name, form_line, name_line = nil)
+    split_forms = @splits[form_name]
+    if name_line
+      line[this_line, :add] = forms(form_name).lines(name_line, :all)
+    end
     line["#{this_line}A", :add] = forms(form_name).lines(form_line, :all)
     line["#{this_line}B", :add] = split_forms.map { |x|
       x.first ? x.first.line(form_line) : BlankZero
@@ -243,6 +266,23 @@ class Form8958 < TaxForm
     }
   end
 
+  #
+  # Splits a form between the two tax returns. The form is checked for two
+  # lines:
+  #
+  # - whose: A value indicating that this form primarily belongs to self or
+  #          spouse. A variety of indicator terms is permitted.
+  # - split: A list of lines in the form for which numeric values are to be
+  #          split between the two returns.
+  #
+  # If no split value is given, then the form is copied to the return of the
+  # spouse indicated in the whose line. Otherwise, two copies of the form are
+  # made. For numeric-valued lines, the number is split evenly if the line is in
+  # split; otherwise it is solely distributed to the spouse in the whose line.
+  #
+  # Returns a two-element array of the produced form for each return (nil being
+  # returned in one of the array slots if no form was produced for one spouse).
+  #
   def split_form(f)
 
     case f.line['whose', :opt]

@@ -65,10 +65,10 @@ class Form1040E < TaxForm
     end
 
     line['29a.h'] = line['28h', :sum]
-    line['29a.k'] = line['28k', :sum]
+    line['29a.k/pship_nonpassive_inc'] = line['28k', :sum]
     line['29b.g'] = line['28g', :sum]
-    line['29b.i'] = line['28i', :sum]
-    line['29b.j'] = line['28j', :sum]
+    line['29b.i/pship_nonpassive_loss'] = line['28i', :sum]
+    line['29b.j/pship_179_ded'] = line['28j', :sum]
 
     line[30] = sum_lines('29a.h', '29a.k')
     line[31] = sum_lines('29b.g', '29b.i', '29b.j')

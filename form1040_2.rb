@@ -72,4 +72,6 @@ class Form1040_2 < TaxForm
 end
 
 # Not inflation adjusted
-FilingStatus.set_param('niit_threshold', 200000, 250000, 125000, 200000, 250000)
+FilingStatus.set_param('niit_threshold',
+                       single: 200000, mfj: 250000, mfs: 125000,
+                       hoh: 200000, qw: 250000)

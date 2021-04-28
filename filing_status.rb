@@ -66,8 +66,14 @@ class FilingStatus
     All[name]
   end
 
-  def self.set_param(key, single, mfj, mfs, hoh, qw)
+  def self.set_param(key, *args,
+                     single: nil, mfj: nil, mfs: nil, hoh: nil, qw: nil)
     key = key.to_s
+    unless args.empty?
+      warn "FilingStatus.set_param(#{key}) should use key-value parameters"
+      single, mfj, mfs, hoh, qw = args
+    end
+
     Single.set_param(key, single)
     MarriedFilingJointly.set_param(key, mfj)
     MarriedFilingSeparately.set_param(key, mfs)

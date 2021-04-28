@@ -5,7 +5,7 @@ class Form8959 < TaxForm
   NAME = '8959'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -24,7 +24,7 @@ class Form8959 < TaxForm
     with_form('1040 Schedule SE') do |sched_se|
       # Forms 1040-PR or 1040-SS may be required if the self-employed person
       # lives in a US territory.
-      line[8] = [ 0, sched_se.line[6] ].max
+      line[8] = [ 0, sched_se.line[:se_inc] ].max
       line[9] = form(1040).status.form_8959_limit
       line[10] = line[4]
       line[11] = [ 0, line[9] - line[10] ].max
@@ -33,7 +33,7 @@ class Form8959 < TaxForm
     end
 
     if forms('W-2').any? { |w2| w2.line[14, :present] }
-      assert_question('Did you receive any RRTA compensation or tips?', false)
+      raise "RRTA compensation additional medicare tax not implemented"
     end
 
     line[18] = sum_lines(7, 13, 17)
@@ -43,15 +43,20 @@ class Form8959 < TaxForm
     line[21] = (line[20] * 0.0145).round
     line[22] = [ 0, line[19] - line[21] ].max
 
+    # Line 23 relates to RRTA withholding; not implemented per above
+
     line[24] = sum_lines(22, 23)
   end
 
   def needed?
-    return line[18] > 0 || line[24] > 0
+    return true if line[1] > 200_000
+    return true if sum_lines(4, 8) > line[5]
+    return false
   end
 end
 
 
-FilingStatus.set_param('form_8959_limit', 200000, 250000, 125000, :single,
-                       :single)
+FilingStatus.set_param('form_8959_limit',
+                       single: 200000, mfj: 250000, mfs: 125000, hoh: :single,
+                       qw: :single)
 

@@ -12,17 +12,20 @@ class Form1040A < TaxForm
   def compute
     set_name_ssn
 
-    line['5a'] = forms('State Tax').lines(:amount, :sum) + \
+    line['5a/salt_inc'] = forms('State Tax').lines(:amount, :sum) + \
       forms('W-2').lines(17, :sum)
     line['5b/salt_real'] = forms('1098').lines(10, :sum)
-    line['5d'] = sum_lines(*%w(5a 5b 5c))
-    line['5e'] = [ form(1040).status.halve_mfs(10_000), line['5d'] ].min
+    line['5d/salt_all'] = sum_lines(*%w(5a 5b 5c))
+    line['5e/salt_lim'] = [
+      form(1040).status.halve_mfs(10_000), line['5d']
+    ].min
     line['6/other_tax'] = BlankZero
     line['7/salt'] = sum_lines('5e', 6)
 
     compute_mortgage_interest
 
     assert_question("Did you have any investment interest?", false)
+    line['9/inv_int'] = BlankZero
     line[10] = sum_lines('8e', 9)
 
     cg = forms('Charity Gift')

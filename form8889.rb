@@ -8,7 +8,7 @@ class Form8889 < TaxForm
   NAME = '8889'
 
   def year
-    2019
+    2020
   end
 
   def initialize(manager, hsa_form)
@@ -23,20 +23,18 @@ class Form8889 < TaxForm
     set_name
     line[:ssn] = @hsa_form.line[:ssn]
 
-    line["1_#{compute_family_or_self}"] = 'X'
+    compute_coverage
+    unless @coverage_months.count == 12
+      raise "Partial HSA coverage not implemented"
+    end
+    line["1_#{@coverage_type}"] = 'X'
     line[2] = @hsa_form.line[:contributions]
-    hdhp_last_month_forms = forms('1095-B') { |f|
-      f.line[:hdhp?] == true && f.line[:months, :all].include?('dec')
-    }
-    if hdhp_last_month_forms.any? { |f| f.line[:coverage] == 'family' }
-      line[3] = 7000
-    elsif hdhp_last_month_forms.any? { |f| f.line[:coverage] == 'individual' }
-      line[3] = 3500
-    else
-      raise "Form 8889, line 3 not implemented where last-month rule not met"
+    case @coverage_type
+    when :family then line[3] = 7100
+    when :individual then line[3] = 3550
     end
 
-    assert_question('Do you or your spouse have an Archer MSA?', false)
+    confirm('Neither you nor your spouse has an Archer MSA')
     line[4] = 0
     line[5] = line3 - line4
 
@@ -49,9 +47,7 @@ class Form8889 < TaxForm
     line[8] = sum_lines(6, 7)
 
     line[9] = employer_contributions
-    assert_question(
-      "Did you make a qualified distribution from an IRA to an HSA?", false
-    )
+    confirm("You received no qualified distribution from an IRA to an HSA")
     line[11] = sum_lines(9, 10)
     line[12] = line8 - line11
     line[13] = [ line2, line12 ].min
@@ -66,7 +62,7 @@ class Form8889 < TaxForm
 
   end
 
-  def compute_family_or_self
+  def compute_coverage
     indiv_months = []
     family_months = []
 
@@ -88,7 +84,13 @@ class Form8889 < TaxForm
       end
     end
     indiv_months -= family_months
-    return family_months.count >= indiv_months.count ? 'family' : 'self'
+    if family_months.count >= indiv_months.count
+      @coverage_type = :family
+      @coverage_months = family_months
+    else
+      @coverage_type = :individual
+      @coverage_months = indiv_months
+    end
   end
 
   def allocate_hsa_limit

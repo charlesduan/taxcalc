@@ -33,10 +33,12 @@ class Form1040_1 < TaxForm
     assert_no_forms('1099-MISC')
     #line[3] = forms('1040 Schedule C').lines(31, :sum)
 
-    # Line 4 must be zero because we assume no sole proprietorships
+    # Line 4 is assumed to be zero; otherwise implement line 4797
+    confirm("No business property was sold or lost")
+    line['4/other_gains'] = BlankZero
 
     sched_e = @manager.compute_form('1040 Schedule E')
-    line[5] = sched_e.line[41]
+    line['5/rrerpst'] = sched_e.line[41]
 
     line[9] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 
