@@ -24,8 +24,8 @@ class Form1040SE < TaxForm
 
     line['4c'] = sum_lines('4a', '4b')
     if line['4c'] < 400
-      line[12] = BlankZero
-      line[13] = BlankZero
+      line['12/se_tax'] = BlankZero
+      line['13/se_ded'] = BlankZero
       return
     end
 
@@ -50,8 +50,8 @@ class Form1040SE < TaxForm
       line[10] = ([ line[6], line[9] ].min * 0.124).round
     end
     line[11] = (line[6] * 0.029).round
-    line[12] = sum_lines(10, 11)
-    line[13] = (line[12] * 0.5).round
+    line['12/se_tax'] = sum_lines(10, 11)
+    line['13/se_ded'] = (line[12] * 0.5).round
   end
 
   def needed?

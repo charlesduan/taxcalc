@@ -57,7 +57,7 @@ class Form8958 < TaxForm
     # A table of all split_forms outputs
     @splits = {}
     %w(
-      W-2 1099-INT 1099-DIV 1099-MISC 1099-G 1099-B
+      W-2 1099-INT 1099-DIV 1099-MISC 1099-NEC 1099-G 1099-B
       1065\ Schedule\ K-1 1098
       State\ Tax Charity\ Gift Estimated\ Tax
       Dependent Home\ Office
@@ -104,6 +104,7 @@ class Form8958 < TaxForm
     }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
     enter_split(5, '1065 Schedule K-1', 14)
     enter_split(5, '1099-MISC', 3, :payer)
+    enter_split(5, '1099-NEC', 3, :payer)
 
     line[6, :all] = my_manager.forms(8949).lines('II.1a', :all) + \
       spouse_manager.forms(8949).lines('II.1a', :all)

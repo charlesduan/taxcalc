@@ -41,6 +41,8 @@ class FilingStatus
     end
   end
 
+  alias_method :is?, :is
+
   def visit(visitor, *args)
     visitor.send(@name, *args)
   end

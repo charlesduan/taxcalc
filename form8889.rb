@@ -11,24 +11,17 @@ class Form8889 < TaxForm
     2020
   end
 
-  def initialize(manager, hsa_form)
-    super(manager)
-    @hsa_form = hsa_form
-    @bio = forms('Biographical').find { |f|
-      f.line[:ssn] == @hsa_form.line[:ssn]
-    }
-  end
-
   def compute
-    set_name
-    line[:ssn] = @hsa_form.line[:ssn]
+    set_name_ssn
 
     compute_coverage
     unless @coverage_months.count == 12
       raise "Partial HSA coverage not implemented"
     end
     line["1_#{@coverage_type}"] = 'X'
-    line[2] = @hsa_form.line[:contributions]
+
+    line[2] = forms('HSA Contribution').lines(:contributions, :sum)
+
     case @coverage_type
     when :family then line[3] = 7100
     when :individual then line[3] = 3550
@@ -40,7 +33,7 @@ class Form8889 < TaxForm
 
     allocate_hsa_limit # Line 6
 
-    if age(@bio) >= 55
+    if age >= 55
       raise "Over-55 HSA contribution increase not implemented"
     end
 
@@ -50,7 +43,7 @@ class Form8889 < TaxForm
     confirm("You received no qualified distribution from an IRA to an HSA")
     line[11] = sum_lines(9, 10)
     line[12] = line8 - line11
-    line[13] = [ line2, line12 ].min
+    line['13/hsa_ded'] = [ line2, line12 ].min
     if line2 > line13
       raise "Excess HSA contribution not implemented"
     end

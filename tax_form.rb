@@ -217,15 +217,19 @@ class TaxForm
   end
 
   def compute_form(name, *args)
-    @manager.compute_form(name, *args)
+    f = @manager.compute_form(name, *args)
+    yield(f) if block_given? and f
+    return f
   end
 
   def find_or_compute_form(name)
     if has_form?(name)
-      return form(name)
+      f = form(name)
     else
-      compute_form(name)
+      f = compute_form(name)
     end
+    yield(f) if block_given? and f
+    return f
   end
 
   #

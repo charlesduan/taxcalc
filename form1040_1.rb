@@ -1,24 +1,25 @@
-require 'tax_form'
-require 'form8889'
-require 'form1040_e'
+require_relative 'tax_form'
+require_relative 'form8889'
+require_relative 'form1040_e'
 
-# Because the adjustments computation can depend on the income computation, this
-# form must be computed in two parts.
+#
+# Form 1040 Schedule 1: Additional Income and Adjustments
+#
 class Form1040_1 < TaxForm
 
   NAME = '1040 Schedule 1'
 
   def year
-    2019
+    2020
   end
 
   def compute
     set_name_ssn
 
-    assert_question("Did you have any interest in virtual currency?", false)
-    line['bitcoin.no'] = 'X'
+    #
+    # Part I: Additional Income
+    #
 
-    # Line 10
     if @manager.has_form?('1099-G')
       line['1/taxrefund'] = compute_1099g
     end
@@ -30,26 +31,62 @@ class Form1040_1 < TaxForm
       #line['2a'] = forms(:Alimony).lines(:amount, :sum)
     end
 
-    assert_no_forms('1099-MISC')
-    #line[3] = forms('1040 Schedule C').lines(31, :sum)
+    compute_form('1040 Schedule C') do |sch_c|
+      line['3/bus_inc'] = sch_c.line(:net_profit)
+    end
 
     # Line 4 is assumed to be zero; otherwise implement line 4797
     confirm("No business property was sold or lost")
     line['4/other_gains'] = BlankZero
 
     sched_e = @manager.compute_form('1040 Schedule E')
-    line['5/rrerpst'] = sched_e.line[41]
+    line['5/rrerpst'] = sched_e.line[:tot_inc]
 
-    line[9] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
+    line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 
+    #
+    # Part II: Adjustments
+    #
+    # This used to be in a separate method because, I think, it had to follow
+    # the IRA calculations. It appears that by 2019 the form had been
+    # rearranged, so now all the computations can be performed in a single
+    # method.
+    #
+
+    f8889 = find_or_compute_form(8889)
+    line[12] = f8889.line[:hsa_ded] if f8889
+
+    sched_se = find_or_compute_form('1040 Schedule SE')
+    line[14] = sched_se.line[:se_ded] if sched_se
+
+    ira_analysis = form('IRA Analysis')
+    ira_analysis.continue_computation
+    line[19] = ira_analysis.line[:deductible_contribs]
+
+    # Line 20
+    if !form(1040).status.is(:mfs)
+      raise "Student loan interest deduction not implemented"
+    end
+
+    line['22/adj_inc'] = sum_lines(
+      10, 11, 12, 13, 14, 15, 16, 17, '18a', 19, 20, 21
+    )
   end
 
+  #
+  # Computes the taxable portion of any state tax refund. Generally this is
+  # going to be zero, because the deductible portion of SALT is so small that
+  # the SALT paid after the refund will still exceed the deductible portion. If
+  # that is not the case, see the comment below.
+  #
   def compute_1099g
     assert_no_lines('1099-G', 1, 4, 5, 6, 7, 9, 11)
     salt_recovery = forms('1099-G').lines(2, :sum)
     lym = @manager.submanager(:last_year)
     return BlankZero unless lym.has_form?('1040 Schedule A')
     lysa = lym.form('1040 Schedule A')
+
+    # For 2021, change these to the named line number values
     if lysa.line_5d - salt_recovery < lysa.line_5e
       raise "SALT tax recovery not implemented"
       #
@@ -66,19 +103,4 @@ class Form1040_1 < TaxForm
     return BlankZero
   end
 
-  def compute_adjustments
-
-    line[12] = forms('HSA Contribution').map { |f|
-      compute_form(8889, f).line[13]
-    }.inject(BlankZero, :+)
-
-    sched_se = find_or_compute_form('1040 Schedule SE')
-    line[14] = sched_se.line[13] if sched_se
-
-    ira_analysis = form('IRA Analysis')
-    ira_analysis.continue_computation
-    line[19] = ira_analysis.line[:deductible_contribs]
-
-    line[22] = sum_lines(10, 11, 12, 13, 14, 15, 16, 17, '18a', 19, 20, 21)
-  end
 end

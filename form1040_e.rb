@@ -74,7 +74,7 @@ class Form1040E < TaxForm
     line[31] = sum_lines('29b.g', '29b.i', '29b.j')
     line[32] = line[30] - line[31]
 
-    line[41] = sum_lines(26, 32, 37, 39, 40)
+    line['41/tot_inc'] = sum_lines(26, 32, 37, 39, 40)
   end
 end
 

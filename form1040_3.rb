@@ -1,8 +1,8 @@
-require 'tax_form'
-require 'form1040_r'
-require 'foreign_tax_credit'
-require 'form2441'
-require 'form8863'
+require_relative 'tax_form'
+require_relative 'form1040_r'
+require_relative 'foreign_tax_credit'
+require_relative 'form2441'
+require_relative 'form8863'
 
 #
 # Additional credits and payments
@@ -12,7 +12,7 @@ class Form1040_3 < TaxForm
   NAME = '1040 Schedule 3'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -23,14 +23,12 @@ class Form1040_3 < TaxForm
     line[1] = ftc_form.line[:fill!] if ftc_form
 
     # Child care expenses
-    compute_form(2441)
-    with_form(2441) do |f|
+    compute_form(2441) do |f|
       line[2] = f.line[11]
     end
 
     # Education credits
-    compute_form(8863)
-    with_form(8863) do |f|
+    compute_form(8863) do |f|
       line[3] = f.line[19]
     end
 
@@ -50,21 +48,17 @@ class Form1040_3 < TaxForm
     compute_form('1040 Schedule R') && raise("Can't handle Schedule R")
     # None of the other credits seem relevant.
 
-    line[7] = sum_lines(*1..6)
+    line['7/nref_credits'] = sum_lines(*1..6)
 
     #
     # Part II
     #
-    # Estimated tax payments
-    line[8] = forms('Estimated Tax').lines('amount', :sum) + \
-      @manager.submanager(:last_year).form(1040).line(21, :opt)
-
-    # 9: net premium tax credit. For health care purchased on marketplace (Form
+    # 8: net premium tax credit. For health care purchased on marketplace (Form
     # 1095-A).
     #
-    # 10: Amount paid with extension to file.
+    # 9: Amount paid with extension to file.
 
-    # 11: Social security excess
+    # 10: Social security excess
     ss_threshold = 8240
     ss_tax_paid = forms('W-2').lines[4].map { |x|
       warn "Employer withheld too much social security tax" if x > ss_threshold
@@ -76,14 +70,14 @@ class Form1040_3 < TaxForm
        line[11] = ss_tax_paid - ss_threshold
      end
 
-     # 12: fuel tax credit.
-     # 13: Other credits.
+     # 11: fuel tax credit.
+     # 12: Other credits.
 
-     line[14] = sum_lines(*8..13)
+     line['13/ref_credits'] = sum_lines(*8..13)
   end
 
   def needed?
-    line[7] != 0 || line[14] != 0
+    line[:nref_credits] != 0 || line[:ref_credits] != 0
   end
 
 end

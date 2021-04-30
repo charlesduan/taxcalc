@@ -9,7 +9,13 @@ class Form8960 < TaxForm
     2020
   end
 
+  def needed?
+    return form(1040).line_agi > form(1040).status.niit_threshold
+  end
+
   def compute
+    return unless needed?
+
     set_name_ssn
 
     line[1] = form(1040).line_taxable_int
@@ -36,7 +42,7 @@ class Form8960 < TaxForm
     line['4c'] = line['4a'] + line['4b']
 
     # This needs to be limited to other income
-    line['5a'] = form(1040).line_other_inc +
+    line['5a'] = form(1040).line[:cap_gain, :opt] +
       form('1040 Schedule 1').line[:other_gains, :opt]
     line['5d'] = sum_lines('5a', '5b', '5c')
 
@@ -71,13 +77,17 @@ class Form8960 < TaxForm
     line[12] = [ 0, line[8] - line[11] ].max
     line[13] = form(1040).line_agi
 
-    # niit_threshold is defined in 1040 Schedule 2
     line[14] = form(1040).status.niit_threshold
 
     line[15] = [ 0, line[13] - line[14] ].max
 
     line[16] = [ line[12], line[15] ].min
-    line[17] = (line[16] * 0.038).round
+    line['17/niit'] = (line[16] * 0.038).round
 
   end
 end
+
+# Not inflation adjusted
+FilingStatus.set_param('niit_threshold',
+                       single: 200000, mfj: 250000, mfs: 125000,
+                       hoh: 200000, qw: 250000)

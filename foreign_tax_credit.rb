@@ -8,7 +8,7 @@ class ForeignTaxCredit < TaxForm
   NAME = "Foreign Tax Credit"
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -18,7 +18,7 @@ class ForeignTaxCredit < TaxForm
     if ftc == 0
       line[:fill!] = 0
       return
-    elsif ftc < form(1040).status.is('mfj') ? 600 : 300
+    elsif ftc < (form(1040).status.is('mfj') ? 600 : 300)
       if interview(
         'Do your foreign taxes satisfy Form 1040 Schedule 3, Line 1?'
       )

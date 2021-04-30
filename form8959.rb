@@ -36,7 +36,7 @@ class Form8959 < TaxForm
       raise "RRTA compensation additional medicare tax not implemented"
     end
 
-    line[18] = sum_lines(7, 13, 17)
+    line['18/add_mc_tax'] = sum_lines(7, 13, 17)
 
     line[19] = forms('W-2').lines(6, :sum)
     line[20] = line[1]
@@ -45,7 +45,7 @@ class Form8959 < TaxForm
 
     # Line 23 relates to RRTA withholding; not implemented per above
 
-    line[24] = sum_lines(22, 23)
+    line['24/mc_wh'] = sum_lines(22, 23)
   end
 
   def needed?

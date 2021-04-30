@@ -26,7 +26,7 @@ class Form1040 < TaxForm
   NAME = '1040'
 
   def year
-    2019
+    2020
   end
 
   MONTHS = %w(jan feb mar apr may jun jul aug sep oct nov dec)
@@ -97,6 +97,12 @@ class Form1040 < TaxForm
       line['ssd.dependent'] = 'X'
     end
 
+    if interview("Did you transact in virtual currency?")
+      line['bitcoin.yes'] = 'X'
+    else
+      line['bitcoin.no'] = 'X'
+    end
+
     @force_itemize = false
     if status.is('mfs')
       itemize = interview('Do you want to itemize deductions?')
@@ -147,10 +153,7 @@ class Form1040 < TaxForm
     line['1/wages'] = forms('W-2').lines(1, :sum)
 
     if has_form?(8958) && has_form?('Explanation of 8958')
-      line['1*note'] = 'See attached explanation of line 1'
-      line['1.explanation!', :all] = [
-        'Explanation of Line 1 based on Form 8958'
-      ] + form('Explanation of 8958').line[:explanation, :all]
+      line['1*note'] = 'From Form 8958, Line 1'
     end
 
     sched_b = compute_form('1040 Schedule B')
@@ -183,29 +186,25 @@ class Form1040 < TaxForm
 
     # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')
-    line['4d/taxable_pension'] = BlankZero
+    #line['5b/taxable_pension'] = BlankZero
+    #line['6b/taxable_ss'] = BlankZero
 
     # Capital gains/losses
-    sched_d = find_or_compute_form('1040 Schedule D')
-    if sched_d
-      line['6/capgain'] = sched_d.line[:fill!]
-    else
-      line['6/capgain'] = BlankZero
+    find_or_compute_form('1040 Schedule D') do |sched_d|
+      line['7/cap_gain'] = sched_d.line[:fill!]
     end
 
     # Other income, Schedule 1
     sched_1 = compute_form('1040 Schedule 1')
-    line['7a/other_inc'] = sched_1.line_9
+    line[8] = sched_1.line[:add_inc]
 
     # Total income
-    line['7b'] = sum_lines(*%w(1 2b 3b 4b 5b 6 7a))
+    line[9] = sum_lines(*%w(1 2b 3b 4b 5b 6b 7 8))
 
-    # AGI
-    sched_1.compute_adjustments
-    line['8a/adjustments'] = sched_1.line_22
-    line['8b/agi'] = line_7b - line_8a
-
-    # Standard or itemized deduction
+    #
+    # Standard or itemized deduction. This needs to be done first in view of
+    # line 10b.
+    #
     choose_itemize = false
     unless @force_itemize
       if interview('Do you want the computer to choose whether to itemize?')
@@ -226,106 +225,117 @@ class Form1040 < TaxForm
     end
     sd = status.standard_deduction
 
-    # Compute itemized deduction
+    # Compute Schedule A, the presence of which will indicate whether deductions
+    # are to be itemized.
     if itemize || choose_itemize
       sched_a = compute_form('1040 Schedule A')
-
-      if itemize || sched_a.line[17] > sd
-        line['9/deduction'] = sched_a.line_total
-      else
+      unless itemize || sched_a.line[17] > sd
         @manager.remove_form(sched_a)
-        line['9/deduction'] = sd
       end
-
-    else
-      line['9/deduction'] = sd
     end
+
+    #
+    # Now continue with line 10.
+    #
+    line['10a'] = sched_1.line[:adj_inc]
+    if !sched_a && has_form?("Charity Gift")
+      raise "Line 10b charitable contribution adjustment not implemented"
+    end
+    line['10c'] = sched_1.sum_lines('10a', '10b')
+    line['11/agi'] = line[9] - line['10c']
+
+    line['12/deduction'] = sched_a ? sched_a.line_total : sd
 
     # Qualified business income deduction
     taxable_income = line_agi - line_deduction; # AGI minus deduction
-    line['10/qbid'] = compute_form('QBI Manager').line[:deduction]
+    line['13/qbid'] = compute_form('QBI Manager').line[:deduction]
 
     # Total deductions
-    line['11a'] = sum_lines(9, 10)
+    line[14] = sum_lines(12, 13)
     # Taxable income
-    line['11b/taxinc'] = [ line_8b - line_11a, 0 ].max
+    line['15/taxinc'] = [ line[11] - line[14], 0 ].max
 
     #
     # PAGE 2
     #
 
     # Tax
-    line['12a/tax'] = compute_tax
+    line['16/tax'] = compute_tax
 
     sched_2 = compute_form('1040 Schedule 2')
-    if sched_2
-      line['12b'] = line['12a'] + sched_2.line[3]
-    else
-      line['12b'] = line['12a']
-    end
+    line[17] = sched_2.line[:add_tax] if sched_2
+    line[18] = sum_lines(16, 17)
 
     # Child tax credit and other credits
-    line['13a'] = @manager.compute_form(
-      'Child Tax Credit Worksheet'
-    ).line[:fill!]
-    compute_form('1040 Schedule 3')
-    with_or_without_form('1040 Schedule 3') do |f|
-      if f
-        line['13b/credits'] = line['13a'] + f.line[7]
-      else
-        line['13b/credits'] = line['13a']
-      end
+    ctcw = compute_form('Child Tax Credit Worksheet')
+    line[19] = ctcw.line[:fill!]
+
+    sched_3 = compute_form('1040 Schedule 3')
+    line[20] = sched_3.line[:nref_credits] if sched_3
+    line[21] = sum_lines(19, 20)
+
+    line[22] = [ line[18] - line[21], 0 ].max
+
+    line[23] = sched_2.line[:other_tax] if sched_2
+
+    line['24/tot_tax'] = sum_lines(22, 23)
+
+
+    line['25a'] = forms('W-2').lines(2, :sum)
+    line['25b'] = [
+      forms('1099-MISC').lines(4, :sum),
+      forms('1099-INT').lines(4, :sum),
+      forms('1099-DIV').lines(4, :sum),
+      forms('1099-NEC').lines(4, :sum),
+    ].sum
+    with_form(8959) do |f|
+      line['25c'] = f.line[:mc_wh]
     end
+    line['25d'] = sum_lines(*%w(25a 25b 25c 25d))
 
-    line[14] = [ line['12b'] - line['13b'], 0 ].max
+    line[26] = forms('Estimated Tax').lines('amount', :sum) + \
+      @manager.submanager(:last_year).form(1040).line(:refund_applied, :opt)
 
-    line[15] = sched_2.line_10 if sched_2
-
-    line[16] = sum_lines(14, 15)
-    withholdings = forms('W-2').lines(2, :sum)
-    with_or_without_form(8959) do |f|
-      withholdings += f.line[24, :opt] if f
+    # 27: earned income credit. Inapplicable for mfs status.
+    # 28: refundable child tax credit.
+    if ctcw.line['11.yes', :present] || ctcw.line['12.yes', :present]
+      raise "Refundable child tax credit not implemented"
     end
-    line[17] = withholdings
-
-    # 18a: earned income credit. Inapplicable for mfs status.
-    # 18b: child credit.
-    with_form('Child Tax Credit Worksheet') do |f|
-      if f.line['11.yes', :present] || f.line['12.yes', :present]
-        raise "Refundable child tax credit not implemented"
-      end
-    end
-    # 18c: American Opportunity (education) credit. Inapplicable for mfs status.
+    # 29: American Opportunity (education) credit. Inapplicable for mfs status.
     with_or_without_form('1040 Schedule 3') do |f|
       line['18d'] = f.line[14] if f
     end
+    # Recovery rebate credit.
+    max_eip = status.double_mfj(1200) +
+      500 * line[:dep_4_ctc, :all].count { |x| x == 'X' }
+    if (line[:agi] - status.rrc_threshold) * 0.05 < max_eip
+      raise "Recovery rebate credit not implemented"
+    end
 
-    line['18e'] = sum_lines(*%w(18a 18b 18c 18d))
+    line[31] = sched_3.line[:ref_credits] if sched_3
 
-    # Total payments
-    line[19] = sum_lines(17, '18e')
+    line[32] = sum_lines(*27..31)
+    line[33] = sum_lines('25d', 26, 32)
 
-    if line[19] > line[16]
+    if line[33] > line[24]
 
       # Refund
-      line[20] = line[19] - line[16]
-      line['21a'] = line[20]
+      line[34] = line[33] - line[24]
+      line['35a'] = line[34] # Assume it's all refunded
       if interview("Do you want your refund direct deposited?")
-        line['21b'] = interview("Direct deposit routing number:")
-        box_line('21b', 9)
+        line['35b'] = interview("Direct deposit routing number:")
         if interview("Direct deposit is to checking?")
-          line['21c.checking'] = 'X'
+          line['35c.checking'] = 'X'
         else
-          line['21c.savings'] = 'X'
+          line['35c.savings'] = 'X'
         end
-        line['21d'] = interview("Direct deposit account number:")
-        box_line('21d', 17)
+        line['35d'] = interview("Direct deposit account number:")
       end
-      line['22/refund_applied'] = BlankZero
+      line['36/refund_applied'] = line[34] - line['35a']
     else
 
       # Amount owed
-      line[23] = line[16] - line[19]
+      line[37] = line[24] - line[33]
       compute_penalty
     end
 
@@ -339,35 +349,48 @@ class Form1040 < TaxForm
 
   include TaxComputation
 
+  #
+  # These follow the instructions for the estimated tax penalty.
+  #
   def compute_penalty
-    [ 8828, 4137, 5329, 8885, 8919 ].each do |f|
+
+    # Under the definition of "tax shown on your return," these forms are
+    # listed, but they are not implemented in this program.
+    [ 7202, 8828, 4137, 5329, 8885, 8919 ].each do |f|
       raise "Penalty with form #{f} not implemented" if has_form?(f)
     end
-    tax_shown = line[16] - sum_lines(*%w(18a 18b 18c))
-    with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(9, 12) end
 
-    # Test if a penalty is owed. First check if the amount owed is over $1000
-    # and also over 10% of tax shown.
-    if line[23] > 1000 && line[23] > 0.1 * tax_shown
+    # Defined as "tax shown on your return" in the instructions
+    tax_shown = line[:tot_tax] - sum_lines(*%w(17 18 19 30))
+    with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(8, 11) end
+
+    # The first test is given in the first bullet under "You may owe this
+    # penalty"
+    if line[37] > 1000 && line[37] > 0.1 * tax_shown
 
       ly = @manager.submanager(:last_year)
-      # Last year's tax shown
-      last_year_tax = ly.form(1040).line_15 - \
-        ly.form(1040).sum_lines(*%w(17a, 17b, 17c)) - \
-        ly.form('1040 Schedule 4').line(61, :opt) - \
-        ly.form('1040 Schedule 5').sum_lines(70, 73)
+      # Last year's tax shown, defined under "tax shown on your 20xx return"
+      last_year_tax = ly.form(1040).line_16 - \
+        ly.form(1040).sum_lines(*%w(18a, 18b, 18c)) - \
+        ly.form('1040 Schedule 3').sum_lines(9, 12)
 
+      # First test under the exception.
       unless last_year_tax == 0
+
+        # Second test under the exception: calculate threshold
         penalty_threshold = last_year_tax
         last_year_agi = ly.form(1040).line[7]
         if last_year_agi > status.halve_mfs(150000)
           penalty_threshold = (1.1 * last_year_tax)
         end
 
-        tax_paid = line[17]
-        with_or_without_form('1040 Schedule 3') do |f|
-          tax_paid += f.sum_lines(8, 11) if f
+        # Second test: Calculate payments
+        tax_paid = sum_lines('25d', 26)
+        with_form('1040 Schedule 3') do |f|
+          tax_paid += line[10, :opt]
         end
+
+        # Second test: comparison
         unless tax_paid >= penalty_threshold
           warn "Penalty computation not implemented"
         end
@@ -475,5 +498,9 @@ class ChildTaxCreditWorksheet < TaxForm
 end
 
 FilingStatus.set_param('standard_deduction',
-                       12_200, 24_400, :single, 18_350, :mfj)
+                       single: 12_200, mfj: 24_400, mfs: :single,
+                       hoh: 18_350, qw: :mfj)
 
+FilingStatus.set_param('rrc_threshold',
+                       single: 75_000, mfj: 150_000, mfs: 75_000,
+                       hoh: 112_500, qw: 150_000)

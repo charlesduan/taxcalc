@@ -209,7 +209,7 @@ class Form6251 < TaxForm
     compute_line_10
 
     # AMT additional tax
-    line[11] = [ 0, line[9] - line[10] ].max
+    line['11/amt_tax'] = [ 0, line[9] - line[10] ].max
 
     place_lines(*12..40) if line[12, :present]
 

@@ -7,6 +7,10 @@ class Form8949 < TaxForm
 
   NAME = '8949'
 
+  def year
+    2018
+  end
+
   def initialize(manager, term, reported, forms)
     raise 'Invalid term' unless %w(short long).include?(term)
     raise 'Invalid reported' unless %w(yes no).include?(reported)

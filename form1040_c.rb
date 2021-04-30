@@ -9,7 +9,18 @@ class Form1040C < TaxForm
     2020
   end
 
+  def needed?
+    return has_form?('Sole Proprietorship')
+  end
+
   def compute
+
+    unless has_form?('Sole Proprietorship')
+      if has_form?('1099-MISC') or has_form?('1099-NEC')
+        raise "No sole proprietorship form for 1099-MISC or -NEC"
+      end
+      return
+    end
 
     @f1040 = form('1040')
     @sp = form('Sole Proprietorship')
@@ -114,7 +125,7 @@ class Form1040C < TaxForm
       line['30(b)'] = biz_sf
     end
 
-    line[31] = line[29] - line[30, :opt]
+    line['31/net_profit'] = line[29] - line[30, :opt]
 
     if line[31] < 0
       raise "Sole proprietorship loss at-risk not implemented"
