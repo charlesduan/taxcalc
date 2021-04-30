@@ -1,11 +1,11 @@
-require 'tax_form'
+require_relative 'tax_form'
 
 class Form1040B < TaxForm
 
   NAME = '1040 Schedule B'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -22,7 +22,7 @@ class Form1040B < TaxForm
     line[2] = line['1r', :sum]
 
     # Line 3
-    assert_question("Do you have any series EE or I savings bonds?", false)
+    confirm("You have no series EE or I savings bonds")
 
     line[4] = line[2] - line[3, :opt]
 

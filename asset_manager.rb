@@ -34,6 +34,10 @@ class AssetManager < TaxForm
 
   end
 
+  def needs_4562?
+    return @current_assets.any?
+  end
+
   def depreciation_total
     if @current_assets.empty?
       return BlankZero

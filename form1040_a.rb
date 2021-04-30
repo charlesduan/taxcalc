@@ -1,16 +1,18 @@
-require 'tax_form'
-require 'form8283'
+require_relative 'tax_form'
+require_relative 'form8283'
 
 class Form1040A < TaxForm
 
   NAME = '1040 Schedule A'
 
   def year
-    2019
+    2020
   end
 
   def compute
     set_name_ssn
+
+    # Medical expenses not implemented
 
     line['5a/salt_inc'] = forms('State Tax').lines(:amount, :sum) + \
       forms('W-2').lines(17, :sum)
@@ -19,12 +21,16 @@ class Form1040A < TaxForm
     line['5e/salt_lim'] = [
       form(1040).status.halve_mfs(10_000), line['5d']
     ].min
+
+    # This is for foreign taxes and the GST. The former is better dealt with as
+    # a credit; the latter applies only to transfers of over $11 million.
     line['6/other_tax'] = BlankZero
+
     line['7/salt'] = sum_lines('5e', 6)
 
     compute_mortgage_interest
 
-    assert_question("Did you have any investment interest?", false)
+    confirm("You did not have any investment interest")
     line['9/inv_int'] = BlankZero
     line[10] = sum_lines('8e', 9)
 
@@ -43,7 +49,7 @@ class Form1040A < TaxForm
     }.lines(:amount, :sum).round
 
     if line[12] > 500
-      compute_form(8283)
+      find_or_compute_form(8283)
     end
 
     line[14] = sum_lines(11, 12, 13)
@@ -51,7 +57,7 @@ class Form1040A < TaxForm
       raise "Pub. 526 limit on charitable contributions not implemented"
     end
 
-    assert_question('Did you have casualty or theft losses?', false)
+    confirm('You had no casualty or theft losses')
 
     line['17/total'] = sum_lines(4, 7, 10, 14, 15, 16)
 
@@ -62,24 +68,28 @@ class Form1040A < TaxForm
   end
 
   def compute_mortgage_interest
-    assert_question("Did you receive non-1098 mortgage interest?", false)
-    p936w = compute_form(
-      'Pub. 936 Home Mortgage Interest Worksheet'
-    )
-    if p936w && p936w.line[16] != 0
-      raise "Not able to handle mortgage interest deduction limit"
-    end
+    confirm("You did not receive non-1098 mortgage interest")
 
-    f1098s = forms(1098) { |f| f.line[:property, :present] }
-    f1098s.each do |f|
-      ho_forms = f.match_forms('Home Office', :property)
-      ho_forms.each do |ho|
-        next if ho.line[:method] == 'simplified'
-        raise "Cannot yet handle adjustment of Schedule A for home offices"
+    # This calculates the various limits on home mortgage interest
+    # deductibility.
+    compute_form('Pub. 936 Home Mortgage Interest Worksheet') do |p936w|
+      if p936w.line[16] != 0
+        raise "Not able to handle mortgage interest deduction limit"
       end
+      line['8a'] = p936w.line[:ded_hm_int] if p936w
     end
 
-    line['8a'] = p936w.line[15] if p936w
+    #
+    # There is some complicated business involving apportioning home mortgage
+    # interest where there is a home office, if the non-simplified calculation
+    # for the home office deduction is used. Since that also triggers recapture
+    # at the time the home is sold, I assume that only the simplified method
+    # will be used.
+    #
+    unless forms('Home Office').all? { |f| f.line[:method] == 'simplified' }
+      raise "Cannot yet handle adjustment of Schedule A for home offices"
+    end
+
     line['8e'] = sum_lines(*%w(8a 8b 8c))
 
   end
@@ -94,10 +104,17 @@ class Pub936Worksheet < TaxForm
   NAME = 'Pub. 936 Home Mortgage Interest Worksheet'
 
   def year
-    2019
+    2020
   end
 
   def compute
+
+    #
+    # It is assumed that all 1098-reported debt is for home acquisitions (i.e.,
+    # not buying a car or other non-home) and that there are no mixed-use
+    # mortgages (e.g., refinanced grandfathered debt with additional amounts
+    # taken out so some of the debt is grandfathered and the rest isn't).
+    #
     f1098s = forms(1098) { |f| f.line[:property, :present] }
     return if f1098s.empty?
 
@@ -114,17 +131,19 @@ class Pub936Worksheet < TaxForm
         post_tcja += f1098.line[2]
       end
     end
+    s = form(1040).status
+
     line[1] = grandfathered
     line[2] = pre_tcja
-    line[3] = form(1040).status.halve_mfs(1_000_000)
+    line[3] = s.halve_mfs(1_000_000)
     line[4] = [ line[1], line[3] ].max
     line[5] = sum_lines(1, 2)
     line[6] = [ line[4], line[5] ].min
-    if post_tcja == 0
+    if post_tcja == 0 or line[6] >= s.halve_mfs(750_000)
       line[11] = line[6]
     else
       line[7] = post_tcja
-      line[8] = form(1040).status.halve_mfs(750_000)
+      line[8] = s.halve_mfs(750_000)
       line[9] = [ line[6], line[8] ].max
       line[10] = sum_lines(6, 7)
       line[11] = [ line[9], line[10] ].min
@@ -132,11 +151,11 @@ class Pub936Worksheet < TaxForm
     line[12] = sum_lines(1, 2, 7)
     line[13] = f1098s.lines(1, :sum) + f1098s.lines(6, :sum)
     if line[11] >= line[12]
-      line[15] = line[13]
+      line['15/ded_hm_int'] = line[13]
       line[16] = 0
     else
       line[14] = (1.0 * line[11] / line[12]).round(3)
-      line[15] = (line[13] * line[14]).round
+      line['15/ded_hm_int'] = (line[13] * line[14]).round
       line[16] = line[13] - line[15]
       if line[16] > 0
         raise "You should refine the Pub. 936 Worksheet implementation"
@@ -144,8 +163,10 @@ class Pub936Worksheet < TaxForm
     end
   end
 
+  # The form is needed if any interest is deductible.
   def needed?
-    line[16, :present]
+    line[:ded_hm_int, :present]
   end
+
 end
 

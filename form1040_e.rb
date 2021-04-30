@@ -1,12 +1,16 @@
-require 'form4562'
-require 'home_office'
+require_relative 'form4562'
+require_relative 'home_office'
 
+#
+# Supplemental Income and Loss: rental real eastate, royalties, partnerships,
+# etc.
+#
 class Form1040E < TaxForm
 
   NAME = '1040 Schedule E'
 
   def year
-    2019
+    2020
   end
 
   include HomeOfficeManager
@@ -15,19 +19,28 @@ class Form1040E < TaxForm
     set_name_ssn
 
     k1s = forms('1065 Schedule K-1')
-    assert_question(
-      'Do you have prior year unallowed losses for Schedule E?', false
-    )
-    assert_question(
-      'Do you have unreimbursed partnership expenses (other than home office)?',
-      false
-    )
+    #
+    # At the time the partnership experiences a loss, it will be necessary to
+    # implement the loss limitations. At that time, the rules for applying prior
+    # year disallowed losses to the current year should be implemented here.
+    #
 
-    ho_upes = {}
-    home_office_partnership do |ho_form, entry|
-      ho_upes[ho_form.line[:ein]] = entry
+    upes = {}
+    forms("Unreimbursed Partnership Expense").each do |f|
+      l = f.line[:passive?] ? '28i' : '28g'
+      upes.push(
+        '28a' => "UPE (#{f.line[:ein]})",
+        l => f.line[:amount],
+      )
     end
-    if ho_upes.empty?
+
+    home_office_partnership do |ho_form, deduction|
+      upes.push(
+        '28a' => "UPE (#{ho_form.line[:ein]})",
+        '28i' => deduction,
+      )
+    end
+    if upes.empty?
       line['27.no'] = 'X'
     else
       line['27.yes'] = 'X'
@@ -36,7 +49,9 @@ class Form1040E < TaxForm
     assert_question('Are any of your partnerships foreign?', false)
     assert_question('Were you active in all your partnerships?', true)
 
-    compute_form(4562)
+    find_or_compute_form('Asset Manager') do |f|
+      compute_form(4562) if f.needs_4562?
+    end
 
     k1s.each do |k1|
       raise 'Partnership losses not implemented' if k1.line[1] < 0
@@ -49,20 +64,17 @@ class Form1040E < TaxForm
       if k1.line[1] < 0
         res['28i'] = -k1.line[1];
       end
-      f4562 = forms(4562).find { |x| x.line[:business] == pship_name }
-      res['28j'] = f4562.line[12] if f4562
+      if has_form?(4562)
+        f4562 = forms(4562).find { |x| x.line[:business] == pship_name }
+        res['28j'] = f4562.line[12] if f4562
+      end
       if k1.line[1] > 0
         res['28k'] = k1.line[1];
       end
       add_table_row(res)
     end
 
-    ho_upes.each do |ein, deduction|
-      add_table_row(
-        '28a' => "UPE (#{ein})",
-        '28i' => deduction
-      )
-    end
+    upes.each do |row| add_table_row(row) end
 
     line['29a.h'] = line['28h', :sum]
     line['29a.k/pship_nonpassive_inc'] = line['28k', :sum]

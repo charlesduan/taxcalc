@@ -264,13 +264,13 @@ class Form1040 < TaxForm
 
     sched_2 = compute_form('1040 Schedule 2')
     line[17] = sched_2.line[:add_tax] if sched_2
-    line[18] = sum_lines(16, 17)
+    line['18/pre_ctc_tax'] = sum_lines(16, 17)
 
     # Child tax credit and other credits
     ctcw = compute_form('Child Tax Credit Worksheet')
     line[19] = ctcw.line[:fill!]
 
-    sched_3 = compute_form('1040 Schedule 3')
+    sched_3 = find_or_compute_form('1040 Schedule 3')
     line[20] = sched_3.line[:nref_credits] if sched_3
     line[21] = sum_lines(19, 20)
 
@@ -401,15 +401,23 @@ class Form1040 < TaxForm
 
 end
 
+#
+# From Form 1040, line 19 instructions
+#
 class ChildTaxCreditWorksheet < TaxForm
   NAME = 'Child Tax Credit Worksheet'
 
   def year
-    2019
+    2020
   end
 
   def compute
     f1040 = form(1040)
+
+    #
+    # Part 1
+    #
+
     if f1040.line[:dep_4_ctc, :present]
       line['1num'] = f1040.line[:dep_4_ctc, :all].count { |x| x == 'X' }
       line[1] = line['1num'] * 2000
@@ -421,6 +429,7 @@ class ChildTaxCreditWorksheet < TaxForm
     end
 
     line[3] = sum_lines(1, 2)
+    # No point in calculating the credit if there won't be one
     if line[3] == 0
       line[:fill!] = 0
       return
@@ -452,9 +461,13 @@ class ChildTaxCreditWorksheet < TaxForm
       return
     end
 
-    line[9] = f1040.line['12b']
+    #
+    # Part 2
+    #
 
-    with_form('1040 Schedule 3') do |f|
+    line[9] = f1040.line[:pre_ctc_tax]
+
+    find_or_compute_form('1040 Schedule 3') do |f|
       line['10_3_1'] = f.line[1, :opt]
       line['10_3_2'] = f.line[2, :opt]
       line['10_3_3'] = f.line[3, :opt]

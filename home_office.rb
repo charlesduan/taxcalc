@@ -8,6 +8,10 @@ module HomeOfficeManager
     end
   end
 
+  #
+  # Computes the home office deduction for a partnership. Yields to a block
+  # taking two arguments: a Home Office form and the amount of the deduction.
+  #
   def home_office_partnership
     forms('Home Office') { |f| f.line['type'] == 'partnership' }.each do |f|
       unless f.line['method'] == 'simplified'
@@ -28,7 +32,7 @@ class Pub587Worksheet < TaxForm
   NAME = 'Publication 587 Worksheets'
 
   def year
-    2019
+    2020
   end
 
   def initialize(manager, ho_form, income_form)
@@ -72,6 +76,9 @@ class Pub587Worksheet < TaxForm
     line[4] = (line[2] * line['3c']).round
     line[5] = [ [ line[1], line[4] ].min, 0 ].max
     line[:fill!] = line[5]
+
+    # Line 6 only applies if you used actual expenses in a previous year
+
   end
 
   def compute_actual
@@ -104,26 +111,14 @@ module Pub587Partnership
     return @income_form
   end
 
-  def confirm_all_from_home
-    assert_question(
-      "Is all income/loss for Partnership " + \
-      "#{@ho_form.line[:ein]} from business use of your home?",
-      true
-    )
-  end
-
   def gross_income
-    confirm_all_from_home
+    confirm(
+      "All income/loss for Partnership " + \
+      "#{@ho_form.line[:ein]} is from business use of your home",
+    )
     return @income_form.sum_lines(
       1, 2, 3, 4, 5, '6a', '6b', 7, 8, '9a', '9b', '9c', 10, 11
     )
   end
 
-  def nonhome_business_expenses
-    assert_question(
-      'Do you have unreimbursed partnership expenses (other than home office)?',
-      false
-    )
-    return @income_form.line[12]
-  end
 end

@@ -1,5 +1,5 @@
-require 'tax_form'
-require 'asset_manager'
+require_relative 'tax_form'
+require_relative 'asset_manager'
 
 # Depreciation and amortization (and section 179 deduction)
 class Form4562 < TaxForm

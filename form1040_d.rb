@@ -1,5 +1,5 @@
-require 'tax_form'
-require 'form8949'
+require_relative 'tax_form'
+require_relative 'form8949'
 
 class Form1040D < TaxForm
   NAME = '1040 Schedule D'
