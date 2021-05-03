@@ -43,7 +43,18 @@ class Form1040 < TaxForm
     line[:first_name] + ' ' + line[:last_name]
   end
 
+  #
+  # Some schedules are used in so many different places that it makes sense to
+  # compute them early so that other forms can be sure that they exist if
+  # needed.
+  #
+  def compute_early_schedules
+    compute_form('1040 Schedule C')
+    compute_form('1040 Schedule SE')
+  end
+
   def compute
+
 
     @bio = forms('Biographical').find { |x| x.line[:whose] == 'mine' }
     @sbio = forms('Biographical').find { |x| x.line[:whose] == 'spouse' }
@@ -149,6 +160,8 @@ class Form1040 < TaxForm
       add_table_row(row)
     end
 
+    compute_early_schedules
+
     # Wages, salaries, tips
     line['1/wages'] = forms('W-2').lines(1, :sum)
 
@@ -199,7 +212,7 @@ class Form1040 < TaxForm
     line[8] = sched_1.line[:add_inc]
 
     # Total income
-    line[9] = sum_lines(*%w(1 2b 3b 4b 5b 6b 7 8))
+    line['9/tot_inc'] = sum_lines(*%w(1 2b 3b 4b 5b 6b 7 8))
 
     #
     # Standard or itemized deduction. This needs to be done first in view of
@@ -238,9 +251,7 @@ class Form1040 < TaxForm
     # Now continue with line 10.
     #
     line['10a'] = sched_1.line[:adj_inc]
-    if !sched_a && has_form?("Charity Gift")
-      raise "Line 10b charitable contribution adjustment not implemented"
-    end
+    line['10b'] = sd_charitable_contributions
     line['10c'] = sched_1.sum_lines('10a', '10b')
     line['11/agi'] = line[9] - line['10c']
 
@@ -345,6 +356,18 @@ class Form1040 < TaxForm
     end
     copy_line('phone', @bio)
 
+  end
+
+  #
+  # Computes the charitable contributions income adjustment if the standard
+  # deduction is taken. This is a separate method because it is also used by the
+  # Pub. 590-A Worksheet 1-1 computation.
+  #
+  def sd_charitable_contributions
+    if !sched_a && has_form?("Charity Gift")
+      raise "Line 10b charitable contribution adjustment not implemented"
+    end
+    return BlankZero
   end
 
   include TaxComputation

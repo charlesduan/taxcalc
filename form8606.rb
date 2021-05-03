@@ -10,7 +10,7 @@ class Form8606 < TaxForm
   NAME = '8606'
 
   def year
-    2019
+    2020
   end
 
   def copy_analysis_line(to_line)
@@ -42,11 +42,17 @@ class Form8606 < TaxForm
     copy_analysis_line(5)
 
     if @ira_analysis.line[:compute_8606_rest?]
-      compute_lines_6_to_12
+      line[6] = form('End-of-year Traditional IRA Value').line[:amount]
+      line[7] = @ira_analysis.line[:distrib_cash]
+      line[8] = @ira_analysis.line[:distrib_roth]
+      line[9] = sum_lines(6, 7, 8)
+      line[10] = [ (1.0 * line[5] / line[9]).round(8), 1.0 ].min
+      line[11] = (line[8] * line[10]).round
+      line[12] = (line[7] * line[10]).round
     end
 
     copy_analysis_line(13) { sum_lines(11, 12) }
-    line[14] = line[13] - line[3]
+    line['14/tot_basis'] = line[13] - line[3]
     copy_analysis_line('15a')  { line[12] - line[7] }
     copy_analysis_line('15b')  { BlankZero }
     copy_analysis_line('15c') { line['15a'] - line['15b'] }
@@ -55,24 +61,21 @@ class Form8606 < TaxForm
     compute_part_iii
   end
 
-  def compute_lines_6_to_12
-
-    # Question already asked in Pub. 590-B WS 1-1
-    line[6] = interview(
-      'Enter the value of all traditional IRAs as of Dec. 31 of this year:'
-    )
-    line[7] = @ira_analysis.line[:distrib_cash]
-    line[8] = @ira_analysis.line[:distrib_roth]
-    line[9] = sum_lines(6, 7, 8)
-    line[10] = [ (1.0 * line[5] / line[9]).round(8), 1.0 ].min
-    line[11] = (line[8] * line[10]).round
-    line[12] = (line[7] * line[10]).round
-  end
-
   def compute_part_ii
-    copy_analysis_line(16)
-    copy_analysis_line(17)
-    copy_analysis_line(18)
+    if @ira_analysis.line['8606_16', :present]
+      copy_analysis_line(16)
+      copy_analysis_line(17)
+      copy_analysis_line(18)
+    elsif @ira_analysis.line[:compute_8606_rest?]
+      line[16] = line[8]
+      line[17] = line[11]
+      line[18] = line[16] - line[17]
+    else
+      # This situation will never happen for me, because I have made
+      # nondeductible contributions to a traditional IRA in previous years and
+      # therefore will always complete Part I.
+      raise "Form 8606, Part II not implemented in this condition"
+    end
   end
 
   def compute_part_iii

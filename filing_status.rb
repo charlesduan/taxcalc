@@ -1,7 +1,7 @@
 class FilingStatus
 
   def initialize(name)
-    @name = name
+    @name = name.to_s
     @params = {}
     All[name] = self
   end
@@ -37,7 +37,7 @@ class FilingStatus
     if expected.is_a?(Array)
       return expected.any? { |x| is(x) }
     else
-      return @name == expected
+      return @name == expected.to_s
     end
   end
 

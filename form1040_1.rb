@@ -29,9 +29,11 @@ class Form1040_1 < TaxForm
     if has_form?(:Alimony)
       raise "Alimony forms not implemented"
       #line['2a'] = forms(:Alimony).lines(:amount, :sum)
+    else
+      line['2a/alimony'] = BlankZero
     end
 
-    compute_form('1040 Schedule C') do |sch_c|
+    with_form('1040 Schedule C') do |sch_c|
       line['3/bus_inc'] = sch_c.line(:net_profit)
     end
 
@@ -56,8 +58,9 @@ class Form1040_1 < TaxForm
     f8889 = find_or_compute_form(8889)
     line[12] = f8889.line[:hsa_ded] if f8889
 
-    sched_se = find_or_compute_form('1040 Schedule SE')
-    line[14] = sched_se.line[:se_ded] if sched_se
+    with_form('1040 Schedule SE') do |sched_se|
+      line[14] = sched_se.line[:se_ded]
+    end
 
     ira_analysis = form('IRA Analysis')
     ira_analysis.continue_computation
