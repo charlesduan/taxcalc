@@ -4,6 +4,7 @@ require 'yaml'
 require 'json'
 
 require_relative 'controller'
+require_relative '../form_manager'
 
 
 @rubyRd, @nodeWr = IO.pipe
@@ -25,6 +26,7 @@ end
 pid = fork do
   @rubyRd.close
   @rubyWr.close
+  Dir.chdir(File.dirname(__FILE__))
   exec(
     './qode', 'main.js',
     @nodeRd.fileno.to_s, @nodeWr.fileno.to_s,
@@ -37,8 +39,17 @@ end
 
 @controller = Marking::Controller.new(@rubyWr)
 
-@controller.cmd_load('file' => 'posdata.yaml')
-@controller.select_form('1040')
+input, form, file = ARGV
+
+@controller.cmd_load('file' => 'posdata.yaml') if File.exist?('posdata.yaml')
+
+@controller.add_form(form, file) if file
+
+manager = FormManager.new
+manager.import(input)
+@controller.import_forms(manager)
+
+@controller.select_form(form)
 @controller.start
 
 @rubyRd.each do |line|

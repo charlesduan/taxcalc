@@ -67,7 +67,7 @@ class Marking
         raise "Wrong form #{tax_form.name} for #{self.class} #@name"
       end
 
-      new_lines = form.line.map { |l, v|
+      new_lines = tax_form.line.map { |l, v|
         next [] if l.end_with?("!")
         v.is_a?(Array) ? [ l, *(2..v.length).map { |i| "#{l}##{i}" } ] : l
       }.flatten
@@ -76,7 +76,7 @@ class Marking
       # line in the form becomes a new Line object with no defined position.
       # This ensures that the order of the lines most closely matches the
       # TaxForm.
-      new_lines_obj = new_lines.map { |nl| Line.new('name' => nl) }
+      new_lines_obj = new_lines.map { |nl| Line.new(nl) }
 
       # insert_pos is a cursor to new_lines_obj that indicates which entry we
       # should insert any missing data after.
@@ -239,10 +239,30 @@ class Marking
       @min_x, @min_y, @max_x, @max_y = *pos
     end
 
-    attr_accessor :page
+    attr_accessor :page, :min_x, :min_y, :max_x, :max_y
 
     def to_a
       [ @min_x, @min_y, @max_x, @max_y ]
+    end
+
+    def to_s
+      "Position (#@min_x, #@min_y)..(#@max_x, #@max_y)"
+    end
+
+    def w
+      @max_x - @min_x
+    end
+
+    def h
+      @max_y - @min_y
+    end
+
+    def x
+      @min_x
+    end
+
+    def y
+      @min_y
     end
 
   end

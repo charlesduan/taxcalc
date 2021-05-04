@@ -14,9 +14,18 @@ class Marking; class Controller
     @forms = YAML.load(open(args['file'], &:read))
   end
 
-  def add_form(form)
-    raise "Invalid form" unless form.is_a?(Form)
-    @current_form = @forms[form.name] = form
+  def import_forms(form_manager)
+    @forms.each do |name, form|
+      next unless form_manager.has_form?(name)
+      form_manager.forms(name).each do |tax_form|
+        form.merge_lines(tax_form)
+      end
+    end
+  end
+
+  def add_form(form_name, file)
+    return if @forms[form_name]
+    @current_form = @forms[form_name] = Form.new(form_name, file)
   end
 
   def select_form(name)
@@ -26,7 +35,7 @@ class Marking; class Controller
   def start
     send_cmd('loadPdf', {
       'form' => @current_form.name,
-      'file' => @current_form.file,
+      'file' => File.absolute_path(@current_form.file),
       'lines' => @current_form.line_names,
     })
   end
