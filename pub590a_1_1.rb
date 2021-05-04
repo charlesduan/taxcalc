@@ -4,17 +4,20 @@ class Pub590AWorksheet1_1 < TaxForm
   NAME = "Pub. 590-A Worksheet 1-1"
 
   def year
-    2019
+    2020
   end
 
   def compute
 
-    # Because the IRS instructions somehow expect you to calculate 1040 line 8b
-    # before line 8a, this computation below uses a different approach
-    # that appears equivalent.
-    line[1] = form(1040).line_7b - form('1040 Schedule 1').sum_lines(
-      10, 11, 12, 13, 14, 15, 16, 17, '18a'
-    )
+    #
+    # The instructions call for filling line 1 with AGI from Form 1040, "figured
+    # without Schedule 1 line [for IRA contributions]". This approach below
+    # attempts to capture that computation.
+    #
+    line[1] = form(1040).line[:tot_inc] \
+      - form('1040 Schedule 1').sum_lines(*%w(10 11 12 13 14 15 16 17 18a)) \
+      - form(1040).sd_charitable_contributions
+
     # Line 2 adds back the student loan interest deduction that would have been
     # subtracted in the Schedule 1 computation above. Since it is omitted from
     # the above computation, it is not included here.
@@ -35,7 +38,7 @@ class Pub590AWorksheet1_1 < TaxForm
     with_form(8839) do |f|
       line[7] = f.line[28]
     end
-    line[8] = sum_lines(1, 2, 3, 4, 5, 6, 7)
+    line['8/magi'] = sum_lines(1, 2, 3, 4, 5, 6, 7)
   end
 
 end

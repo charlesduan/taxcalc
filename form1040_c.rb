@@ -25,8 +25,7 @@ class Form1040C < TaxForm
     @f1040 = form('1040')
     @sp = form('Sole Proprietorship')
 
-    line[:name] = @f1040.full_name
-    line[:ssn] = @f1040.line[:ssn]
+    set_name_ssn
     line[:A] = @sp.line[:business]
     line[:B] = @sp.line[:code]
     line[:C] = @sp.line[:dba] if @sp.line[:dba, :present]

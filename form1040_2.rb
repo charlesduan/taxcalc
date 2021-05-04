@@ -29,8 +29,7 @@ class Form1040_2 < TaxForm
     #
     # Part II
     #
-    sched_se = find_or_compute_form('1040 Schedule SE')
-    if sched_se
+    with_form('1040 Schedule SE') do |sched_se|
       line[4] = sched_se.line[:se_tax]
     end
 

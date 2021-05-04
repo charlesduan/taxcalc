@@ -1,91 +1,109 @@
+#
+# Computes the deductible and nondeductible portions of an IRA contribution. The
+# computation produces two lines :deductible_contrib and :nondeductible_contrib.
+#
 class Pub590AWorksheet1_2 < TaxForm
   NAME = "Pub. 590-A Worksheet 1-2"
 
   def year
-    2019
+    2020
+  end
+
+  def has_ret_plan(mgr)
+    mgr.forms('W-2').lines('13ret?', :all).any? { |x| x == true }
   end
 
   def compute
     @ira_analysis = form('IRA Analysis')
 
-    status = form(1040).status
-
-    @over50 = (age >= 50)
-    ret_limits = nil
-
-    covered = forms('W-2').lines('13ret?', :present)
-    if covered
-      # IRA deduction MAGI limits if you are covered by a retirement plan
-      ret_limits = status.ira_deduction_limit
-
-    elsif status.is('mfs') or status.is('mfj') && \
-      submanager(:spouse).forms('W-2').lines('13ret?').any? { |x| x == true }
-
-      # Limits if spouse is covered by a plan
-      ret_limits = form(1040).status.ira_deduction_limit_spouse
+    @status = form(1040).status
+    skip = false
+    if has_ret_plan(@manager)
+      limit = status.ira_deduction_limit
+    elsif @status.is(%w(mfs mfj) && has_ret_plan(submanager(:spouse))
+      limit = @status.ira_deduction_limit_spouse
     else
       # No limits apply if neither spouse or a single person is covered by a
       # retirement plan.
-      compute_no_limit
-      return
+      compute_all_deductible
+      skip = true
     end
 
-    # Determine whether the MAGI is between the limits. If it is below the lower
-    # bound limit, then compute as if there were no limit.
-    magi = @manager.compute_form('Pub. 590-A Worksheet 1-1').line[8]
-    if magi <= ret_limits[0]
-      compute_no_limit
-      return
+    unless skip
+      # Determine whether the MAGI is between the limits. If it is below the
+      # lower bound limit, then compute as if there were no limit.
+      magi = compute_form('Pub. 590-A Worksheet 1-1').line[:magi]
+      if magi <= ret_limits[0]
+        compute_all_deductible
+      elsif magi >= ret_limits[1]
+        compute_none_deductible
+      else
+        compute_some_deductible
+      end
     end
 
-    line[1] = ret_limits[1]
-    line[2] = magi
-
-    if magi >= ret_limits[1]
-      compute_5_to_6
-      line[7] = 0
-      line[8] = [ line[5], line[6] ].min - line[7]
-      return
-    end
-
-    line[3] = line[1] - line[2]
-    line4frac = @over50 ? 0.65 : 0.55
-    if covered && (status.is('mfj') || status.is('qw'))
-      line4frac = @over50 ? 0.325 : 0.275
-    end
-    line[4] = [ 200, (line[3] * line4frac / 10).ceil * 10 ].max
-
-    compute_no_limit
+    line[:deductible_contrib] = line[7]
+    line[:nondeductible_contrib] = line[8]
   end
 
-  def compute_5_to_6
+  #
+  # Sets line 5/compensation_limit to the limit on IRA contributions. Also
+  # returns the value.
+  #
+  def compute_compensation_limit
 
-    # Compensation minus self-employment tax and SEP/SIMPLE/qualified plans
-    line5 = form(1040).line[1]
+    # The computation of compensation is based on Pub. 590-A. However, the
+    # definition of compensation is complex, and needs to be updated if unusual
+    # forms of compensation are to be included.
+    compensation = form(1040).line[:wages]
     with_form('1040 Schedule 1') do |f|
-      line5 -= f.sum_lines(27, 28)
+      compensation += f.line[:alimony]
     end
-    if form(1040).status.is('mfj')
-      # TODO: If spouse's income is greater, then add it minus spouse's IRA
-      # contributions
+    with_form('1040 Schedule SE') do |f|
+      compensation += [ f.line[:tot_inc], 0 ].max
     end
-    line[5] = line5
+    line['5/compensation_limit'] = compensation
+    return compensation
+  end
 
-    # IRA contributions for this year
-    line[6] = @ira_analysis.line[:this_year_contrib]
-    if line[6] > (@over50 ? 7000 : 6000)
+  #
+  # Enters into line 6/contribution the amount actually contributed. If the
+  # amount is greater than the limits, then an error is raised since excess
+  # contributions are not implemented yet.
+  #
+  def enter_contributions
+    line[:age_limit] = (age > 50 ? 7000 : 6000)
+    line['6/contribution'] = @ira_analysis.line[:this_year_contrib]
+    if line[6] > [ line[:age_limit], line[5] ].min
       raise "Excess contributions to traditional IRA not implemented"
     end
   end
 
-  def compute_no_limit
-    compute_5_to_6
-    if line[4, :present]
-      line[7] = [ line[4], line[5], line[6] ].min
-    else
-      line[7] = [ line[5], line[6] ].min
-    end
-    line[8] = [ line[5], line[6] ].min - line[7]
+  def compute_all_deductible
+    compute_compensation_limit
+    enter_contributions
+    #
+    # Since enter_contributions has already confirmed that the actual
+    # contributions do not exceed the limit, the deductible amount is the entire
+    # contribution.
+    line[7] = line[:contribution]
+    line[8] = 0
+  end
+
+  def compute_none_deductible
+    compute_compensation_limit
+    enter_contributions
+    line[7] = 0
+    line[8] = line[:contribution]
+  end
+
+  def compute_some_deductible
+    line[3] = line[1] - line[2]
+    #
+    # The computation has gotten more complicated than usual here, and to date I
+    # do not qualify for any deduction anyway.
+    #
+    raise "Partially deductible IRA contribution not implemented"
   end
 
 end
@@ -93,10 +111,12 @@ end
 # Traditional IRA deduction limits for modified AGI, per worksheet line 1.
 FilingStatus.set_param(
   'ira_deduction_limit',
-  [ 64_000, 74_000 ], [ 103_000, 123_000 ], [ 0, 10_000 ], :single, :mfj
+  single: [ 65_000, 75_000 ], mfj: [ 104_000, 123_000 ], mfs: [ 0, 10_000 ],
+  hoh: :single, qw: :mfj
 )
 FilingStatus.set_param(
   'ira_deduction_limit_spouse',
-  nil, [ 193_000, 203_000 ], [ 0, 10_000 ], nil, nil
+  single: nil, mfj: [ 196_000, 206_000 ], mfs: [ 0, 10_000 ],
+  hoh: nil, qw: nil
 )
 

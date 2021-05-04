@@ -3,7 +3,7 @@ class Form1040SE < TaxForm
   NAME = '1040 Schedule SE'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -14,37 +14,45 @@ class Form1040SE < TaxForm
     # This always uses the long form Schedule SE, because the short-form one
     # doesn't deduct W-2 wages from the extra social security wages tax.
     #
+    se_inc = forms('1065 Schedule K-1').lines(14, :sum)
+    with_form('1040 Schedule C') do |sc|
+      se_inc += sc.line[:net_profit]
+    end
+    line[2] = se_inc
 
-    assert_no_forms('1099-MISC') # Otherwise Schedule C must be computed
-    line[2] = forms('1065 Schedule K-1').lines(14, :sum)
-
-    line[3] = sum_lines('1a', '1b', 2)
+    line['3/tot_inc'] = sum_lines('1a', '1b', 2)
 
     line['4a'] = line[3] <= 0 ? line[3] : (line[3] * 0.9235).round
 
     line['4c'] = sum_lines('4a', '4b')
     if line['4c'] < 400
+      line['6/se_inc'] = BlankZero
       line['12/se_tax'] = BlankZero
       line['13/se_ded'] = BlankZero
       return
     end
 
+    # Assuming no church employee income
+
     line['6/se_inc'] = sum_lines('4c', '5b')
-    line[7] = 132900 # Maximum social security wages, 2019
+    line['7!'] = 137_700 # Maximum social security wages, 2020
 
     line['8a'] = forms('W-2').lines(3, :sum) + forms('W-2').lines(7, :sum)
 
     # Lines 8b and 8c relate to unreported tips and employee wages
     # miscategorized as independent contractor payments. These two assertions
     # ensure that neither occurred.
-    assert_question('Did you receive unreported tips?', false)
-    assert_no_forms('1099-MISC')
+    confirm('You received no unreported tips')
+    if has_form?('1099-MISC') or has_form?('1099-NEC')
+      confirm("None of your independent contractor pay was mischaracterized")
+    end
 
     line['8d'] = sum_lines('8a', '8b', '8c')
 
-    l9 = line[7] - line['8d']
+    l9 = line['7!'] - line['8d']
     if l9 <= 0
-      line[9] = line[10] = 0
+      line[9] = 0
+      line[10] = 0
     else
       line[9] = l9
       line[10] = ([ line[6], line[9] ].min * 0.124).round
@@ -55,7 +63,7 @@ class Form1040SE < TaxForm
   end
 
   def needed?
-    return line['4c'] >= 400
+    return line[:tot_inc] > 0
   end
 
 end
