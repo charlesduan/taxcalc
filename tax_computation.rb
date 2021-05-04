@@ -1,8 +1,19 @@
-require 'tax_table'
+require_relative 'tax_table'
+require_relative 'tax_form'
 
-module TaxComputation
+class TaxComputation < TaxForm
 
-  def compute_tax
+  NAME = "Tax Computation"
+
+  def year
+    2020
+  end
+
+
+  def compute
+
+    @f1040 = form(1040)
+    @status = f1040.status
 
     # Form for rich kids (under 24)
     if age < 24
@@ -12,28 +23,28 @@ module TaxComputation
     with_or_without_form('1040 Schedule D') do |sched_d|
       if sched_d
         if sched_d.line['20no', :present]
-          line[:tax_method!] = 'Sch D'
+          line[:tax_method] = 'Sch D'
           return compute_tax_schedule_d # Not implemented; raises error
-        elsif sched_d.line[15] > 0 && sched_d.line[16] > 0
-          line[:tax_method!] = 'QDCGTW'
+        elsif sched_d.line[:lt_gain] > 0 && sched_d.line[:tot_gain] > 0
+          line[:tax_method] = 'QDCGTW'
           return compute_tax_qdcgt
         end
-      elsif line['3a', :present] or line[6, :opt] != 0
-        line[:tax_method!] = 'QDCGTW'
+      elsif f1040.line[:qualdiv, :present] or f1040.line[:cap_gain, :opt] != 0
+        line[:tax_method] = 'QDCGTW'
         return compute_tax_qdcgt
       end
     end
 
     # Default computation method
-    return compute_tax_standard(line[10])
+    return compute_tax_standard(f1040.line[:taxinc])
   end
 
   def compute_tax_standard(income)
-    if income < 100000
-      line[:tax_method!] = 'Table' unless line[:tax_method!, :present]
-      return compute_tax_table(income, status)
+    if income < 100_000
+      line[:tax_method] = 'Table' unless line[:tax_method, :present]
+      return compute_tax_table(income, @status)
     else
-      line[:tax_method!] = 'TCW' unless line[:tax_method!, :present]
+      line[:tax_method] = 'TCW' unless line[:tax_method, :present]
       return compute_tax_worksheet(income)
     end
   end
@@ -41,7 +52,7 @@ module TaxComputation
   include TaxTable # This adds compute_tax_table
 
   def compute_tax_worksheet(income)
-    raise 'Worksheet not applicable for less than $100,000' if income < 100000
+    raise 'Worksheet not applicable for less than $100,000' if income < 100_000
     brackets = @status.tax_brackets
     raise "Cannot compute tax worksheet for your filing status" unless brackets
     brackets.each do |limit, rate, subtract|
@@ -55,7 +66,7 @@ module TaxComputation
     f = @manager.compute_form(
       'Qualified Dividends and Capital Gains Tax Worksheet'
     )
-    return f.line[27]
+    return f.line[:tax]
   end
 
 end
@@ -64,59 +75,61 @@ class QdcgtWorksheet < TaxForm
   NAME = 'Qualified Dividends and Capital Gains Tax Worksheet'
 
   def year
-    2019
+    2020
   end
 
   def compute
     f1040 = form(1040)
-    assert_question("Did you have any foreign income?", false)
-    line[1] = f1040.line_taxinc
-    line[2] = f1040.line_qualdiv
+    ftc = form('Tax Computation')
+    confirm("You have no foreign income")
+
+    line[1] = f1040.line[:taxinc]
+    line[2] = f1040.line[:qualdiv]
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       line['3yes'] = 'X'
-      line[3] = [ 0, [ sched_d.line[15], sched_d.line[16] ].min ].max
+      line[3] = [
+        0, [ sched_d.line[:lt_gain], sched_d.line[:tot_gain] ].min
+      ].max
     else
       line['3no'] = 'X'
-      line[3] = f1040.line_6
+      line[3] = f1040.line[:cap_gain]
     end
 
-    line[4] = line[2] + line[3]
-    if has_form?(4952)
-      line[5] = form(4952).line['4g']
-    else
-      line[5] = 0
-    end
-    line[6] = [ 0, line[4] - line[5] ].max
-    line[7] = [ 0, line[1] - line[6] ].max
-    line[8] = f1040.status.qdcgt_exemption
-    line[9] = [ line[1], line[8] ].min
-    line[10] = [ line[7], line[9] ].min
-    line[11] = line[9] - line[10]
+    line[4] = line[2] + line[3] # Total qualdiv and cap gains
+    line[5] = line[1] - line[4] # Income excluding qualdiv/capgain
 
-    line[12] = [ line[1], line[6] ].min
-    line[13] = line[11]
-    line[14] = line[12] - line[13]
+    line[6] = f1040.status.qdcgt_exemption
+    line[7] = [ line[1], line[6] ].min  # Exemption, limited by income
+    line[8] = [ line[5], line[7] ].min  # Non-qdcg income, up to exemption
+    line[9] = line[7] - line[8]         # Some non-qdcg income is exempt
+    line[10] = [ line[1], line[4] ].min # Lesser of income and qdcg
+    line[11] = line[9]
+    line[12] = line[10] - line[11]      # What's left after exemption
 
-    line[15] = f1040.status.qdcgt_cap
-    line[16] = [ line[1], line[15] ].min
-    line[17] = sum_lines(7, 11)
-    line[18] = [ 0, line[16] - line[17] ].max
-    line[19] = [ line[14], line[18] ].min
-    line[20] = (line[19] * 0.15).round
-    line[21] = sum_lines(11, 19)
-    line[22] = line[12] - line[21]
-    line[23] = (line[22] * 0.2).round
+    line[13] = f1040.status.qdcgt_cap
+    line[14] = [ line[1], line[13] ].min # 15% rate cap limited by income
+    line[15] = line[5] + line[9]         # Non-qdcg income plus line 9 exemption
+    line[16] = [ line[14] - line[15], 0 ].max # Phase-out of 15% rate cap
+    line[17] = [ line[12], line[16] ].min # qdcg income limited by 15% cap
+    line[18] = (line[17] * 0.15).round    # 15% tax
+    line[19] = line[9] + line[17]         # qdcg income accounted for so far
+    line[20] = line[10] - line[19]        # qdcg income left to account for
+    line[21] = (line[20] * 0.20).round    # taxed at 20% rate
 
-    line[24] = form(1040).compute_tax_standard(line[7])
-    line[25] = sum_lines(20, 23, 24)
-    line[26] = form(1040).compute_tax_standard(line[1])
-    line[27] = [ line[25], line[26] ].min
+    line[22] = ftc.compute_tax_standard(line[5])
+    line[23] = sum_lines(18, 21, 22)
+    line[24] = ftc.compute_tax_standard(line[1])
+    line['25/tax'] = [ line[23], line[24] ].min
   end
 end
 
-FilingStatus.set_param('qdcgt_exemption', 39_375, 78_750, :single, 52_750, :mfj)
-FilingStatus.set_param('qdcgt_cap', 434_550, 488_850, 244_425, 461_700, :mfj)
+FilingStatus.set_param('qdcgt_exemption',
+                       single: 40_000, mfj: 80_000, mfs: 40_000,
+                       hoh: 53_600, qw: :mfj)
+FilingStatus.set_param('qdcgt_cap',
+                       single: 441_450, mfj: 496_600, mfs: 248_300,
+                       hoh: 469_050, qw: :mfj)
 
 # A one-liner that will convert the tables of the tax brackets worksheet into
 # the appropriate forms below:
@@ -125,15 +138,15 @@ FilingStatus.set_param('qdcgt_cap', 434_550, 488_850, 244_425, 461_700, :mfj)
 #
 FilingStatus.set_param(
   'tax_brackets',
-  nil,
-  nil,
-  [
-    [ 160725, 0.24, 5825.50 ],
-    [ 204100, 0.32, 18683.50 ],
-    [ 306175, 0.35, 24806.50 ],
-    [ nil, 0.37, 30930.00 ],
+  single: nil,
+  mfj: nil,
+  mfs: [
+    [ 163300, 0.24, 5920.50 ],
+    [ 207350, 0.32, 18984.50 ],
+    [ 311025, 0.35, 25205.00 ],
+    [ nil, 0.37, 31425.50 ],
   ],
-  nil,
-  nil
+  hoh: nil,
+  qw: nil
 )
 

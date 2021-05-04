@@ -5,7 +5,7 @@ class Form8995 < TaxForm
   NAME = '8995'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -27,21 +27,18 @@ class Form8995 < TaxForm
     line[4] = [ sum_lines(2, 3), 0 ].max
     line[5] = (0.2 * line[4]).round
 
-    # Lines 7-9
-    assert_question(
-      'Did you have REIT dividends or publicly traded partnership income?',
-      false
-    )
+    # Lines 6-9
+    confirm('You have no REIT dividends or publicly traded partnership income')
 
     line[10] = sum_lines(5, 9)
     line[11] = qbi_manager.line[:taxable_income]
     with_or_without_form('1040 Schedule D') do |sched_d|
       if sched_d
-        line[12] = form(1040).line_3a + [
+        line[12] = form(1040).line[:qualdiv] + [
           [ sched_d.line_15, sched_d.line_16 ].min, 0
         ].max
       else
-        line[12] = form(1040).sum_lines('3a', 6)
+        line[12] = form(1040).sum_lines(:qualdiv, :cap_gain)
       end
     end
 

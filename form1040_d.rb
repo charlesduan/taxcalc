@@ -73,9 +73,9 @@ class Form1040D < TaxForm
     line[12] = forms('1065 Schedule K-1').lines('9a', :sum)
 
     assert_no_lines('1099-DIV', '2a', '2b', '2c', '2d')
-    line[15] = line['8b.h'] + line['9h']
+    line['15/lt_gain'] = line['8b.h'] + line['9h']
 
-    line[16] = line[7] + line[15]
+    line['16/tot_gain'] = line[7] + line[15]
 
     if line[16] > 0
       line[:fill!] = line[16]

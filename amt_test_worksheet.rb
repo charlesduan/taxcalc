@@ -1,5 +1,5 @@
-require 'tax_form'
-require 'form6251'
+require_relative 'tax_form'
+require_relative 'form6251'
 
 #
 # From 1040 instructions, Schedule 2 Line 1
@@ -8,7 +8,7 @@ class AMTTestWorksheet < TaxForm
   NAME = "Worksheet to See If You Should Fill In Form 6251"
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -53,7 +53,7 @@ class AMTTestWorksheet < TaxForm
       line[11] = line[7]
     end
 
-    if line[11] > f1040.status.halve_mfs(194800)
+    if line[11] > f1040.status.halve_mfs(197_900)
       line['12yes'] = 'X'
       line[:fill_yes] = 'X'
       return
@@ -64,7 +64,8 @@ class AMTTestWorksheet < TaxForm
     # Schedule J: assumed we are not a farmer or fisherman.
     # I'm assuming no Premium Tax Credit at issue and thus no Schedule 2, line
     # 46.
-    line[13] = f1040.line_tax
+    line[13] = f1040.line_tax + \
+      (with_form('1040 Schedule 2') { |f| f.line[2] } || 0)
     if line[12] > line[13]
       line[:fill_yes] = 'X'
     else

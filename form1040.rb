@@ -271,7 +271,7 @@ class Form1040 < TaxForm
     #
 
     # Tax
-    line['16/tax'] = compute_tax
+    line['16/tax'] = compute_form('Tax Computation').line[:fill!]
 
     sched_2 = compute_form('1040 Schedule 2')
     line[17] = sched_2.line[:add_tax] if sched_2

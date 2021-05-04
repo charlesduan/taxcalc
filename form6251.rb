@@ -10,7 +10,7 @@ class Form6251 < TaxForm
   NAME = '6251'
 
   def year
-    2019
+    2020
   end
 
   def compute
@@ -143,7 +143,7 @@ class Form6251 < TaxForm
     line[4] = sum_lines(*%w(
       1 2a 2b 2c 2d 2e 2f 2g 2h 2i 2j 2k 2l 2m 2n 2o 2p 2q 2r 2s 2t 3
     ))
-    if form(1040).status.is('mfs') && line[4] > 733700
+    if form(1040).status.is('mfs') && line[4] > 745_200
       raise "Form 6251 Line 4 adjustment not implemented"
     end
     with_form('1040 Schedule E') do |f|
@@ -155,7 +155,7 @@ class Form6251 < TaxForm
     # AMT computation
 
     # Several things depend on the foreign tax credit computation.
-    @ftc_form = compute_form('Foreign Tax Credit')
+    @ftc_form = find_or_compute_form('Foreign Tax Credit')
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
@@ -174,17 +174,12 @@ class Form6251 < TaxForm
     end
 
     # Line 7
-    assert_question("Did you have any foreign income?", false)
+    confirm("You have no foreign income")
     l7test = false
-    if form(1040).line_qualdiv > 0
-      l7test = true
-    else
-      with_form(1040) do |f|
-        l7test = true if f.line[6] > 0
-      end
-      with_form('1040 Schedule D') do |f|
-        l7test = true if f.line[15] > 0 and f.line[16] > 0
-      end
+    l7test = true if form(1040).line_qualdiv > 0
+    l7test = true if form(1040).line[:cap_gain] > 0
+    with_form('1040 Schedule D') do |f|
+      l7test = true if f.line[:lt_gain] > 0 and f.line[:tot_gain] > 0
     end
 
     if l7test
@@ -216,7 +211,7 @@ class Form6251 < TaxForm
   end
 
   def compute_line_10
-    l10 = form(1040).line_tax
+    l10 = form(1040).line[:tax]
     with_form(4972) do |f|
       if f.line[30, :present]
         l10 -= f.line[30]
@@ -228,7 +223,7 @@ class Form6251 < TaxForm
       l10 += f.line[2]
     end
     with_form('1040 Schedule 3') do |f|
-      l10 -= f.line_1
+      l10 -= f.line[1]
     end
     l10 -= @ftc_form.line[:fill!] if @ftc_form
 
@@ -241,7 +236,7 @@ class Form6251 < TaxForm
     line[12] = line[6]
 
     check_line_13_conds
-    line[13] = compute_from_worksheets(6, 13) { BlankZero }
+    line[13] = compute_from_worksheets(4, 13) { BlankZero }
 
     with_or_without_form('1040 Schedule D') do |sd|
       line[14] = sd ? sd.line[19, :opt] : BlankZero
@@ -260,8 +255,8 @@ class Form6251 < TaxForm
     line[18] = amt_tax(line[17])
 
     line[19] = form(1040).status.amt_cg_exempt
-    line[20] = compute_from_worksheets(7, 14) {
-      [ 0, form(1040).line_11b ].max
+    line[20] = compute_from_worksheets(5, 14) {
+      [ 0, form(1040).line[:taxinc] ].max
     }
 
     line[21] = [ 0, line[19] - line[20] ].max
@@ -272,8 +267,8 @@ class Form6251 < TaxForm
     line[25] = form(1040).status.amt_cg_upper
 
     line[26] = line[21]
-    line[27] = compute_from_worksheets(7, 21) {
-      [ 0, form(1040).line_11b ].max
+    line[27] = compute_from_worksheets(5, 21) {
+      [ 0, form(1040).line[:taxinc] ].max
     }
 
     line[28] = sum_lines(26, 27)
@@ -310,10 +305,10 @@ class Form6251 < TaxForm
   end
 
   def amt_tax(amount)
-    if amount <= form(1040).status.halve_mfs(194_800)
+    if amount <= form(1040).status.halve_mfs(197_900)
       return (amount * 0.26).round
     else
-      return (amount * 0.28).round - form(1040).status.halve_mfs(3896)
+      return (amount * 0.28).round - form(1040).status.halve_mfs(3958)
     end
   end
 
@@ -364,13 +359,18 @@ class Line5ExemptionWorksheet < TaxForm
 end
 
 # Parameter order reminder: set_param(single, mfj, mfs, hoh, qw)
-FilingStatus.set_param('amt_exempt_max', 510_300, 1_020_600, :half_mfj, :single,
-                       :mfj)
-FilingStatus.set_param('amt_exemption', 71_700, 111_700, :half_mfj, :single,
-                       :mfj)
+FilingStatus.set_param('amt_exempt_max',
+                       single: 518_400, mfj: 1_036_800, mfs: :half_mfj,
+                       hoh: :single, qw: :mfj)
+FilingStatus.set_param('amt_exemption',
+                       single: 72_900, mfj: 113_400, mfs: :half_mfj, hoh:
+                       :single, qw: :mfj)
 FilingStatus.set_param('amt_exempt_zero', 797_100, 1_467_400, :half_mfj,
                        :single, :mfj)
-FilingStatus.set_param('amt_cg_exempt', 39_375, 78_750, :single, 52_750, :mfj)
-FilingStatus.set_param('amt_cg_upper', 434_550, 488_850, :half_mfj, 461_700,
-                       :mfj)
+FilingStatus.set_param('amt_cg_exempt',
+                       single: 40_000, mfj: 80_000, mfs: :single,
+                       hoh: 53_600, qw: :mfj)
+FilingStatus.set_param('amt_cg_upper',
+                       single: 441_450, mfj: 496_600, mfs: :half_mfj,
+                       hoh: 469_050, qw: :mfj)
 

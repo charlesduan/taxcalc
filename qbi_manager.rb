@@ -82,7 +82,7 @@ class QBIManager < TaxForm
     confirm('You have no REIT dividends or publicly traded partnership income')
 
     # Exclude SSTB (consulting income) if the income threshold is exceeded
-    line[:taxable_income] = f1040.line[:agi] - f1040.line[:deduction];
+    line[:taxable_income] = f1040.line[:agi] - f1040.line[:deduction]
     if line[:taxable_income] > f1040.status.qbi_max
       line[:sstb_excluded?] = true
       @qbi.reject!(&:sstb)
