@@ -1,7 +1,6 @@
 require_relative 'tax_form'
 require_relative 'form1040_r'
 require_relative 'foreign_tax_credit'
-require_relative 'form2441'
 require_relative 'form8863'
 
 #
@@ -23,7 +22,7 @@ class Form1040_3 < TaxForm
     line[1] = ftc_form.line[:fill!] if ftc_form
 
     # Child care expenses
-    compute_form(2441) do |f|
+    with_form(2441) do |f|
       line[2] = f.line[11]
     end
 

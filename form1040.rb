@@ -51,6 +51,7 @@ class Form1040 < TaxForm
   def compute_early_schedules
     compute_form('1040 Schedule C')
     compute_form('1040 Schedule SE')
+    compute_form(2441)
   end
 
   def compute
@@ -163,7 +164,8 @@ class Form1040 < TaxForm
     compute_early_schedules
 
     # Wages, salaries, tips
-    line['1/wages'] = forms('W-2').lines(1, :sum)
+    line['1/wages'] = forms('W-2').lines(1, :sum) + \
+      with_form(2441, otherwise_return: 0) { |f| f.line[:tax_benefit] }
 
     if has_form?(8958) && has_form?('Explanation of 8958')
       line['1*note'] = 'From Form 8958, Line 1'

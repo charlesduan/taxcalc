@@ -41,7 +41,7 @@ class Form1040C < TaxForm
       line['F.3.specify'] = @sp.line[:accounting]
     end
 
-    if @sp.line[:materially_participated]
+    if @sp.line[:materially_participated?]
       line['G.yes'] = 'X'
     else
       line['G.no'] = 'X'
