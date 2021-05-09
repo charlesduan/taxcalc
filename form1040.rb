@@ -12,6 +12,7 @@ require_relative 'form1040_c'
 require_relative 'form1040_d'
 require_relative 'form1040_e'
 require_relative 'form1040_se'
+require_relative 'form2441'
 require_relative 'form6251'
 require_relative 'form8959'
 require_relative 'form8960'
@@ -252,6 +253,7 @@ class Form1040 < TaxForm
     #
     # Now continue with line 10.
     #
+    sched_1.compute_adjustments
     line['10a'] = sched_1.line[:adj_inc]
     line['10b'] = sd_charitable_contributions
     line['10c'] = sched_1.sum_lines('10a', '10b')
@@ -371,8 +373,6 @@ class Form1040 < TaxForm
     end
     return BlankZero
   end
-
-  include TaxComputation
 
   #
   # These follow the instructions for the estimated tax penalty.

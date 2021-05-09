@@ -1,9 +1,13 @@
 require_relative 'tax_form'
 require_relative 'form4562'
+require_relative 'expense_manager'
+require_relative 'home_office'
 
 class Form1040C < TaxForm
 
   NAME = '1040 Schedule C'
+
+  include HomeOfficeManager
 
   def year
     2020
@@ -51,14 +55,14 @@ class Form1040C < TaxForm
       line['H'] = 'X'
     end
 
-    @asset_manager = @manager.compute_form('Asset Manager')
+    @asset_manager = compute_form('Asset Manager')
     if @asset_manager.has_current_assets?
       @manager.compute_form(4562)
     end
 
     @asset_manager.attach_safe_harbor_election(self)
 
-    @expense_manager = @manager.compute_form('Business Expense Manager')
+    @expense_manager = compute_form('Business Expense Manager')
 
     if @expense_manager.line[:Commissions, :present] \
         or @expense_manager.line[:Contracts, :present]
@@ -73,7 +77,9 @@ class Form1040C < TaxForm
     end
 
 
-    line[1] = forms('1099-MISC').lines(3, :sum)
+    line[1] = forms('1099-MISC').lines(3, :sum) + \
+      forms('1099-MISC').lines(10, :sum) + \
+      forms('1099-NEC').lines(1, :sum)
 
     line[3] = line[1] - line[2, :opt]
 

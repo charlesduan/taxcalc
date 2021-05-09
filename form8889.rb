@@ -68,10 +68,9 @@ class Form8889 < TaxForm
 
       case f.line[:coverage]
       when 'family'
-        return 'family' if months.include?('dec')
-        family_months &= months
+        family_months |= months
       when 'individual'
-        indiv_months &= months
+        indiv_months |= months
       else
         raise "Unknown value for Form 1095-B coverage: #{f.line[:coverage]}"
       end
@@ -114,7 +113,7 @@ class Form8889 < TaxForm
     else
       line[6] = interview(
         "How much of the HSA limit #{line[5]} do you want to allocate to " + \
-        @bio.line[:first_name] + ":"
+        form(1040).line[:first_name] + ":"
       )
       raise "Invalid HSA limit allocation" if line[6] > line[5]
     end
@@ -124,7 +123,7 @@ class Form8889 < TaxForm
   def employer_contributions
     total = BlankZero
     forms('W-2').each do |f|
-      next unless f.line[:a] == @bio.line[:ssn]
+      next unless f.line[:a] == form(1040).line[:ssn]
       l12w = f.line['12.code', :all].index('W')
       next unless l12w
       total += f.line[12, :all][l12w]

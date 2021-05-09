@@ -46,13 +46,15 @@ class Form1040_1 < TaxForm
 
     line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 
+  end
+
+  def compute_adjustments
     #
     # Part II: Adjustments
     #
-    # This used to be in a separate method because, I think, it had to follow
-    # the IRA calculations. It appears that by 2019 the form had been
-    # rearranged, so now all the computations can be performed in a single
-    # method.
+    # This is in a separate method because ira_analysis.continue_computation
+    # depends on Form 1040, line tot_inc, which depends on Schedule 1, line
+    # add_inc computed above.
     #
 
     f8889 = find_or_compute_form(8889)

@@ -70,7 +70,7 @@ class AssetManager < TaxForm
       address = case
                 when has_form?(1065)
                   form(1065).line[:address] + ", " + form(1065).line[:city_zip]
-                when has_form(1040)
+                when has_form?(1040)
                   form(1040).line[:home_address] + ", " + \
                     form(1040).line[:city_zip]
                 end

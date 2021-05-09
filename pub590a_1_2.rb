@@ -19,8 +19,8 @@ class Pub590AWorksheet1_2 < TaxForm
     @status = form(1040).status
     skip = false
     if has_ret_plan(@manager)
-      limit = status.ira_deduction_limit
-    elsif @status.is(%w(mfs mfj) && has_ret_plan(submanager(:spouse))
+      limit = @status.ira_deduction_limit
+    elsif @status.is(%w(mfs mfj)) && has_ret_plan(submanager(:spouse))
       limit = @status.ira_deduction_limit_spouse
     else
       # No limits apply if neither spouse or a single person is covered by a

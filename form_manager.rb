@@ -122,20 +122,29 @@ class FormManager
   # computation to be present.
   #
   def compute_form(f, *args)
-    f = TaxForm.by_name(f) if f.is_a?(String)
-    f = f.new(self, *args) if f.is_a?(Class)
-    add_form(f)
-    f.explain("Computing Form #{f.name} for #{name}")
-    @compute_stack.push(f)
-    f.compute
+    case f
+    when TaxForm
+      form = f
+    when Class
+      form = f.new(self, *args)
+      raise "Invalid type #{f}" unless form.is_a?(TaxForm)
+    when String, Numeric
+      form = TaxForm.by_name(f.to_s).new(self, *args)
+    else
+      raise "Unexpected type #{f.class} for compute_form"
+    end
+    add_form(form)
+    form.explain("Computing Form #{form.name} for #{name}")
+    @compute_stack.push(form)
+    form.compute
     @compute_stack.pop
-    f.explain("Done computing Form #{f.name}")
-    unless f.needed?
-      f.explain("Removing Form #{f.name} as not needed")
-      remove_form(f)
+    form.explain("Done computing Form #{form.name}")
+    unless form.needed?
+      form.explain("Removing Form #{form.name} as not needed")
+      remove_form(form)
       return nil
     end
-    return f
+    return form
   end
 
   # Returns the form that is currently being computed

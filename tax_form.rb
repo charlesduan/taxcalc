@@ -28,7 +28,9 @@ class TaxForm
     end
     UNREGISTERED_FORMS.clear
 
-    return FORM_TYPES[name.to_s]
+    res = FORM_TYPES[name.to_s]
+    raise "Unknown Form #{name.to_s}" unless res
+    return res
   end
 
   def initialize(manager)

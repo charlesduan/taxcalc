@@ -7,6 +7,14 @@ require 'form1040_se'
 # ALLOCATION OF TAX AMOUNTS BETWEEN CERTAIN INDIVIDUALS IN COMMUNITY PROPERTY
 # STATES
 #
+# This form manages the division of community property tax forms between two
+# spouses and then produces Form 8958 reflecting that division. To use it,
+# create a FormManager that contains all forms belonging to the community.
+# Compute this form, which will create two submanagers for self and spouse, each
+# having forms appropriately divided. Add any additional forms to those
+# submanagers and compute the 1040 returns for each. Then call compute_post to
+# actually fill in Form 8958 based on the completed returns.
+#
 ########################################################################
 
 class Form8958 < TaxForm
@@ -27,12 +35,10 @@ class Form8958 < TaxForm
   end
 
   def compute
-
     compute_split_forms
+  end
 
-    @my_manager.compute(1040)
-    @spouse_manager.compute(1040)
-
+  def compute_post
     compute_8958_lines
     update_managers
   end
@@ -52,7 +58,16 @@ class Form8958 < TaxForm
 
     split_biographical
 
+    # Set up itemization and filing status for the submanagers
     @itemize = interview('Do you want to itemize deductions?')
+    @my_manager.interviewer.answer('Enter your filing status:', 'mfs')
+    @my_manager.interviewer.answer('Do you want to itemize deductions?',
+                                   @itemize ? 'yes' : 'no')
+
+    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs')
+    @spouse_manager.interviewer.answer('Do you want to itemize deductions?',
+                                       @itemize ? 'yes' : 'no')
+
 
     # A table of all split_forms outputs
     @splits = {}
@@ -103,8 +118,8 @@ class Form8958 < TaxForm
       x.split("\n")[0]
     }.zip(forms('1065 Schedule K-1').lines('F')).map { |x| x.join(", ") }
     enter_split(5, '1065 Schedule K-1', 14)
-    enter_split(5, '1099-MISC', 3, :payer)
-    enter_split(5, '1099-NEC', 3, :payer)
+    enter_split(5, '1099-MISC', 10, :payer)
+    enter_split(5, '1099-NEC', 1, :payer)
 
     line[6, :all] = my_manager.forms(8949).lines('II.1a', :all) + \
       spouse_manager.forms(8949).lines('II.1a', :all)
@@ -190,14 +205,6 @@ class Form8958 < TaxForm
   # Updates the individual's FormManager objects with relevant information,
   # including copies of this Form 8958 itself.
   def update_managers
-    @my_manager.interviewer.answer('Enter your filing status:', 'mfs')
-    @my_manager.interviewer.answer('Do you want to itemize deductions?',
-                                   @itemize ? 'yes' : 'no')
-
-    @spouse_manager.interviewer.answer('Enter your filing status:', 'mfs')
-    @spouse_manager.interviewer.answer('Do you want to itemize deductions?',
-                                       @itemize ? 'yes' : 'no')
-
     @my_manager.copy_form(self).exportable = true
     sf = @spouse_manager.copy_form(self)
     sf.exportable = true
