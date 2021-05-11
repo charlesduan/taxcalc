@@ -20,7 +20,7 @@ class Pub590BWorksheet1_1 < TaxForm
 
     # Line 5 is the sum of line 1 of those 1099-R forms that are traditional
     # IRA distributions
-    line[5] = analysis.line[:total_distribs]
+    line[5] = analysis.line[:total_distrib]
 
     line[6] = sum_lines(4, 5)
     line[7] = [ 1.0, line[3].to_f / line[6] ].min.round(5)
@@ -34,9 +34,9 @@ class Pub590BWorksheet1_1 < TaxForm
 
       line[11] = line[9] - line[10]
 
-      line[:taxable_distribs] = line[11]
+      line[:taxable_distrib] = line[11]
     else
-      line[:taxable_distribs] = line[9]
+      line[:taxable_distrib] = line[9]
     end
 
   end

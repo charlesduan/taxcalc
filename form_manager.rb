@@ -137,14 +137,34 @@ class FormManager
     form.explain("Computing Form #{form.name} for #{name}")
     @compute_stack.push(form)
     form.compute
+    needed = form.needed?
     @compute_stack.pop
     form.explain("Done computing Form #{form.name}")
-    unless form.needed?
+    unless needed
       form.explain("Removing Form #{form.name} as not needed")
       remove_form(form)
       return nil
     end
     return form
+  end
+
+  #
+  # Continues computation of a form. The parameters are a TaxForm object (since
+  # this is a continuation of computation, the object cannot be created) and a
+  # symbol representing the name of the computation method (compute_[method]).
+  #
+  def compute_more(form, method)
+    raise "Invalid form for compute_more" unless form.is_a?(TaxForm)
+    method = "compute_#{method}".to_sym
+    unless form.respond_to?(method)
+      raise "Form #{form.name} has no method #{method}"
+    end
+
+    form.explain("Computing Form #{form.name} (#{method}) for #{name}")
+    @compute_stack.push(form)
+    form.send(method)
+    @compute_stack.pop
+    form.explain("Done computing Form #{form.name} (#{method})")
   end
 
   # Returns the form that is currently being computed

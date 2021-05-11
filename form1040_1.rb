@@ -41,7 +41,7 @@ class Form1040_1 < TaxForm
     confirm("No business property was sold or lost")
     line['4/other_gains'] = BlankZero
 
-    sched_e = @manager.compute_form('1040 Schedule E')
+    sched_e = compute_form('1040 Schedule E')
     line['5/rrerpst'] = sched_e.line[:tot_inc]
 
     line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
@@ -65,8 +65,8 @@ class Form1040_1 < TaxForm
     end
 
     ira_analysis = form('IRA Analysis')
-    ira_analysis.continue_computation
-    line[19] = ira_analysis.line[:deductible_contribs]
+    compute_more(ira_analysis, :continuation)
+    line[19] = ira_analysis.line[:deductible_contrib]
 
     # Line 20
     if !form(1040).status.is(:mfs)

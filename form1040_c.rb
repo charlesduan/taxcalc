@@ -159,7 +159,7 @@ class Form1040C < TaxForm
 
   def expense(line_no, category)
     if @expenses.include?(category)
-      line[line_no] = @expense_manager.line[category]
+      line[line_no] = @expense_manager.line[category].round
       @expenses.delete(category)
     end
   end
@@ -169,7 +169,7 @@ class Form1040C < TaxForm
   # method, this totals everything left.
   #
   def other_expenses_total
-    @expenses.map { |x| @expense_manager.line[x] }.sum
+    @expenses.map { |x| @expense_manager.line[x] }.sum.round
   end
 
 end

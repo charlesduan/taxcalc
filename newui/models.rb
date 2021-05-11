@@ -113,12 +113,12 @@ class Marking
 
       # If this line and the current index line have the same prefix, then
       # don't do the next step
-      unless l[name].sub(/#.*/, '') == nl_noname_hash
+      unless l.name.sub(/#.*/, '') == nl_name_nohash
 
         # Increment insert_pos further until the prefix doesn't match the
         # current one.
         while insert_pos < new_lines_obj.length
-          break if new_lines_obj[insert_pos].sub(/#.*/, '') != nl_noname_hash
+          break if new_lines_obj[insert_pos].name.sub(/#.*/, '') != nl_name_nohash
           insert_pos += 1
         end
       end

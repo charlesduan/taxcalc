@@ -9,17 +9,17 @@ require 'pub590a_1_2'
 # Computes 1040 information relating to IRA distributions and contributions. Its
 # purpose is to compute the following:
 #
-# - Line taxable_distribs: The taxable amount of IRA distributions to be shown
+# - Line taxable_distrib: The taxable amount of IRA distributions to be shown
 #   on Form 1040.
-# - Line total_distribs: The total amount of distributions, also show on Form
+# - Line total_distrib: The total amount of distributions, also show on Form
 #   1040.
-# - Line deductible_contribs: The deductible portion of IRA contributions.
-# - Line nondeductible_contribs: The non-deductible portion of IRA
+# - Line deductible_contrib: The deductible portion of IRA contributions.
+# - Line nondeductible_contrib: The non-deductible portion of IRA
 #   contributions (used for Form 8606).
 # - Form 8606, as necessary.
 #
-# The IRA Analysis has two methods: compute and continue_computation. The former
-# computes the *_distribs values; the latter deductible_contribs and Form 8606. 
+# The IRA Analysis has two methods: compute and compute_continuation. The former
+# computes the *_distrib values; the latter deductible_contrib and Form 8606. 
 #
 class IraAnalysis < TaxForm
 
@@ -60,20 +60,20 @@ class IraAnalysis < TaxForm
     # reflect these. To implement any other destinations for an IRA
     # distribution, see the 1040 line 4a instructions.
     #
-    distribs = {
+    distrib = {
       'roth' => BlankZero,
       'cash' => BlankZero
     }
     all_1099rs.each do |f|
-      distribs[f.line[:destination]] += f.line[1]
+      distrib[f.line[:destination]] += f.line[1]
       if f.line[:destination] != 'roth'
         raise "Cannot handle 1099-R distributions that are not Roth conversions"
       end
     end
-    distribs.each do |d, v|
+    distrib.each do |d, v|
       line["distrib_#{d}"] = v
     end
-    line[:total_distribs] = all_1099rs.lines(1, :sum)
+    line[:total_distrib] = all_1099rs.lines(1, :sum)
 
     #
     # II. Computing
@@ -107,7 +107,7 @@ class IraAnalysis < TaxForm
 
   # This method is called to continue computation when Form 1040 requires the
   # deductible contributions amount.
-  def continue_computation
+  def compute_continuation
     @contrib_continuation.call
 
     # Compute Form 8606
@@ -115,8 +115,8 @@ class IraAnalysis < TaxForm
 
     # Check that the required lines were all computed
     [
-      :total_distribs, :taxable_distribs,
-      :deductible_contribs, :nondeductible_contribs
+      :total_distrib, :taxable_distrib,
+      :deductible_contrib, :nondeductible_contrib
     ].each do |l|
       raise "Missing #{l} from IRA Analysis" unless line[l, :present]
     end
@@ -127,31 +127,31 @@ class IraAnalysis < TaxForm
   # Performs computations when there were distributions only.
   #
   def compute_distributions_only
-    line[:deductible_contribs] = BlankZero
-    line[:nondeductible_contribs] = BlankZero
+    line[:deductible_contrib] = BlankZero
+    line[:nondeductible_contrib] = BlankZero
     # If there were no contributions, then all we need to do is the following:
-    # (1) Compute Form 8606 if it's needed, which will set taxable_distribs
+    # (1) Compute Form 8606 if it's needed, which will set taxable_distrib
     # (2) If it's not needed, then there is no basis in traditional IRAs so
     #     the taxable portion of the distribution is the whole distribution.
     unless compute_8606_if_needed
-      line[:taxable_distribs] = line[:total_distribs]
+      line[:taxable_distrib] = line[:total_distrib]
     end
     @contrib_continuation = proc { }
   end
 
 
   #
-  # Performs computations when there are no distributions. The taxable_distribs
+  # Performs computations when there are no distributions. The taxable_distrib
   # is naturally zero, and we use Pub. 590-A Worksheet 1-2 to compute the
   # deductible and nondeductible contributions.
   #
   def compute_contributions_only
-    raise "Inconsistent state" unless line[:total_distribs] == 0
-    line[:taxable_distribs] = line[:total_distribs]
+    raise "Inconsistent state" unless line[:total_distrib] == 0
+    line[:taxable_distrib] = line[:total_distrib]
     @contrib_continuation = proc {
       @pub590a_w1_2 = @manager.compute_form("Pub. 590-A Worksheet 1-2")
-      line[:deductible_contribs] = @pub590a_w1_2.line[7]
-      line[:nondeductible_contribs] = @pub590a_w1_2.line[8]
+      line[:deductible_contrib] = @pub590a_w1_2.line[7]
+      line[:nondeductible_contrib] = @pub590a_w1_2.line[8]
     }
   end
 
@@ -168,16 +168,16 @@ class IraAnalysis < TaxForm
     @pub590b_w1_1 = compute_form("Pub. 590-B Worksheet 1-1")
 
     # Step 8 of the instructions: copies 590-B W1-1 line 9 or 11, coded as
-    # :taxable_distribs, to Form 8606 line 15a. (Also computes 15b and 15c
+    # :taxable_distrib, to Form 8606 line 15a. (Also computes 15b and 15c
     # incidentally.)
-    line['8606_15a'] = @pub590b_w1_1.line[:taxable_distribs]
+    line['8606_15a'] = @pub590b_w1_1.line[:taxable_distrib]
     line['8606_15b'] = BlankZero # Qualified disaster distributions
     line['8606_15c'] = line['8606_15a'] - line['8606_15b']
 
     # This will compute lines 18 and 25c
     compute_8606_parts_ii_iii_for_contrib_distrib
 
-    line[:taxable_distribs] = sum_lines(*%w(8606_15c 8606_18 8606_25c))
+    line[:taxable_distrib] = sum_lines(*%w(8606_15c 8606_18 8606_25c))
 
     @contrib_continuation = proc {
       compute_contributions_and_distributions_continuation
@@ -187,15 +187,18 @@ class IraAnalysis < TaxForm
   def compute_contributions_and_distributions_continuation
 
     @pub590a_w1_2 = @manager.compute_form("Pub. 590-A Worksheet 1-2")
-    line[:deductible_contribs] = @pub590a_w1_2.line[7]
-    line[:nondeductible_contribs] = @pub590a_w1_2.line[8]
+
+    # Step 2 is done here by setting line nondeductible_contrib
+    line[:deductible_contrib] = @pub590a_w1_2.line[:deductible_contrib]
+    line[:nondeductible_contrib] = @pub590a_w1_2.line[:nondeductible_contrib]
 
     # Step 3 says to complete lines 2-5 of Form 8606. Rather than invoking that
     # form, the computations occur here, and Form 8606 is coded to copy the
     # information.
     compute_8606_lines_2_to_5
 
-    if line['8606_5'] < @pub590b_w1_1.line[8]
+    # Step 4.
+    if line['8606_5'] < @pub590b_w1_1.line[:nontax_distrib]
       # In this case (where the IRA basis in the current tax year was less than
       # the nontaxable portion of the distribution), we complete Form 8606 lines
       # 6-15c and stop. That will be done when Form 8606 is computed.
@@ -214,10 +217,11 @@ class IraAnalysis < TaxForm
       # revisit to see what numbers are produced.
       raise "IRS instructions are ambiguous here"
     else
+      # Steps 5-6.
       # In this case, we do not compute Form 8606 lines 6-12, instead entering
       # various numbers onto the lines.
       line[:compute_8606_rest?] = false
-      line['8606_13'] = @pub590b_w1_1.line[8]
+      line['8606_13'] = @pub590b_w1_1.line[:nontax_distrib]
       line['8606_13*note'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
     end
 
@@ -233,12 +237,12 @@ class IraAnalysis < TaxForm
     else
       line['8606_2'] = BlankZero
     end
-    line['8606_3'] = sum_lines(:nondeductible_contribs, '8606_2')
+    line['8606_3'] = sum_lines(:nondeductible_contrib, '8606_2')
     line['8606_4'] = [
       forms('Traditional IRA Contribution') { |f|
         f.line[:date].year > @manager.year
       }.lines(:amount, :sum),
-      line[:nondeductible_contribs]
+      line[:nondeductible_contrib]
     ].min
     line['8606_5'] = line['8606_3'] - line['8606_4']
   end
@@ -255,7 +259,7 @@ class IraAnalysis < TaxForm
     if line[:distrib_roth] > 0
       line['8606_16'] = line[:distrib_roth]
       line['8606_17'] = @pub590b_w1_1.line[:nontax_distrib]
-      line['8686_18'] = @pub590b_w1_1.line[:taxable_roth_conv]
+      line['8606_18'] = @pub590b_w1_1.line[:taxable_roth_conv]
       line['8606_18*note'] = 'Lines 17 and 18 from Pub. 690-B Worksheet 1-1'
     end
 
@@ -277,15 +281,15 @@ class IraAnalysis < TaxForm
   # but not both.
   #
   def compute_8606_if_needed
-    unless line[:nondeductible_contribs, :present]
+    unless line[:nondeductible_contrib, :present]
       raise "Cannot use this method"
     end
-    ndc = line[:nondeductible_contribs]
+    ndc = line[:nondeductible_contrib]
     if @manager.submanager(:last_year).has_form?(8606) || ndc != 0
       compute_8606_lines_2_to_5
       line[:compute_8606_rest?] = true
       @form8606 = compute_form(8606)
-      line[:taxable_distribs] = @form8606.sum_lines('15c', 18, '25c')
+      line[:taxable_distrib] = @form8606.sum_lines('15c', 18, '25c')
       return true
     else
       return false

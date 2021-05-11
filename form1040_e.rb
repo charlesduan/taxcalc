@@ -25,7 +25,7 @@ class Form1040E < TaxForm
     # year disallowed losses to the current year should be implemented here.
     #
 
-    upes = {}
+    upes = []
     forms("Unreimbursed Partnership Expense").each do |f|
       l = f.line[:passive?] ? '28i' : '28g'
       upes.push(
@@ -50,7 +50,7 @@ class Form1040E < TaxForm
     assert_question('Were you active in all your partnerships?', true)
 
     find_or_compute_form('Asset Manager') do |f|
-      compute_form(4562) if f.needs_4562?
+      compute_form(4562) if f.line[:needs_4562?]
     end
 
     k1s.each do |k1|

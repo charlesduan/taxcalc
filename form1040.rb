@@ -21,6 +21,7 @@ require_relative 'form8995a'
 require_relative 'ira_analysis'
 require_relative 'qbi_manager'
 require_relative 'amt_test_worksheet'
+require_relative 'tax_computation'
 
 class Form1040 < TaxForm
 
@@ -84,7 +85,6 @@ class Form1040 < TaxForm
     end
     if @status.is(%w(mfj mfs))
       line[:spouse_ssn] = @sbio.line[:ssn]
-      box_line(:spouse_ssn, 3, '-')
     end
 
     copy_line('home_address', @bio)
@@ -116,11 +116,17 @@ class Form1040 < TaxForm
       line['bitcoin.no'] = 'X'
     end
 
-    @force_itemize = false
+    #
+    # The introduction of the standard-deduction charity deduction introduces a
+    # circularity into the 1040 computation: To determine automatically whether
+    # to itemize or take the standard deduction, we must compute Schedule A,
+    # which requires computing the line 11 AGI, but the SD charity deduction
+    # must be determined at line 10. As a result, the user must determine
+    # itemization manually.
+    #
+    @itemize = interview('Do you want to itemize deductions?')
     if status.is('mfs')
-      itemize = interview('Do you want to itemize deductions?')
-      @force_itemize = true if itemize
-      line['ssd.isrdsa'] = 'X' if itemize || interview(
+      line['ssd.isrdsa'] = 'X' if @itemize || interview(
         'Are you a dual-status alien?'
       )
     end
@@ -144,13 +150,9 @@ class Form1040 < TaxForm
     #
 
     forms('Dependent').each do |dep|
-      ssn_parts = dep.line[:ssn].split(/-/)
-      # TODO: Figure out boxed lines for tables
       row = {
         :dep_1 => dep.line[:name],
-        :dep_2_1 => ssn_parts[0],
-        :dep_2_2 => ssn_parts[1],
-        :dep_2_3 => ssn_parts[2],
+        :dep_2 => dep.line[:ssn],
         :dep_3 => dep.line[:relationship],
       }
       case dep.line[:qualifying]
@@ -197,8 +199,8 @@ class Form1040 < TaxForm
 
     # IRAs, pensions, and annuities
     ira_analysis = compute_form('IRA Analysis')
-    line['4a'] = ira_analysis.line_total_distribs
-    line['4b/taxable_ira'] = ira_analysis.line_taxable_distribs
+    line['4a'] = ira_analysis.line_total_distrib
+    line['4b/taxable_ira'] = ira_analysis.line_taxable_distrib
 
     # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')
@@ -206,8 +208,11 @@ class Form1040 < TaxForm
     #line['6b/taxable_ss'] = BlankZero
 
     # Capital gains/losses
-    find_or_compute_form('1040 Schedule D') do |sched_d|
-      line['7/cap_gain'] = sched_d.line[:fill!]
+    compute_form('1040 Schedule D')
+    line['7/cap_gain'] = with_form(
+      '1040 Schedule D', otherwise_return: BlankZero
+    ) do |sched_d|
+      sched_d.line[:fill!]
     end
 
     # Other income, Schedule 1
@@ -217,49 +222,27 @@ class Form1040 < TaxForm
     # Total income
     line['9/tot_inc'] = sum_lines(*%w(1 2b 3b 4b 5b 6b 7 8))
 
-    #
-    # Standard or itemized deduction. This needs to be done first in view of
-    # line 10b.
-    #
-    choose_itemize = false
-    unless @force_itemize
-      if interview('Do you want the computer to choose whether to itemize?')
-        choose_itemize = true
-      else
-        itemize = interview('Do you want to itemize deductions?')
-        @force_itemize = true if itemize
-      end
-    end
-
-    # Compute standard deduction
-    %w(
-      ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
-    ).each do |l|
-      if line[l, :present]
-        raise "Cannot handle special standard deduction for #{l}"
-      end
-    end
-    sd = status.standard_deduction
-
-    # Compute Schedule A, the presence of which will indicate whether deductions
-    # are to be itemized.
-    if itemize || choose_itemize
-      sched_a = compute_form('1040 Schedule A')
-      unless itemize || sched_a.line[17] > sd
-        @manager.remove_form(sched_a)
-      end
-    end
-
-    #
-    # Now continue with line 10.
-    #
-    sched_1.compute_adjustments
+    compute_more(sched_1, :adjustments)
     line['10a'] = sched_1.line[:adj_inc]
     line['10b'] = sd_charitable_contributions
     line['10c'] = sched_1.sum_lines('10a', '10b')
     line['11/agi'] = line[9] - line['10c']
 
-    line['12/deduction'] = sched_a ? sched_a.line_total : sd
+    # Compute Schedule A, the presence of which will indicate whether deductions
+    # are to be itemized.
+    if @itemize
+      sched_a = compute_form('1040 Schedule A')
+      line['12/deduction'] = sched_a.line_total
+    else
+      %w(
+        ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
+      ).each do |l|
+        if line[l, :present]
+          raise "Cannot handle special standard deduction for #{l}"
+        end
+      end
+      line['12/deduction'] = status.standard_deduction
+    end
 
     # Qualified business income deduction
     taxable_income = line_agi - line_deduction; # AGI minus deduction
@@ -275,7 +258,7 @@ class Form1040 < TaxForm
     #
 
     # Tax
-    line['16/tax'] = compute_form('Tax Computation').line[:fill!]
+    line['16/tax'] = compute_form('Tax Computation').line[:tax]
 
     sched_2 = compute_form('1040 Schedule 2')
     line[17] = sched_2.line[:add_tax] if sched_2
@@ -321,8 +304,10 @@ class Form1040 < TaxForm
       line['18d'] = f.line[14] if f
     end
     # Recovery rebate credit.
-    max_eip = status.double_mfj(1200) +
-      500 * line[:dep_4_ctc, :all].count { |x| x == 'X' }
+    max_eip = status.double_mfj(1200)
+    if line[:dep_4_ctc, :present]
+      max_eip += 500 * line[:dep_4_ctc, :all].count { |x| x == 'X' }
+    end
     if (line[:agi] - status.rrc_threshold) * 0.05 < max_eip
       raise "Recovery rebate credit not implemented"
     end
@@ -335,22 +320,19 @@ class Form1040 < TaxForm
     if line[33] > line[24]
 
       # Refund
-      line[34] = line[33] - line[24]
+      line['34/tax_refund'] = line[33] - line[24]
       line['35a'] = line[34] # Assume it's all refunded
-      if interview("Do you want your refund direct deposited?")
-        line['35b'] = interview("Direct deposit routing number:")
-        if interview("Direct deposit is to checking?")
-          line['35c.checking'] = 'X'
-        else
-          line['35c.savings'] = 'X'
-        end
-        line['35d'] = interview("Direct deposit account number:")
+      
+      with_form('Refund Direct Deposit') do |f|
+        line['35b'] = f.line[:routing]
+        line["35c.#{f.line[:type]}"] = 'X'
+        line['35d'] = f.line[:account]
       end
       line['36/refund_applied'] = line[34] - line['35a']
     else
 
       # Amount owed
-      line[37] = line[24] - line[33]
+      line['37/tax_owed'] = line[24] - line[33]
       compute_penalty
     end
 
@@ -368,7 +350,7 @@ class Form1040 < TaxForm
   # Pub. 590-A Worksheet 1-1 computation.
   #
   def sd_charitable_contributions
-    if !sched_a && has_form?("Charity Gift")
+    if !@itemize && has_form?("Charity Gift")
       raise "Line 10b charitable contribution adjustment not implemented"
     end
     return BlankZero

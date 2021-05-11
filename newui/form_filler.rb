@@ -28,6 +28,10 @@ class FormFiller
     @explanation_lines = []
 
     pos_form = @posdata[tax_form.name]
+    unless pos_form
+      warn("No position data for Form #{tax_form.name}")
+      return
+    end
     @assembler = PdfAssembler.new(pos_form.file, outfile)
     @assembler.even_pages = @even_pages
     unless pos_form
@@ -74,7 +78,7 @@ class FormFiller
       value.to_s.split(
         marking_line.separator, marking_line.split_count
       ).each_with_index do |v, i|
-        insert_value(marking_line.pos(i), marking_line.name, v)
+        insert_value(marking_line.pos(i + 1), marking_line.name, v)
       end
     else
       insert_value(marking_line.pos, marking_line.name, value)

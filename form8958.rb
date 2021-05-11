@@ -97,11 +97,9 @@ class Form8958 < TaxForm
     copy_line(:first_name, @my_bio)
     copy_line(:last_name, @my_bio)
     copy_line(:ssn, @my_bio)
-    box_line(:ssn, 3, '-')
     line[:spouse_first_name] = @spouse_bio.line[:first_name]
     line[:spouse_last_name] = @spouse_bio.line[:last_name]
     line[:spouse_ssn] = @spouse_bio.line[:ssn]
-    box_line(:spouse_ssn, 3, '-')
 
     my_name = "#{line[:first_name]} #{line[:last_name]}"
     spouse_name = "#{line[:spouse_first_name]} #{line[:spouse_last_name]}"
@@ -144,29 +142,33 @@ class Form8958 < TaxForm
 
     if @my_manager.has_form?('1040 Schedule SE')
       my_se = @my_manager.form('1040 Schedule SE')
-      if my_se && my_se.line[12] > 0
-        line[9, :add] = "Deduction for #{my_name}"
-        line['9A', :add] = my_se.line[13]
-        line['9B', :add] = my_se.line[13]
-        line['9C', :add] = BlankZero
-        line[10, :add] = "Tax for #{my_name}"
-        line['10A', :add] = my_se.line[12]
-        line['10B', :add] = my_se.line[12]
-        line['10C', :add] = BlankZero
+      if my_se && my_se.line[:se_tax] > 0
+        add_table_row(
+          9     => "Deduction for #{my_name}",
+          '9A'  => my_se.line[:se_ded],
+          '9B'  => my_se.line[:se_ded],
+          '9C'  => BlankZero,
+          10    => "Tax for #{my_name}",
+          '10A' => my_se.line[:se_tax],
+          '10B' => my_se.line[:se_tax],
+          '10C' => BlankZero,
+        )
       end
     end
 
     if @spouse_manager.has_form?('1040 Schedule SE')
       spouse_se = @spouse_manager.form('1040 Schedule SE')
-      if spouse_se && spouse_se.line[12] > 0
-        line[9, :add] = "Deduction for #{spouse_name}"
-        line['9A', :add] = spouse_se.line[13]
-        line['9B', :add] = BlankZero
-        line['9C', :add] = spouse_se.line[13]
-        line[10, :add] = "Tax for #{spouse_name}"
-        line['10A', :add] = spouse_se.line[12]
-        line['10B', :add] = BlankZero
-        line['10C', :add] = spouse_se.line[12]
+      if spouse_se && spouse_se.line[:se_tax] > 0
+        add_table_row(
+          9     => "Deduction for #{spouse_name}",
+          '9A'  => spouse_se.line[:se_ded],
+          '9B'  => BlankZero,
+          '9C'  => spouse_se.line[:se_ded],
+          10    => "Tax for #{spouse_name}",
+          '10A' => spouse_se.line[:se_tax],
+          '10B' => BlankZero,
+          '10C' => spouse_se.line[:se_tax],
+        )
       end
     end
 

@@ -54,7 +54,7 @@ class Form2441 < TaxForm
     # TODO: Add sole proprietorship/partnership benefits as necessary. See lines
     # 22 and 24 if this is done.
     line[12] = forms('W-2').lines[10, :sum]
-    return if line[12] = 0
+    return if line[12] == 0
 
     @use_form = form("Dependent Care Benefit Use")
     line[13] = @use_form.line[:last_year_grace_period_use]
@@ -70,7 +70,7 @@ class Form2441 < TaxForm
 
     line[18] = compute_earned_income(@manager)
     if form(1040).status.is?(:mfs) && !line[:mfs_except, :present]
-      line[19] = compute_earned_income(submanager(:spouse))
+      line[19] = compute_earned_income(@manager.submanager(:spouse))
       line[20] = [ line[17], line[18], line[19] ].min
       line[21] = 2500
     else
@@ -108,7 +108,7 @@ class Form2441 < TaxForm
     res += manager.forms('1065 Schedule K-1').lines(14, :sum)
 
     if manager.has_form?('1040 Schedule C')
-      res += manager.form('1040 Schedule C').line[:tot_inc]
+      res += manager.form('1040 Schedule C').line[:net_profit]
     else
       # Fake a computation of Schedule C
       fake_schedule_c = manager.compute_form('1040 Schedule C')

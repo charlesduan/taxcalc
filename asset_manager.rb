@@ -32,10 +32,8 @@ class AssetManager < TaxForm
       end
     end
 
-  end
+    line[:needs_4562?] = @current_assets.any?
 
-  def needs_4562?
-    return @current_assets.any?
   end
 
   def depreciation_total

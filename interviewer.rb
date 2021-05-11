@@ -1,7 +1,6 @@
 require 'date'
 
 require_relative 'tax_form'
-require_relative 'boxed_data'
 
 class Interviewer
 
@@ -97,8 +96,6 @@ class Interviewer
 
     case data
     when '-' then BlankZero
-    when /^<(.*?)\|(\d+)\|(.*)>$/
-      BoxedData.new($1, $2.to_i, parse(question, $3))
     when /^-?\d+$/ then data.to_i
     when /^-?\d*\.\d*$/ then data.to_f
     when /^\d{4}-\d{1,2}-\d{1,2}$/ then Date.strptime(data, "%Y-%m-%d")

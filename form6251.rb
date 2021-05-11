@@ -365,8 +365,9 @@ FilingStatus.set_param('amt_exempt_max',
 FilingStatus.set_param('amt_exemption',
                        single: 72_900, mfj: 113_400, mfs: :half_mfj, hoh:
                        :single, qw: :mfj)
-FilingStatus.set_param('amt_exempt_zero', 797_100, 1_467_400, :half_mfj,
-                       :single, :mfj)
+FilingStatus.set_param('amt_exempt_zero',
+                       single: 810_000, mfj: 1_490_400, mfs: :half_mfj,
+                       hoh: :single, qw: :mfj)
 FilingStatus.set_param('amt_cg_exempt',
                        single: 40_000, mfj: 80_000, mfs: :single,
                        hoh: 53_600, qw: :mfj)

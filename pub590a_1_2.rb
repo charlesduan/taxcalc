@@ -33,9 +33,9 @@ class Pub590AWorksheet1_2 < TaxForm
       # Determine whether the MAGI is between the limits. If it is below the
       # lower bound limit, then compute as if there were no limit.
       magi = compute_form('Pub. 590-A Worksheet 1-1').line[:magi]
-      if magi <= ret_limits[0]
+      if magi <= limit[0]
         compute_all_deductible
-      elsif magi >= ret_limits[1]
+      elsif magi >= limit[1]
         compute_none_deductible
       else
         compute_some_deductible

@@ -13,30 +13,37 @@ class TaxComputation < TaxForm
   def compute
 
     @f1040 = form(1040)
-    @status = f1040.status
+    @status = @f1040.status
 
     # Form for rich kids (under 24)
     if age < 24
       raise "Form 8615 is not implemented"
     end
 
-    with_or_without_form('1040 Schedule D') do |sched_d|
-      if sched_d
-        if sched_d.line['20no', :present]
-          line[:tax_method] = 'Sch D'
-          return compute_tax_schedule_d # Not implemented; raises error
-        elsif sched_d.line[:lt_gain] > 0 && sched_d.line[:tot_gain] > 0
-          line[:tax_method] = 'QDCGTW'
-          return compute_tax_qdcgt
-        end
-      elsif f1040.line[:qualdiv, :present] or f1040.line[:cap_gain, :opt] != 0
-        line[:tax_method] = 'QDCGTW'
-        return compute_tax_qdcgt
-      end
+    line[:tax] = with_form('1040 Schedule D', otherwise: proc {
+      compute_no_schedule_d
+    }) do |sched_d|
+      compute_with_schedule_d(sched_d)
     end
+  end
 
-    # Default computation method
-    return compute_tax_standard(f1040.line[:taxinc])
+  def compute_with_schedule_d(sched_d)
+    if sched_d.line['20no', :present]
+      line[:tax_method] = 'Sch D'
+      return compute_tax_schedule_d # Not implemented; raises error
+    elsif sched_d.line[:lt_gain] > 0 && sched_d.line[:tot_gain] > 0
+      line[:tax_method] = 'QDCGTW'
+      return compute_tax_qdcgt
+    end
+  end
+
+  def compute_no_schedule_d
+    if @f1040.line[:qualdiv, :present] or @f1040.line[:cap_gain, :opt] != 0
+      line[:tax_method] = 'QDCGTW'
+      return compute_tax_qdcgt
+    else
+      return compute_tax_standard(@f1040.line[:taxinc])
+    end
   end
 
   def compute_tax_standard(income)
@@ -79,12 +86,12 @@ class QdcgtWorksheet < TaxForm
   end
 
   def compute
-    f1040 = form(1040)
+    @f1040 = form(1040)
     ftc = form('Tax Computation')
     confirm("You have no foreign income")
 
-    line[1] = f1040.line[:taxinc]
-    line[2] = f1040.line[:qualdiv]
+    line[1] = @f1040.line[:taxinc]
+    line[2] = @f1040.line[:qualdiv]
     if has_form?('1040 Schedule D')
       sched_d = form('1040 Schedule D')
       line['3yes'] = 'X'
@@ -93,13 +100,13 @@ class QdcgtWorksheet < TaxForm
       ].max
     else
       line['3no'] = 'X'
-      line[3] = f1040.line[:cap_gain]
+      line[3] = @f1040.line[:cap_gain]
     end
 
     line[4] = line[2] + line[3] # Total qualdiv and cap gains
     line[5] = line[1] - line[4] # Income excluding qualdiv/capgain
 
-    line[6] = f1040.status.qdcgt_exemption
+    line[6] = @f1040.status.qdcgt_exemption
     line[7] = [ line[1], line[6] ].min  # Exemption, limited by income
     line[8] = [ line[5], line[7] ].min  # Non-qdcg income, up to exemption
     line[9] = line[7] - line[8]         # Some non-qdcg income is exempt
@@ -107,7 +114,7 @@ class QdcgtWorksheet < TaxForm
     line[11] = line[9]
     line[12] = line[10] - line[11]      # What's left after exemption
 
-    line[13] = f1040.status.qdcgt_cap
+    line[13] = @f1040.status.qdcgt_cap
     line[14] = [ line[1], line[13] ].min # 15% rate cap limited by income
     line[15] = line[5] + line[9]         # Non-qdcg income plus line 9 exemption
     line[16] = [ line[14] - line[15], 0 ].max # Phase-out of 15% rate cap

@@ -4,7 +4,6 @@ require 'date'
 require_relative 'form_manager'
 require_relative 'interviewer'
 require_relative 'blank_zero'
-require_relative 'boxed_data'
 
 class TaxForm
 
@@ -67,7 +66,6 @@ class TaxForm
       else
         new_copy.line[lnum] = val
       end
-      new_copy.box_line(lnum, *line.box_data(lnum)) if line.boxed?(lnum)
     end
     return new_copy
   end
@@ -177,13 +175,6 @@ class TaxForm
     format % nums.map { |l| line[l] }
   end
 
-  #
-  # Use when a line is presented as a series of character-width boxes.
-  #
-  def box_line(line, box, split = "")
-    self.line.box(line, box, split)
-  end
-
   def form_line_or(form_name, form_line, default)
     if @manager.has_form?(form_name)
       form(form_name).line(form_line)
@@ -196,10 +187,11 @@ class TaxForm
     @manager.has_form?(name)
   end
 
-  def with_form(name, otherwise_return: nil)
+  def with_form(name, otherwise: nil, otherwise_return: nil)
     if @manager.has_form?(name)
       return yield(form(name))
     else
+      otherwise_return ||= otherwise.call if otherwise
       return otherwise_return
     end
   end
@@ -224,6 +216,10 @@ class TaxForm
     f = @manager.compute_form(name, *args)
     yield(f) if block_given? and f
     return f
+  end
+
+  def compute_more(form, method)
+    @manager.compute_more(form, method)
   end
 
   def find_or_compute_form(name)
@@ -292,9 +288,6 @@ class TaxForm
         line[last_line, :all] = [ line[last_line, :all], data ].flatten
       elsif data.is_a?(Enumerable)
         line[line_no, :all] = data
-      elsif data.is_a?(BoxedData)
-        line[line_no] = data.data
-        line.box(line_no, data.count, data.split)
       else
         line[line_no] = data
       end
@@ -383,7 +376,6 @@ class TaxForm; class Lines
     @form = form
     @lines_data = {}
     @lines_order = []
-    @boxed_lines = {}
     @aliases = {}
   end
 
@@ -402,8 +394,13 @@ class TaxForm; class Lines
     if @aliases[line]
       res = @aliases[line]
       if @form != @form.manager.currently_computing && res.start_with?(line)
-        warn("In #{@form.manager.currently_computing.name}, use alias for " +
-             "Form #{@form.name}, line #{res}")
+        if @form.manager.currently_computing
+          warn("In #{@form.manager.currently_computing.name}, use alias for " +
+               "Form #{@form.name}, line #{res}")
+        else
+          warn("For #{@form.manager.name}, use alias for " +
+               "Form #{@form.name}, line #{res}")
+        end
       end
       return res
     end
@@ -476,48 +473,17 @@ class TaxForm; class Lines
     end
   end
 
-  def box(line, count, split = "")
-    @boxed_lines[resolve_alias(line)] = [ count, split ]
-  end
-
-  def boxed?(line)
-    @boxed_lines.include?(resolve_alias(line))
-  end
-
-  def box_data(line)
-    @boxed_lines[resolve_alias(line)]
-  end
-
-  def embox(line)
-    line = resolve_alias(line)
-    raise "Not a boxed line" unless boxed?(line)
-    data = self[line]
-    bld = @boxed_lines[line]
-    boxes = data.to_s.split(bld[1])
-    if data.is_a?(Numeric)
-      boxes.unshift(*([ "" ] * [ bld[0] - boxes.count, 0 ].max))
-    else
-      boxes = boxes[0, bld[0]]
-    end
-    return boxes
-  end
-
   def export(io = STDOUT)
 
     io.puts("Form #{@form.name}")
     @lines_order.each do |line|
       data = @lines_data[line]
       prefix = "\t#{line}\t"
-      if @boxed_lines[line]
-        bld = @boxed_lines[line]
-        io.puts("#{prefix}<#{bld[1]}|#{bld[0]}|#{data}>")
-      else
-        [ data ].flatten.each do |item|
-          item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
-          item = item.to_s.gsub("\n", "\\n")
-          io.puts("#{prefix}#{item}")
-          prefix = "\t#{'"'.ljust(line.length)}\t"
-        end
+      [ data ].flatten.each do |item|
+        item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
+        item = item.to_s.gsub("\n", "\\n")
+        io.puts("#{prefix}#{item}")
+        prefix = "\t#{'"'.ljust(line.length)}\t"
       end
     end
     io.puts()

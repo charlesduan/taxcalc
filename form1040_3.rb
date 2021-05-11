@@ -14,6 +14,10 @@ class Form1040_3 < TaxForm
     2020
   end
 
+  # Social security tax withholding threshold. This is from Line 10, and must be
+  # updated every year.
+  SS_THRESHOLD = 8537
+
   def compute
     set_name_ssn
 
@@ -23,7 +27,9 @@ class Form1040_3 < TaxForm
 
     # Child care expenses
     with_form(2441) do |f|
-      line[2] = f.line[11]
+      unless f.line[:credit_not_permitted!]
+        line[2] = f.line[:credit]
+      end
     end
 
     # Education credits
@@ -58,21 +64,20 @@ class Form1040_3 < TaxForm
     # 9: Amount paid with extension to file.
 
     # 10: Social security excess
-    ss_threshold = 8240
     ss_tax_paid = forms('W-2').lines[4].map { |x|
-      warn "Employer withheld too much social security tax" if x > ss_threshold
-      [ x, ss_threshold ].min
-     }.inject(:+)
-     # The next line isn't exactly correct for mfj filers
-     ss_threshold *= 2 if form(1040).status.is('mfj')
-     if ss_tax_paid > ss_threshold
-       line[11] = ss_tax_paid - ss_threshold
-     end
+      warn "Employer withheld too much social security tax" if x > SS_THRESHOLD
+      [ x, SS_THRESHOLD ].min
+    }.inject(:+)
+    # The next line isn't exactly correct for mfj filers
+    tot_sst = form(1040).status.is(:mfj) ? SS_THRESHOLD * 2 : SS_THRESHOLD
+    if ss_tax_paid > tot_sst
+      line[11] = ss_tax_paid - tot_sst
+    end
 
-     # 11: fuel tax credit.
-     # 12: Other credits.
+    # 11: fuel tax credit.
+    # 12: Other credits.
 
-     line['13/ref_credits'] = sum_lines(*8..13)
+    line['13/ref_credits'] = sum_lines(*8..13)
   end
 
   def needed?
@@ -81,4 +86,6 @@ class Form1040_3 < TaxForm
 
 end
 
-FilingStatus.set_param('qrsc_limit', 32_000, 64_000, :single, 48_000, :single)
+FilingStatus.set_param('qrsc_limit',
+                       single: 32_500, mfj: 65_000, mfs: :single,
+                       hoh: 48_750, qw: :single)

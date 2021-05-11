@@ -32,9 +32,7 @@ class Form8959 < TaxForm
       line[13] = (line[12] * 0.009).round
     end
 
-    if forms('W-2').any? { |w2| w2.line[14, :present] }
-      raise "RRTA compensation additional medicare tax not implemented"
-    end
+    confirm("You did not receive any RRTA compensation")
 
     line['18/add_mc_tax'] = sum_lines(7, 13, 17)
 

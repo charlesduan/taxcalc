@@ -35,7 +35,7 @@ class Form8606 < TaxForm
     set_name_ssn
 
     # Lines 1-5 will be computed by the IRA Analysis.
-    line[1] = @ira_analysis.line[:nondeductible_contribs]
+    line[1] = @ira_analysis.line[:nondeductible_contrib]
     copy_analysis_line(2)
     copy_analysis_line(3)
     copy_analysis_line(4)
