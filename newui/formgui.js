@@ -46,6 +46,14 @@ rootView.setStyleSheet(`
     flex-direction: row;
 }
 
+#pageSelector {
+    width: 60px;
+}
+
+#lineSelector {
+    width: 300px;
+}
+
 #container {
     background-color: blue;
     flex-direction: column;
@@ -57,6 +65,10 @@ rootView.setStyleSheet(`
     border: 0px;
     margin: 0px;
     padding: 0px;
+}
+
+#container *[line="true"]:hover {
+    border: 2px solid red;
 }
 
 #container #dragWidget {
@@ -91,6 +103,7 @@ prevPageButton.setText("<");
 toolBar.layout.addWidget(prevPageButton);
 
 const pageSelector = new gui.QComboBox();
+pageSelector.setObjectName("pageSelector");
 toolBar.layout.addWidget(pageSelector);
 
 const nextPageButton = new gui.QPushButton();
@@ -102,6 +115,7 @@ w.setText("Line");
 toolBar.layout.addWidget(w);
 
 const lineSelector = new gui.QComboBox();
+lineSelector.setObjectName("lineSelector");
 toolBar.layout.addWidget(lineSelector);
 
 w = new gui.QLabel();
@@ -284,7 +298,7 @@ async function loadPdf(formname, filename, lines) {
     await pdfloader.loadPdf(filename);
     const numPages = pdfloader.numPages();
     pageSelector.clear();
-    formNameLabel.setText('' + formname + " (" + filename + ")")
+    formNameLabel.setText('Form ' + formname)
     for (var i = 1; i <= numPages; i++) {
         pageSelector.addItem(undefined, i.toString());
     }

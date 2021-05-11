@@ -38,6 +38,7 @@ class Marking; class Controller
       'file' => File.absolute_path(@current_form.file),
       'lines' => @current_form.line_names,
     })
+    select_next_line(nil)
   end
 
   def send_cmd(cmd, args)
@@ -85,9 +86,16 @@ class Marking; class Controller
       warn("Box and toolbar are out of sync as to split for line #{line}")
     end
 
+    select_next_line(line)
+  end
+
+  def select_next_line(line = nil)
     lines = @current_form.lines
-    line_next_index = (lines.find_index { |l| l.name == line } || -1) + 1
-    lines.rotate(line_next_index).each do |line_next|
+    if line
+      line_next_index = (lines.find_index { |l| l.name == line } || -1) + 1
+      lines = lines.rotate(line_next_index)
+    end
+    lines.each do |line_next|
       if line_next.no_pos?
         select_line(line_next)
         break
