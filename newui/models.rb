@@ -7,9 +7,9 @@ class Marking
   # with a PDF file, and contains an array of Line objects initially empty.
   class Form
 
-    def initialize(formname, filename)
+    def initialize(formname)
       @name = formname
-      @file = filename
+      @file = nil
       @lines = []
     end
 
@@ -28,24 +28,16 @@ class Marking
     end
 
     #
-    # Downloads the form to the cache directory if it is not there already.
+    # Returns the predicted URL for the form.
     #
-    def download_form(cache_dir)
+    def file_url
       uname = case @name
               when /^\d{4}$/ then "f#@name"
+              when /^(\d{4})-(\w+) Schedule (\w+)/ then "f#$1#$2#$3".downcase
               when /^(\d{4}) Schedule (\w+)/ then "f#$1s#$2".downcase
               else raise "Can't determine form URL"
               end
-      filename = File.join(cache_dir, uname)
-      unless File.exist?(filename)
-        url = "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"
-        URI.open(url) do |url_io|
-          File.open(filename, 'w') do |file_io|
-            file_io.write(url_io.read)
-          end
-        end
-      end
-      self.file = filename
+      return "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"
     end
 
     def line(num)
@@ -125,6 +117,10 @@ class Marking
       return insert_pos
     end
 
+    def all_filled?
+      return @lines.all?(&:filled?)
+    end
+
   end
 
   class Line
@@ -138,6 +134,14 @@ class Marking
 
     def split?
       return !@separator.nil?
+    end
+
+    def filled?
+      if split?
+        return !@pos.empty?
+      else
+        return !@pos.nil?
+      end
     end
 
     def make_split(sep)

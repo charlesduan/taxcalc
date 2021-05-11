@@ -1,6 +1,7 @@
 require_relative 'models'
 require_relative '../form_manager'
 require 'json'
+require 'open-uri'
 
 class Marking; class Controller
 
@@ -10,26 +11,52 @@ class Marking; class Controller
     @node_io = node_io
   end
 
-  def cmd_load(args)
-    @forms = YAML.load(open(args['file'], &:read))
+  attr_reader :forms
+
+  def load_posdata(file)
+    @forms = YAML.load(open(file, &:read))
   end
 
   def import_forms(form_manager)
-    @forms.each do |name, form|
-      next unless form_manager.has_form?(name)
-      form_manager.forms(name).each do |tax_form|
-        form.merge_lines(tax_form)
+    form_manager.forms(name).each do |tax_form|
+      if @forms.include?(tax_form.name)
+        form = @forms[tax_form.name]
+      else
+        form = @forms[tax_form.name] = Form.new(tax_form.name)
       end
+      form.merge_lines(tax_form)
     end
-  end
-
-  def add_form(form_name, file)
-    return if @forms[form_name]
-    @current_form = @forms[form_name] = Form.new(form_name, file)
   end
 
   def select_form(name)
     @current_form = @forms[name]
+    raise "Unknown Form #{name}" unless @current_form.is_a?(Form)
+  end
+
+  def set_current_form_file(file, force: false)
+    raise "No selected form" unless @current_form
+    if @current_form.file
+      raise "Refusing to overwrite form data; use 'force' option" unless force
+    end
+    @current_form.file = file
+  end
+
+  def download_current_form_file(dir:, url: nil, force: false)
+    raise "No selected form" unless @current_form
+    if @current_form.file
+      raise "Refusing to overwrite form data; use 'force' option" unless force
+    end
+    shortname = @current_form.name.downcase.gsub(/\W+/, '-')
+    filename = File.join(dir, "form#{shortname}.pdf")
+    url ||= @current_form.file_url
+    file.open(filename, 'w') do |io|
+      io.write(URI.open(url, &:read))
+    end
+    set_current_form_file(filename, force: force)
+  end
+
+  def current_form_has_file?
+    return !!@current_form.file
   end
 
   def start
