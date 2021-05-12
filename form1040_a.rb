@@ -13,6 +13,7 @@ class Form1040A < TaxForm
     set_name_ssn
 
     # Medical expenses not implemented
+    line['4/med_ded'] = BlankZero
 
     line['5a/salt_inc'] = forms('State Tax').lines(:amount, :sum) + \
       forms('W-2').lines(17, :sum)
@@ -58,6 +59,7 @@ class Form1040A < TaxForm
     end
 
     confirm('You had no casualty or theft losses')
+    line['15/cas_theft'] = BlankZero
 
     line['17/total'] = sum_lines(4, 7, 10, 14, 15, 16)
 
