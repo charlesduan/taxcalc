@@ -62,7 +62,7 @@ end.parse!
 @controller = Marking::Controller.new(@rubyWr)
 
 # Load the posdata and import tax forms
-@controller.load_posdata(@options.posdata)
+@controller.load_posdata(@options.posdata) if File.exist?(@options.posdata)
 @options.inputs.each do |input|
   manager = FormManager.new
   manager.import(input)

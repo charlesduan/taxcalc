@@ -18,7 +18,7 @@ class Marking; class Controller
   end
 
   def import_forms(form_manager)
-    form_manager.forms(name).each do |tax_form|
+    form_manager.each do |tax_form|
       if @forms.include?(tax_form.name)
         form = @forms[tax_form.name]
       else
