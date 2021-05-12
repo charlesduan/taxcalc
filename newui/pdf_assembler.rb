@@ -16,23 +16,11 @@ class PdfAssembler
 
   def initialize(infile, outfile)
     @infile, @outfile = infile, outfile
-    @tempdir = nil
     @even_pages = true
   end
 
   attr_accessor :file
   attr_accessor :even_pages
-
-  def tempdir
-    return @tempdir if @tempdir
-    @tempdir = Dir.mktmpdir
-    return @tempdir
-  end
-
-  def cleanup
-    FileUtils.remove_entry(@tempdir) if @tempdir
-    @tempdir = nil
-  end
 
   def fill_form(commands)
     command = [ CPDF, "-merge", @infile ]
@@ -48,17 +36,17 @@ class PdfAssembler
     end
   end
 
-  def add_continuation(ct, filename)
-    IO.popen("groff -mom -t | ps2pdf - #{tempdir}/ct.pdf", 'w') do |io|
+  def add_continuation(ct)
+    IO.popen("groff -mom -t | ps2pdf - form-con.pdf", 'w') do |io|
       io.write(ct)
     end
-    command = [ CPDF, '-merge', '-i', filename, '-i', "#{tempdir}/ct.pdf" ]
+    command = [ CPDF, '-merge', '-i', @outfile, '-i', "form-con.pdf" ]
     command.push('AND', '-pad-multiple', '2') if @even_pages
-    command.push('-o', filename)
+    command.push('-o', @outfile)
     popen(*command, :err => "/dev/null") do |io|
       puts io.read
     end
-    cleanup
+    File.unlink("form-con.pdf")
   end
 
 end

@@ -295,6 +295,11 @@ function makeContainer() {
  */
 
 async function loadPdf(formname, filename, lines) {
+    updatingToolbar = true;
+    lineSelector.clear();
+    lineSelector.addItems(lines);
+    updatingToolbar = false;
+
     await pdfloader.loadPdf(filename);
     const numPages = pdfloader.numPages();
     pageSelector.clear();
@@ -302,8 +307,6 @@ async function loadPdf(formname, filename, lines) {
     for (var i = 1; i <= numPages; i++) {
         pageSelector.addItem(undefined, i.toString());
     }
-    lineSelector.clear();
-    lineSelector.addItems(lines);
 }
 
 /*

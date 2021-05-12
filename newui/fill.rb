@@ -14,8 +14,25 @@ Dir.mkdir(output_dir) unless File.directory?(output_dir)
 manager = FormManager.new
 manager.import(form_file)
 
-filler = FormFiller.new(posdata, manager)
+bio = nil
+bio ||= manager.with_form(1040) { |f|
+  "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:ssn]}"
+}
+bio ||= manager.with_form(1065) { |f|
+  "#{f.line[:name]}, EIN #{f.line[:D]}"
+}
+unless bio
+  warn "No biographical information found"
+  bio = "???"
+end
+
 
 manager.each do |tax_form|
-  filler.fill_form(tax_form, File.join(output_dir, "#{tax_form.name}.pdf"))
+  pos_form = posdata[tax_form.name]
+  next unless pos_form && pos_form.file
+  puts "Filling Form #{tax_form.name}"
+
+  filler = FormFiller.new(tax_form, pos_form)
+  filler.continuation_bio = bio
+  filler.fill(File.join(output_dir, "#{tax_form.name}.pdf"))
 end

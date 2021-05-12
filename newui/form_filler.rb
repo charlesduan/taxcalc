@@ -2,70 +2,69 @@ require_relative 'pdf_assembler'
 
 class FormFiller
 
-  def initialize(posdata, manager)
-    @posdata = posdata
-    @manager = manager
+  def initialize(tax_form, pos_form)
+    @tax_form, @pos_form = tax_form, pos_form
     @even_pages = true
+
+    @fill_data = []
+
+    # @continuation_lines is a two-element array. The first is a hash of
+    # options; the second an array of line-value pairs for the continuation.
+    # (See multi_line for further explanation.)
+    @continuation_lines = []
+    @explanation_lines = []
+
+
+    @note_syms = compute_note_symbols
+
   end
 
   attr_accessor :continuation_bio
   attr_accessor :even_pages
 
-  def has_form?(form_name)
-    @posdata.include?(form_name)
-  end
-
-  def has_form_line?(form_name, line)
-    !@posdata[form_name].line(line).nil?
-  end
-
-  def fill_form(tax_form, outfile)
-
-    @note_syms = compute_note_symbols(tax_form)
-
-    @fill_data = []
-    @continuation_lines = []
-    @explanation_lines = []
-
-    pos_form = @posdata[tax_form.name]
-    unless pos_form
-      warn("No position data for Form #{tax_form.name}")
-      return
-    end
-    @assembler = PdfAssembler.new(pos_form.file, outfile)
+  def fill(outfile)
+    @assembler = PdfAssembler.new(@pos_form.file, outfile)
     @assembler.even_pages = @even_pages
-    unless pos_form
-      warn("No form data for filling in #{tax_form.name}")
+
+    unless @pos_form
+      warn("No position data for Form #{@tax_form.name}")
+      return
+    end
+    unless @pos_form.file
+      warn("No PDF file for Form #{@tax_form.name}")
       return
     end
 
-    tax_form.line.each do |l, v|
+    @tax_form.line.each do |l, v|
       if l =~ /explanation!$/
         @explanation_lines.push(v)
       elsif l == 'continuation!'
-        continuation_form = form.manager.form(v)
-        @continuation_lines.push([
-          { :title => continuation_form.name },
-          form.line.to_a
-        ])
+        continuation_form = @tax_form.manager.form(v)
+        if continuation_form
+          @continuation_lines.push([
+            { :title => continuation_form.name },
+            form.line.to_a
+          ])
+        else
+          warn("Expected continuation Form #{v} not found")
+        end
+
       elsif l.end_with?("!") # Ignore
       elsif v.is_a?(Array)
         fill_multi(l, v)
-      elsif pos_form.line(l)
-        fill_line(pos_form.line(l), v)
       else
-        STDERR.puts("No position data for form #{tax_form.name}, line #{l}")
+        fill_line(@pos_form.line(l), v)
       end
     end
     @assembler.fill_form(@fill_data)
-    ct = make_continuation(tax_form.name)
+    ct = make_continuation
     @assembler.add_continuation(ct) if ct
   end
 
-  def compute_note_symbols(tax_form)
+  def compute_note_symbols
     syms = %w(* + ^ ** ++ ^^ *** +++ ^^^ **** ++++ ^^^^)
     note_syms = {}
-    tax_form.line.each do |l, v|
+    @tax_form.line.each do |l, v|
       next unless l =~ /\*note$/
       raise "Too many notes" if syms.empty?
       note_syms[l] = note_syms[$`] = syms.shift
@@ -73,21 +72,81 @@ class FormFiller
     return note_syms
   end
 
+  #
+  # Fills a TaxForm line that is an array. This first converts the line name to
+  # the convention of [line]#[array_pos], sees if the pos_form has enough slots,
+  # and either fills them if so or produces a continuation sheet otherwise.
+  #
+  def fill_multi(line, array)
+    # Compute the line names
+    line_names = [ line, *(2..array.count).map { |x| "#{line}##{x}" } ]
+
+    #
+    # If the last line has a position, then fill all the lines.
+    #
+    last_line = @pos_form.line(line_names.last)
+    if last_line && last_line.positioned?
+      line_names.zip(array).each do |l, v|
+        fill_line(@pos_form.line(l), v)
+      end
+      return
+    end
+
+    # A continuation sheet is needed at this point.
+    first_line = @pos_form.line(line)
+    unless first_line.positioned?
+      warn("Line #{first_line.name} has no position data")
+      return
+    end
+
+    #
+    # Determine whether to suppress the continuation sheet message. First,
+    # construct the options for this line. :prefix is the portion of the line
+    # name up to the first numeric portion; :pos is the lower left corner of
+    # where this line will go.
+    options = {
+      :prefix => line =~ /^\D*\d+/ ? $& : line,
+      :pos_x => first_line.lower_left.first,
+      :pos_y => first_line.lower_left.last,
+    }
+    # We look through the existing continuation lines to see if any of them
+    # match this one, in the sense that they have the same prefix and are
+    # vertically or horizontally aligned. If so, then append this line's data
+    # onto the matching continuation and return.
+    @continuation_lines.each do |c_options, c_lines|
+      next unless c_options[:prefix] == options[:prefix]
+      next if (c_options[:pos_x] - options[:pos_x]).abs > 10 and
+        (c_options[:pos_y] - options[:pos_y]).abs > 10
+      c_lines.push([ line, array ])
+      return
+    end
+    # If no match is found, add a new entry to @continuation lines and fill this
+    # line with the continuation message.
+    @continuation_lines.push([ options, [ [ line, array ] ] ])
+    fill_line(first_line, "See continuation sheet")
+  end
+
   def fill_line(marking_line, value)
+    unless marking_line.positioned?
+      warn("Line #{marking_line.name} has no position data")
+      return
+    end
+
     if marking_line.split?
       value.to_s.split(
         marking_line.separator, marking_line.split_count
       ).each_with_index do |v, i|
         insert_value(marking_line.pos(i + 1), marking_line.name, v)
       end
+
     else
       insert_value(marking_line.pos, marking_line.name, value)
     end
   end
 
   def insert_value(pos, line_name, value)
-    puts "Inserting value #{value} for #{line_name} at #{pos}"
     text, offset = textify(line_name, value)
+    # TODO: Should use the actual page height
     ypos = [ 0, pos.h - 9, 3 ].sort[1] + (792 - pos.max_y)
     res = [
       "-add-text", text,
@@ -130,7 +189,7 @@ class FormFiller
     return [res, offset]
   end
 
-  def make_continuation(form_name)
+  def make_continuation
     return nil if @continuation_lines.empty? && @explanation_lines.empty?
 
     text = ""
@@ -142,8 +201,8 @@ class FormFiller
       .PARA_SPACE
       .START
     EOF
-    text << "\\f[B]Form #{form_name} Continuation Sheet\\f[]\n.PP\n"
-    text << bio.gsub("\n", "\n.PP\n") + "\n.PP\n"
+    text << "\\f[B]Form #{@tax_form.name} Continuation Sheet\\f[]\n.PP\n"
+    text << @continuation_bio.gsub("\n", "\n.PP\n") + "\n.PP\n"
 
     @explanation_lines.each do |explanation|
       text << "\\f[B]#{explanation[0]}\\f[]\n.PP\n"
@@ -174,7 +233,9 @@ class FormFiller
         # line number, [1] the alignment, and [2] the array of values.
         elements = lines.map { |l, v|
           v = [ v ].flatten
-          align = (v.all? { |x| x.is_a?(Numeric) }) ? 'R' : 'L'
+          align = (v.all? { |x|
+            x.is_a?(Numeric) || x.is_a?(BlankNum)
+          }) ? 'R' : 'L'
           [ l.to_s, align, v.map { |x| textify(l, x)[0] } ]
         }
 
@@ -213,7 +274,7 @@ class FormFiller
           }.join("\\*[TB+]\n") << "\n"
         end
 
-        text << ".TQ"
+        text << ".TQ\n\n"
 
       end
     end

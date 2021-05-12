@@ -228,6 +228,18 @@ class FormManager
     end
   end
 
+  # Performs a block if the named form exists and returns the result; otherwise
+  # performs an alternate block and/or returns an alternate value.
+  def with_form(name, otherwise: nil, otherwise_return: nil)
+    if has_form?(name)
+      return yield(form(name))
+    else
+      otherwise_return ||= otherwise.call if otherwise
+      return otherwise_return
+    end
+  end
+
+
 
   ########################################################################
   #

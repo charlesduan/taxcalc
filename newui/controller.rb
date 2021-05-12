@@ -18,7 +18,7 @@ class Marking; class Controller
   end
 
   def import_forms(form_manager)
-    form_manager.forms(name).each do |tax_form|
+    form_manager.each do |tax_form|
       if @forms.include?(tax_form.name)
         form = @forms[tax_form.name]
       else
@@ -49,7 +49,7 @@ class Marking; class Controller
     shortname = @current_form.name.downcase.gsub(/\W+/, '-')
     filename = File.join(dir, "form#{shortname}.pdf")
     url ||= @current_form.file_url
-    file.open(filename, 'w') do |io|
+    open(filename, 'w') do |io|
       io.write(URI.open(url, &:read))
     end
     set_current_form_file(filename, force: force)
@@ -69,7 +69,9 @@ class Marking; class Controller
   end
 
   def send_cmd(cmd, args)
-    @node_io.puts(JSON.generate({ 'command' => cmd, 'payload' => args}))
+    res = JSON.generate({ 'command' => cmd, 'payload' => args})
+    puts "-> #{res}"
+    @node_io.puts(res)
   end
 
   def select_line(line)
@@ -90,6 +92,8 @@ class Marking; class Controller
       warn("Line #{line} not found in form #{@current_form.name}")
       line_obj = @current_form.add_line(line)
     end
+
+    return if pos.too_small?
 
     if line_obj.split? && args['toolbar']['split']
       new_id = line_obj.add_pos(pos)
@@ -123,7 +127,7 @@ class Marking; class Controller
       lines = lines.rotate(line_next_index)
     end
     lines.each do |line_next|
-      if line_next.no_pos?
+      unless line_next.positioned?
         select_line(line_next)
         break
       end
@@ -168,7 +172,11 @@ class Marking; class Controller
     line_obj.remove_pos(boxno).each do |id|
       send_cmd('removeLineBox', { 'id' => id })
     end
-    select_line(line_obj)
+    if line_obj.split?
+      select_next_line(line_obj.name)
+    else
+      select_line(line_obj)
+    end
   end
 
   def cmd_lineChanged(args)
@@ -183,7 +191,7 @@ class Marking; class Controller
     end
     if args['split']
       return if line_obj.split?
-      send_cmd('removeLineBox', 'id' => line_obj.name) unless line_obj.no_pos?
+      send_cmd('removeLineBox', 'id' => line_obj.name) if line_obj.positioned?
       line_obj.make_split(args['separator'])
     else
       return unless line_obj.split?

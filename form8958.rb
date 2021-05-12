@@ -174,10 +174,10 @@ class Form8958 < TaxForm
 
     enter_split(11, 'W-2', 2, :c)
 
-    line[12, :add] = forms('W-2').lines('c').map { |x| "State tax: #{x}" }
+    line[12, :add] = forms('W-2').lines('c').map { |x| "State tax:\n#{x}" }
     enter_split(12, 'W-2', 17)
     line[12, :add] = forms('State Tax').lines('name').map { |x|
-      "State tax: #{x}"
+      "State tax:\n#{x}"
     }
     enter_split(12, 'State Tax', 'amount')
 
@@ -197,7 +197,7 @@ class Form8958 < TaxForm
     enter_split(12, 'Charity Gift', 'amount')
 
     line[12, :add] = forms('Estimated Tax').lines('confirm').map { |x|
-      "Estimated tax, confirmation #{x}"
+      "Estimated tax\nConfirmation #{x}"
     }
     enter_split(12, 'Estimated Tax', 'amount')
 

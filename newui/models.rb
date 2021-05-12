@@ -24,7 +24,7 @@ class Marking
     #
     def file=(filename)
       @file = filename
-      @lines = []
+      @lines.each(&:reset)
     end
 
     #
@@ -117,8 +117,14 @@ class Marking
       return insert_pos
     end
 
-    def all_filled?
-      return @lines.all?(&:filled?)
+    #
+    # Returns true if all the lines are either (1) positioned or (2) an
+    # array-type line where the first line of that array is positioned.
+    #
+    def all_positioned?
+      return @lines.all? { |l|
+        l.positioned? || (l =~ /#/ && line($`).positioned?)
+      }
     end
 
   end
@@ -126,6 +132,10 @@ class Marking
   class Line
     def initialize(name)
       @name = name
+      reset
+    end
+
+    def reset
       @pos = nil
       @separator = nil
     end
@@ -136,7 +146,7 @@ class Marking
       return !@separator.nil?
     end
 
-    def filled?
+    def positioned?
       if split?
         return !@pos.empty?
       else
@@ -192,11 +202,15 @@ class Marking
       end
     end
 
-    def no_pos?
+    # Returns the lower left coordinate.
+    def lower_left
+      unless positioned?
+        raise "Check that lower_left is only called on positioned lines"
+      end
       if split?
-        return @pos.empty?
+        return [ pos.first.min_x, pos.first.max_y ]
       else
-        return @pos.nil?
+        return [ pos.min_x, pos.max_y ]
       end
     end
 
@@ -267,6 +281,10 @@ class Marking
 
     def y
       @min_y
+    end
+
+    def too_small?
+      return (w < 6 || h < 6)
     end
 
   end

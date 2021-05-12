@@ -36,8 +36,8 @@ OptionParser.new do |opts|
     @options.posdata = file
   end
 
-  opts.on("-d", "--download [URL]", "Download the form online") do |url|
-    @options.download = url || true
+  opts.on("-d", "--download", "Download the form online") do
+    @options.download = true
   end
 
   opts.on("-f", "--file FILE", "Select the form's PDF file") do |file|
@@ -74,7 +74,7 @@ end
 if ARGV.count != 1
   puts("Provide a form name to work with. The following forms are available:")
   @controller.forms.each do |name, form|
-    puts "  #{name}#{form.all_filled? ? '' : ' (incomplete)'}"
+    puts "  #{name}#{form.all_positioned? ? '' : ' (incomplete)'}"
   end
   exit
 end
@@ -119,7 +119,7 @@ end
 begin
 
   @rubyRd.each do |line|
-    puts "Ruby: #{line}"
+    puts "<- #{line}"
     obj = JSON.parse(line)
     command, payload = obj['command'], obj['payload']
     if @controller.respond_to?("cmd_#{command}")

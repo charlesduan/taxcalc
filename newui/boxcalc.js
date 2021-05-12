@@ -55,9 +55,6 @@ function computeBoxAtPoint(point) {
     if (res[3] >= context.canvas.height) { res[3] = context.canvas.height - 1; }
 
     const r = new Rectangle(...res);
-    // Ensure that the rectangle returned is of reasonable size. This should be
-    // determined in terms of the resolution of the image.
-    if (r.width < 5 || r.height < 5) { return undefined; }
     return r;
 }
 

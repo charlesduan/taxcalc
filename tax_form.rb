@@ -187,13 +187,9 @@ class TaxForm
     @manager.has_form?(name)
   end
 
-  def with_form(name, otherwise: nil, otherwise_return: nil)
-    if @manager.has_form?(name)
-      return yield(form(name))
-    else
-      otherwise_return ||= otherwise.call if otherwise
-      return otherwise_return
-    end
+  # Convenience for FormManager.with_form
+  def with_form(*args, **params, &block)
+    @manager.with_form(*args, **params, &block)
   end
 
   def with_forms(name)
