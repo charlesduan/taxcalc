@@ -39,17 +39,20 @@ class FormD40 < TaxForm
     )[1, 3]
 
     # Filing status
-    line[1] = interview("Enter your DC filing status:")
+    line['1/status'] = interview("Enter your DC filing status:")
     unless %w(single mfj mfs dep mfssr hoh qw).include?(line[1])
       raise 'Unknown filing status'
     end
 
 
 
-    line['a'] = forms(1040).lines(1, :sum)
-    line['b'] = forms('1040 Schedule 1').lines(3, :sum)
-    line['c'] = forms(1040).lines(6, :sum)
-    line['d'] = forms('1040 Schedule 1').lines(5, :sum)
+    line[:a] = forms(1040).lines(:wages, :sum)
+    line[:b] = forms('1040 Schedule 1').lines(:bus_inc, :sum)
+    if line[:b] > 12_000
+      confirm("Your business income is exempt from D-30 filing")
+    end
+    line[:c] = forms(1040).lines(:cap_gain, :sum)
+    line[:d] = forms('1040 Schedule 1').lines(:rrerpst, :sum)
 
     hc_months = (forms('1095-B') + forms('1095-C')).map { |f|
       f.line_coverage == 'family' ? f.line_months : []
@@ -88,7 +91,7 @@ class FormD40 < TaxForm
     line[14] = sum_lines(*8..13)
 
     # DC AGI
-    line[15] = line[7] - line[14]
+    line['15/agi'] = line[7] - line[14]
 
     if has_form?('1040 Schedule A')
       line['16itemized'] = 'X'
@@ -213,11 +216,12 @@ class D40CalculationF < TaxForm
   end
 
   def year
-    2019
+    2020
   end
 
   def compute
     sch_as = forms('1040 Schedule A')
+    line[:ded_cap!] = (d40.line[:status] == 'mfs' ? 100000 : 200000)
 
     line[:a] = sch_as.lines(:total, :sum)
     line[:b] = sch_as.lines(:salt, :sum)
@@ -227,15 +231,17 @@ class D40CalculationF < TaxForm
     line[:f] = sum_lines(:c, :d, :e)
 
     d40 = form('D-40')
-    if d40.line[14] <= (d40.line[1] == 'mfs' ? 100000 : 200000)
+    if d40.line[:agi] <= line[:ded_cap!]
       line[:fill!] = line[:f]
       return
     end
 
-    line[:g] = %w(4 9 15).map { |l| sch_as.lines(l, :sum) }.inject(&:+)
+    line[:g] = %w(med_ded inv_int cas_theft).map { |l|
+      sch_as.lines(l, :sum)
+    }.inject(&:+)
     line[:h] = line_f - line_g
-    line[:i] = d40.line[15]
-    line[:j] = (d40.line[1] == 'mfs' ? 100000 : 200000)
+    line[:i] = d40.line[:agi]
+    line[:j] = line[:ded_cap!]
     line[:k] = line_i - line_j
     line[:l] = (line_k * 0.05).round
     line[:m] = [ 0, line_h - line_l ].max
