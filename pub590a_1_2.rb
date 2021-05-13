@@ -25,6 +25,7 @@ class Pub590AWorksheet1_2 < TaxForm
     else
       # No limits apply if neither spouse or a single person is covered by a
       # retirement plan.
+      line[:no_limits_apply] = 'No limits apply'
       compute_all_deductible
       skip = true
     end
@@ -32,7 +33,9 @@ class Pub590AWorksheet1_2 < TaxForm
     unless skip
       # Determine whether the MAGI is between the limits. If it is below the
       # lower bound limit, then compute as if there were no limit.
-      magi = compute_form('Pub. 590-A Worksheet 1-1').line[:magi]
+      line[1] = limit[1]
+      line[2] = magi = compute_form('Pub. 590-A Worksheet 1-1').line[:magi]
+      line[3] = line[1] - line[2]
       if magi <= limit[0]
         compute_all_deductible
       elsif magi >= limit[1]
@@ -98,7 +101,6 @@ class Pub590AWorksheet1_2 < TaxForm
   end
 
   def compute_some_deductible
-    line[3] = line[1] - line[2]
     #
     # The computation has gotten more complicated than usual here, and to date I
     # do not qualify for any deduction anyway.

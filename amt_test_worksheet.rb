@@ -5,7 +5,7 @@ require_relative 'form6251'
 # From 1040 instructions, Schedule 2 Line 1
 #
 class AMTTestWorksheet < TaxForm
-  NAME = "Worksheet to See If You Should Fill In Form 6251"
+  NAME = "1040 Worksheet to See If You Should Fill In Form 6251"
 
   def year
     2020

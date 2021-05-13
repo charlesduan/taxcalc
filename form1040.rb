@@ -269,7 +269,7 @@ class Form1040 < TaxForm
     line['18/pre_ctc_tax'] = sum_lines(16, 17)
 
     # Child tax credit and other credits
-    ctcw = compute_form('Child Tax Credit Worksheet')
+    ctcw = compute_form('1040 Child Tax Credit Worksheet')
     line[19] = ctcw.line[:fill!]
 
     sched_3 = find_or_compute_form('1040 Schedule 3')
@@ -416,7 +416,7 @@ end
 # From Form 1040, line 19 instructions
 #
 class ChildTaxCreditWorksheet < TaxForm
-  NAME = 'Child Tax Credit Worksheet'
+  NAME = '1040 Child Tax Credit Worksheet'
 
   def year
     2020

@@ -65,7 +65,7 @@ bio ||= manager.with_form(1065) { |f|
   "#{f.line[:name]}, EIN #{f.line[:D]}"
 }
 bio ||= manager.with_form('D-40') { |f|
-  "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:ssn]}"
+  "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:tin]}"
 }
 unless bio
   warn "No biographical information found"

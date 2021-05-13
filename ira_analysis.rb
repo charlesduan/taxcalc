@@ -129,13 +129,11 @@ class IraAnalysis < TaxForm
   def compute_distributions_only
     line[:deductible_contrib] = BlankZero
     line[:nondeductible_contrib] = BlankZero
-    # If there were no contributions, then all we need to do is the following:
-    # (1) Compute Form 8606 if it's needed, which will set taxable_distrib
-    # (2) If it's not needed, then there is no basis in traditional IRAs so
-    #     the taxable portion of the distribution is the whole distribution.
-    unless compute_8606_if_needed
-      line[:taxable_distrib] = line[:total_distrib]
-    end
+    #
+    # I was unconvinced that the code for this method originally written was
+    # correct, and since this case will not be true for me any time soon, I am
+    # leaving it unimplemented.
+    raise "Not implemented"
     @contrib_continuation = proc { }
   end
 
@@ -225,7 +223,6 @@ class IraAnalysis < TaxForm
       line['8606_13*note'] = 'Line 13 from Pub. 590-B Worksheet 1-1'
     end
 
-    @form8606 = compute_form(8606)
   end
 
   # Computes the values of lines 2-5 of Form 8606 (which are stored as lines in
@@ -267,32 +264,6 @@ class IraAnalysis < TaxForm
     roth_forms = forms('1099-R') { |f| %w(B J T).include?(f.line[7]) }
     unless roth_forms.empty?
       raise "Form 8606 part III is not implemented"
-    end
-  end
-
-  #
-  # Determines if Form 8606 ought to be computed (namely, if it was computed in
-  # the last year, or if nondeductible contributions were made this year). If
-  # so, then this method computes it and returns true; otherwise it returns
-  # false. For purposes of this method, the nondeductible contributions must
-  # have already been determined.
-  #
-  # This method is used only if there were either contributions or distributions
-  # but not both.
-  #
-  def compute_8606_if_needed
-    unless line[:nondeductible_contrib, :present]
-      raise "Cannot use this method"
-    end
-    ndc = line[:nondeductible_contrib]
-    if @manager.submanager(:last_year).has_form?(8606) || ndc != 0
-      compute_8606_lines_2_to_5
-      line[:compute_8606_rest?] = true
-      @form8606 = compute_form(8606)
-      line[:taxable_distrib] = @form8606.sum_lines('15c', 18, '25c')
-      return true
-    else
-      return false
     end
   end
 

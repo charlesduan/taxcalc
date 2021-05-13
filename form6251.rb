@@ -157,7 +157,7 @@ class Form6251 < TaxForm
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
-      line[5] = @manager.compute_form('Line 5 Exemption Worksheet').line[6]
+      line[5] = @manager.compute_form('6251 Line 5 Exemption Worksheet').line[6]
     else
       line[5] = form(1040).status.amt_exemption
     end
@@ -240,7 +240,7 @@ class Form6251 < TaxForm
       sd.line[19, :opt]
     end
     line[15] = with_form(
-      'Schedule D Tax Worksheet', otherwise_return: line[13]
+      '1040 Schedule D Tax Worksheet', otherwise_return: line[13]
     ) do |sdtw|
       [ sum_lines(13, 14), sdtw.line[10] ].min
     end
@@ -314,12 +314,10 @@ class Form6251 < TaxForm
   # present; if not yields and returns that.
   #
   def compute_from_worksheets(qdcgt_line, sdtw_line)
-    with_form(
-      'Qualified Dividends and Capital Gains Tax Worksheet'
-    ) do |qdcgt|
+    with_form('1040 QDCGT Worksheet') do |qdcgt|
       return qdcgt.line[qdcgt_line]
     end
-    with_form('Schedule D Tax Worksheet') do |sdtw|
+    with_form('1040 Schedule D Tax Worksheet') do |sdtw|
       return sdtw.line[sdtw_line]
     end
     return(yield)
@@ -330,7 +328,7 @@ end
 
 
 class Line5ExemptionWorksheet < TaxForm
-  NAME = 'Line 5 Exemption Worksheet'
+  NAME = '6251 Line 5 Exemption Worksheet'
 
   def year
     2019

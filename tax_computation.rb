@@ -70,16 +70,14 @@ class TaxComputation < TaxForm
   end
 
   def compute_tax_qdcgt
-    f = @manager.compute_form(
-      'Qualified Dividends and Capital Gains Tax Worksheet'
-    )
+    f = @manager.compute_form('1040 QDCGT Worksheet')
     return f.line[:tax]
   end
 
 end
 
 class QdcgtWorksheet < TaxForm
-  NAME = 'Qualified Dividends and Capital Gains Tax Worksheet'
+  NAME = '1040 QDCGT Worksheet'
 
   def year
     2020

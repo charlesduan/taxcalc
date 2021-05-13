@@ -20,7 +20,7 @@ module HomeOfficeManager
 
       k1 = forms('1065 Schedule K-1').find { |k| k.line['A'] == f.line['ein'] }
       raise "No matching 1065 Schedule K-1 for Home Office form" unless k1
-      ws = @manager.compute_form('Publication 587 Worksheets', f, k1)
+      ws = @manager.compute_form('Pub. 587 Worksheets', f, k1)
       yield(f, ws.line[:fill!]) if ws.line[:fill!] != 0
     end
   end
@@ -29,7 +29,7 @@ end
 
 class Pub587Worksheet < TaxForm
 
-  NAME = 'Publication 587 Worksheets'
+  NAME = 'Pub. 587 Worksheets'
 
   def year
     2020

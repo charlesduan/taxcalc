@@ -17,7 +17,7 @@ class Form1040_2 < TaxForm
     line[2] = BlankZero
 
     amt_test = @manager.compute_form(
-      "Worksheet to See If You Should Fill In Form 6251"
+      "1040 Worksheet to See If You Should Fill In Form 6251"
     )
     if amt_test.line[:fill_yes, :present]
       line[1] = @manager.compute_form(6251).line['amt_tax']
