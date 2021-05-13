@@ -69,7 +69,7 @@ class Rectangle {
      */
     nextSplitStartPoint() {
         return new Point(
-            this.max.x + this.width / 3,
+            this.max.x + this.width / 2,
             (this.min.y + this.max.y) / 2
         );
     }

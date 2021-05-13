@@ -260,7 +260,7 @@ class IraAnalysis < TaxForm
       line['8606_16'] = line[:distrib_roth]
       line['8606_17'] = @pub590b_w1_1.line[:nontax_distrib]
       line['8606_18'] = @pub590b_w1_1.line[:taxable_roth_conv]
-      line['8606_18*note'] = 'Lines 17 and 18 from Pub. 690-B Worksheet 1-1'
+      line['8606_18*note'] = 'Lines 17 and 18 from Pub. 590-B Worksheet 1-1'
     end
 
     # Part III

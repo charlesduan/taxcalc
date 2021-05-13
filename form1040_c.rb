@@ -33,7 +33,7 @@ class Form1040C < TaxForm
     line[:A] = @sp.line[:business]
     line[:B] = @sp.line[:code]
     line[:C] = @sp.line[:dba] if @sp.line[:dba, :present]
-    line[:D] = @sp.line[:ein]
+    line[:D] = @sp.line[:ein].gsub(/-/, '')
     line[:E_addr] = @sp.line[:address]
     line[:E_city_zip] = @sp.line[:city_zip]
 

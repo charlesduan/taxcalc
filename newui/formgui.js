@@ -382,12 +382,12 @@ function findNextSplitBox(line, page, pos) {
     if (page != currentPage()) { return; } // Avoid synchronization issue
     const rect = new Rectangle(...pos).times(resolution);
     const nextPoint = rect.nextSplitStartPoint();
-    if (!boxcalc.sameColor(rect.center(), nextPoint)) { return; }
+    //if (!boxcalc.sameColor(rect.center(), nextPoint)) { return; }
 
     const newRect = boxcalc.computeBoxAtPoint(nextPoint);
-    if (newRect) {
-        // Have to manually provide the toolbar info because theoretically the
-        // toolbar could have changed by this point
+    if (newRect && Math.abs(newRect.max.y - rect.max.y) < 10) {
+        // Have to manually provide the toolbar info because theoretically
+        // the toolbar could have changed by this point
         addLineBox(newRect, { line, split: true });
     }
 }

@@ -13,6 +13,8 @@ class Form8995A_A < TaxForm
   end
 
   def compute
+    set_name_ssn
+
     @qbi_manager = form('QBI Manager')
     @prefix = "A"
     if @qbi_manager.qbi.count > 3
@@ -46,7 +48,7 @@ class Form8995A_A < TaxForm
   end
 
   def compute_business(qbi)
-    setlineno('1a', qbi.name)
+    setlineno('1a', qbi.name.gsub(/.{10}/, "\\&\n"))
     setlineno('1b', qbi.tin)
     setlineno(2, qbi.amount)
     setlineno(3, BlankZero)

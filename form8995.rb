@@ -32,14 +32,12 @@ class Form8995 < TaxForm
 
     line[10] = sum_lines(5, 9)
     line[11] = qbi_manager.line[:taxable_income]
-    with_or_without_form('1040 Schedule D') do |sched_d|
-      if sched_d
-        line[12] = form(1040).line[:qualdiv] + [
-          [ sched_d.line_15, sched_d.line_16 ].min, 0
-        ].max
-      else
-        line[12] = form(1040).sum_lines(:qualdiv, :cap_gain)
-      end
+    line_12 = with_form('1040 Schedule D', otherwise: proc {
+      form(1040).sum_lines(:qualdiv, :cap_gain)
+    }) do |sched_d|
+      form(1040).line[:qualdiv] + [
+        [ sched_d.line_15, sched_d.line_16 ].min, 0
+      ].max
     end
 
     line[13] = [ line_11 - line_12, 0 ].max

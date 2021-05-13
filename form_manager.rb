@@ -4,6 +4,8 @@ require 'date'
 
 class FormManager
 
+  include Enumerable
+
   def initialize(name = nil)
     @name = name
     @forms = {}
@@ -145,6 +147,7 @@ class FormManager
       remove_form(form)
       return nil
     end
+    yield(form) if block_given? and form
     return form
   end
 

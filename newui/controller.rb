@@ -1,5 +1,6 @@
 require_relative 'models'
 require_relative '../form_manager'
+require_relative 'pdf_assembler'
 require 'json'
 require 'open-uri'
 
@@ -57,6 +58,22 @@ class Marking; class Controller
 
   def current_form_has_file?
     return !!@current_form.file
+  end
+
+  def select_pdf_pages(range, dir:, force: false)
+    shortname = @current_form.name.downcase.gsub(/\W+/, '-')
+    filename = File.join(dir, "form#{shortname}.pdf")
+    command = [
+      PdfAssembler::CPDF, '-merge', '-i', @current_form.file, range,
+      '-o', filename
+    ]
+    IO.popen(command, :err => "/dev/null") do |io|
+      puts io.read
+    end
+
+    unless @current_form.file == filename
+      @current_form.file = filename
+    end
   end
 
   def start

@@ -52,7 +52,7 @@ class Form1040_2 < TaxForm
     end
 
     # Net investment income tax
-    @manager.compute_form(8960) do |f8960|
+    compute_form(8960) do |f8960|
       line['8b'] = 'X'
       l8 += f8960.line[:niit]
     end

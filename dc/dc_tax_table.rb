@@ -1,6 +1,6 @@
 module DcTaxTable
 
-  # Updated for 2018
+  # Updated for 2018. DC tax rates have not changed as of 2020.
 
   def self.parse_table(table)
     res = []
@@ -20,28 +20,16 @@ module DcTaxTable
   end
 
   def compute_tax(income)
-    if income <= 100000
+    if income <= 100_000
       return compute_tax_table(income)
-    elsif income <= 350000
-      return 3500 + (0.085 * (income - 60000)).round
-    elsif income <= 1000000
-      return 28150 + (0.0875 * (income - 350000)).round
+    elsif income <= 350_000
+      return 3_500 + (0.085 * (income - 60_000)).round
+    elsif income <= 1_000_000
+      return 28_150 + (0.0875 * (income - 350_000)).round
     else
-      return 85025 + (0.0895 * (income - 1000000)).round
+      return 85_025 + (0.0895 * (income - 1_000_000)).round
     end
   end
-
-  def exemption_reduction(agi)
-    if agi > 275000
-      return 1775
-    elsif agi <= 150000
-      return 0
-    else
-      reductions = (agi - 150000) / 2500 + (agi % 2500 == 0 ? 0 : 1)
-      return (1775 * 0.02 * reductions).round
-    end
-  end
-
 
   TAX_TABLE = parse_table(<<EOF)
 0	49	0

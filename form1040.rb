@@ -167,8 +167,12 @@ class Form1040 < TaxForm
     compute_early_schedules
 
     # Wages, salaries, tips
-    line['1/wages'] = forms('W-2').lines(1, :sum) + \
-      with_form(2441, otherwise_return: 0) { |f| f.line[:tax_benefit] }
+    wages = forms('W-2').lines(1, :sum)
+    with_form(2441) { |f|
+      wages += f.line[:tax_benefit]
+      line['1.expl'] = 'DCB'
+    }
+    line['1/wages'] = wages
 
     if has_form?(8958) && has_form?('Explanation of 8958')
       line['1*note'] = 'From Form 8958, Line 1'
@@ -300,8 +304,8 @@ class Form1040 < TaxForm
       raise "Refundable child tax credit not implemented"
     end
     # 29: American Opportunity (education) credit. Inapplicable for mfs status.
-    with_or_without_form('1040 Schedule 3') do |f|
-      line['18d'] = f.line[14] if f
+    with_form('1040 Schedule 3') do |f|
+      line['18d'] = f.line[14]
     end
     # Recovery rebate credit.
     max_eip = status.double_mfj(1200)

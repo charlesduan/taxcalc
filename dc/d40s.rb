@@ -12,20 +12,23 @@ class FormD40S < TaxForm
   NAME = 'D-40 Schedule S'
 
   def year
-    2019
+    2020
   end
 
   def compute
-    line['dep_name', :all] = forms('Dependent').lines('name')
-    line['dep_rel', :all] = forms('Dependent').lines('relationship')
+    line[:dep_name, :all] = forms('Dependent').lines('name')
+    line[:dep_rel, :all] = forms('Dependent').lines('relationship')
+    line[:dep_tin, :all] = forms('Dependent').lines('ssn').map { |x|
+      x.gsub(/-/, '')
+    }
+    line[:dep_dob, :all] = forms('Dependent').lines('dob').map { |x|
+      x.strftime("%m%d%Y")
+    }
 
-    status = form('D-40').line[1]
-    if status == 'mfssr'
+    if form('D-40').line[:status] == 'mfssr'
       compute_calculation_j
     end
   end
-
-
 
   def add_calc_j(from1, from2, to)
     line["J.#{to}.m"] = line["J.#{from1}.m"] + line["J.#{from2}.m", :opt]
@@ -52,25 +55,23 @@ class FormD40S < TaxForm
     end
     sub_calc_j(:c, :d, :e)
 
-    deduction = d40.line[17]
+    deduction = d40.line[:ded]
     line['J.f.m'] = optimize_split(deduction)
     line['J.f.s'] = deduction - line['J.f.m']
     sub_calc_j(:e, :f, :g)
 
     # Line J.h. When you implement this, you probably also have to change the
     # split optimization above.
-    if d40.line_19 != 0
-      raise "QHTC splitting for Schedule J not implemented"
-    end
-    sub_calc_j(:g, :h, :i)
+    # Commented out because QHTC is suspended
+    # if d40.line_19 != 0
+    #   raise "QHTC splitting for Schedule J not implemented"
+    # end
+    # sub_calc_j(:g, :h, :i)
 
-    line['J.j.m'] = compute_tax(line['J.i.m'])
-    line['J.j.s'] = compute_tax(line['J.i.s'])
+    line['J.h.m'] = compute_tax(line['J.g.m'])
+    line['J.h.s'] = compute_tax(line['J.g.s'])
 
-    # J.k not implemented; relates to QHTC
-
-    add_calc_j(:j, :k, :l)
-    line['J.m'] = sum_lines('J.l.m', 'J.l.s')
+    line['J.i/calc_j_tax'] = sum_lines('J.h.m', 'J.h.s')
 
   end
 
@@ -91,7 +92,7 @@ class FormD40S < TaxForm
 
 
   def needed?
-    return true if line['J.m', :present]
+    return true if line[:calc_j_tax, :present]
     return true if line['dep_name', :present]
     return false
   end

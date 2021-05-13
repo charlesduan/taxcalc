@@ -20,6 +20,7 @@ require_relative '../form_manager'
   download: false,
   file: nil,
   force: false,
+  pages: nil,
 )
 
 OptionParser.new do |opts|
@@ -43,6 +44,10 @@ OptionParser.new do |opts|
   opts.on("-f", "--file FILE", "Select the form's PDF file") do |file|
     raise "#{file}: File not found" unless File.file?(file)
     @options.file = file
+  end
+
+  opts.on("--pages RANGE", "Range of pages for the PDF file") do |range|
+    @options.pages = range
   end
 
   opts.on("--force", "Overwrite position data for existing form") do
@@ -77,9 +82,16 @@ if ARGV.count != 1
     puts "  #{name}#{form.all_positioned? ? '' : ' (incomplete)'}"
   end
   exit
+elsif ARGV[0] == 'next'
+  @controller.forms.each do |name, form|
+    next if form.all_positioned?
+    next if name =~ /Manager|Worksheet|Analysis|Computation/
+    @controller.select_form(name)
+    break
+  end
+else
+  @controller.select_form(ARGV[0])
 end
-
-@controller.select_form(ARGV[0])
 
 
 # Select the file to be associated with the form.
@@ -98,6 +110,12 @@ end
 
 unless @controller.current_form_has_file?
   raise "Must provide a file or download URL for this form"
+end
+
+if @options.pages
+  @controller.select_pdf_pages(
+    @options.pages, dir: @options.blank_dir, force: @options.force
+  )
 end
 
 pid = fork do

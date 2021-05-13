@@ -13,16 +13,14 @@ class AMTTestWorksheet < TaxForm
 
   def compute
     f1040 = form(1040)
-    with_or_without_form('1040 Schedule A') do |sched_a|
-      if sched_a
-        line['1yes'] = 'X'
-        line[1] = f1040.line_taxinc
-        line[2] = sched_a.line_salt
-        line[3] = sum_lines(1, 2)
-      else
-        line['1no'] = 'X'
-        line[3] = f1040.line_agi - f1040.line_qbid
-      end
+    with_form('1040 Schedule A', otherwise: proc {
+      line['1no'] = 'X'
+      line[3] = f1040.line_agi - f1040.line_qbid
+    }) do |sched_a|
+      line['1yes'] = 'X'
+      line[1] = f1040.line_taxinc
+      line[2] = sched_a.line_salt
+      line[3] = sum_lines(1, 2)
     end
 
     with_form('1040 Schedule 1') do |f|

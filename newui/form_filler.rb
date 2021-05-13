@@ -62,12 +62,12 @@ class FormFiller
   end
 
   def compute_note_symbols
-    syms = %w(* + ^ ** ++ ^^ *** +++ ^^^ **** ++++ ^^^^)
+    count = 1
     note_syms = {}
     @tax_form.line.each do |l, v|
       next unless l =~ /\*note$/
-      raise "Too many notes" if syms.empty?
-      note_syms[l] = note_syms[$`] = syms.shift
+      note_syms[l] = note_syms[$`] = "*" * count
+      count += 1
     end
     return note_syms
   end
@@ -133,10 +133,18 @@ class FormFiller
     end
 
     if marking_line.split?
-      value.to_s.split(
+      split_val = value.to_s.split(
         marking_line.separator, marking_line.split_count
-      ).each_with_index do |v, i|
-        insert_value(marking_line.pos(i + 1), marking_line.name, v)
+      )
+      split_val.pop if split_val.last == ''
+
+      if value.is_a?(Numeric) || value.is_a?(BlankNum)
+        offset = 1 + marking_line.split_count - split_val.count
+      else
+        offset = 1
+      end
+      split_val.each_with_index do |v, i|
+        insert_value(marking_line.pos(i + offset), marking_line.name, v)
       end
 
     else
@@ -184,7 +192,7 @@ class FormFiller
       res = @note_syms[line] + res
     elsif @note_syms[line]
       res += @note_syms[line]
-      offset += sym.length
+      offset += @note_syms[line].length
     end
     return [res, offset]
   end

@@ -111,10 +111,6 @@ class TaxForm
     args.map { |l| line[l, :opt] }.inject(:+)
   end
 
-  def has_line(num)
-    @lines[num, :present]
-  end
-
   def form(num)
     @manager.form(num)
   end
@@ -171,18 +167,6 @@ class TaxForm
     line.place_lines(*nums)
   end
 
-  def format_lines(format, *nums)
-    format % nums.map { |l| line[l] }
-  end
-
-  def form_line_or(form_name, form_line, default)
-    if @manager.has_form?(form_name)
-      form(form_name).line(form_line)
-    else
-      default
-    end
-  end
-
   def has_form?(name)
     @manager.has_form?(name)
   end
@@ -200,18 +184,8 @@ class TaxForm
     end
   end
 
-  def with_or_without_form(name)
-    if @manager.has_form?(name)
-      yield(form(name))
-    else
-      yield(nil)
-    end
-  end
-
-  def compute_form(name, *args)
-    f = @manager.compute_form(name, *args)
-    yield(f) if block_given? and f
-    return f
+  def compute_form(name, *args, &block)
+    @manager.compute_form(name, *args, &block)
   end
 
   def compute_more(form, method)
@@ -271,6 +245,20 @@ class TaxForm
       arr = line[x, :present] ? line[x, :all] : []
       line[x, :all] = arr + ([ BlankZero ] * (max_rows - arr.count) << hash[x])
     end
+  end
+
+  #
+  # Given two lines acting as columns of a table, match a given value in the
+  # first line and return the corresponding value in the second. If the value is
+  # not found, executes the given block and/or returns the default value.
+  #
+  def match_table_value(l1, l2, find:, default: nil)
+    if line[l1, :present]
+      index = line[l1, :all].find_index(find)
+      return line[l2, :all][index] if index
+    end
+    default ||= yield if block_given?
+    return default
   end
 
   def import(io = STDIN)
@@ -477,6 +465,7 @@ class TaxForm; class Lines
       prefix = "\t#{line}\t"
       [ data ].flatten.each do |item|
         item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
+        item = "'#{item}" if item.is_a?(String) && item =~ /\A\d+\z/
         item = item.to_s.gsub("\n", "\\n")
         io.puts("#{prefix}#{item}")
         prefix = "\t#{'"'.ljust(line.length)}\t"

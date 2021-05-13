@@ -12,6 +12,8 @@ class Form2441 < TaxForm
   end
 
   def compute
+    set_name_ssn
+
     if form(1040).status.is('mfs')
       mfs_except = interview(
         'Did you live apart from your spouse for the last 6 months of the year?'

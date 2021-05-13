@@ -11,6 +11,10 @@ class Form8889 < TaxForm
     2020
   end
 
+  def needed?
+    line[2] > 0
+  end
+
   def compute
     set_name_ssn
 

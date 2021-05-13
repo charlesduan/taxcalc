@@ -26,12 +26,10 @@ class Form6251 < TaxForm
     line[1] = form(1040).line_taxinc
 
     # Schedule A tax deduction, or 1040 standard deduction.
-    with_or_without_form('1040 Schedule A') do |f|
-      if f
-        line['2a'] = f.line_salt
-      else
-        line['2a'] = form(1040).line_deduction
-      end
+    line['2a'] = with_form('1040 Schedule A', otherwise: proc {
+      form(1040).line[:deduction]
+    }) do |f|
+      f.line_salt
     end
 
     with_form('1040 Schedule 1') do |f|
@@ -238,15 +236,13 @@ class Form6251 < TaxForm
     check_line_13_conds
     line[13] = compute_from_worksheets(4, 13) { BlankZero }
 
-    with_or_without_form('1040 Schedule D') do |sd|
-      line[14] = sd ? sd.line[19, :opt] : BlankZero
+    line[14] = with_form('1040 Schedule D', otherwise_return: BlankZero) do |sd|
+      sd.line[19, :opt]
     end
-    with_or_without_form('Schedule D Tax Worksheet') do |sdtw|
-      if sdtw
-        line[15] = [ sum_lines(13, 14), sdtw.line[10] ].min
-      else
-        line[15] = line[13]
-      end
+    line[15] = with_form(
+      'Schedule D Tax Worksheet', otherwise_return: line[13]
+    ) do |sdtw|
+      [ sum_lines(13, 14), sdtw.line[10] ].min
     end
 
     line[16] = [ line[12], line[15] ].min
@@ -318,13 +314,13 @@ class Form6251 < TaxForm
   # present; if not yields and returns that.
   #
   def compute_from_worksheets(qdcgt_line, sdtw_line)
-    with_or_without_form(
+    with_form(
       'Qualified Dividends and Capital Gains Tax Worksheet'
     ) do |qdcgt|
-      return qdcgt.line[qdcgt_line] if qdcgt
+      return qdcgt.line[qdcgt_line]
     end
-    with_or_without_form('Schedule D Tax Worksheet') do |sdtw|
-      return sdtw.line[sdtw_line] if sdtw
+    with_form('Schedule D Tax Worksheet') do |sdtw|
+      return sdtw.line[sdtw_line]
     end
     return(yield)
   end

@@ -12,7 +12,7 @@ class Form8283 < TaxForm
   end
 
   def compute
-    set_name
+    set_name_ssn
 
     gifts = forms('Charity Gift') { |f| !f.line_cash? }.each do |g|
       raise "Donations over $5000 not implemented" if g.line[:amount] > 5000

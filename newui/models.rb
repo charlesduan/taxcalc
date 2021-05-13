@@ -33,8 +33,9 @@ class Marking
     def file_url
       uname = case @name
               when /^\d{4}$/ then "f#@name"
-              when /^(\d{4})-(\w+) Schedule (\w+)/ then "f#$1#$2#$3".downcase
-              when /^(\d{4}) Schedule (\w+)/ then "f#$1s#$2".downcase
+              when /^(\d{4})-(\w+)$/ then "f#$1#$2".downcase
+              when /^(\d{4})-(\w+) Schedule (\w+)$/ then "f#$1#$2#$3".downcase
+              when /^(\d{4}) Schedule (\w+)$/ then "f#$1s#$2".downcase
               else raise "Can't determine form URL"
               end
       return "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"
@@ -123,7 +124,7 @@ class Marking
     #
     def all_positioned?
       return @lines.all? { |l|
-        l.positioned? || (l =~ /#/ && line($`).positioned?)
+        l.positioned? || (l.name =~ /#/ && line($`).positioned?)
       }
     end
 
