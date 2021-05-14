@@ -41,8 +41,9 @@ class Form1040_1 < TaxForm
     confirm("No business property was sold or lost")
     line['4/other_gains'] = BlankZero
 
-    sched_e = compute_form('1040 Schedule E')
-    line['5/rrerpst'] = sched_e.line[:tot_inc]
+    with_form('1040 Schedule E') do |sched_e|
+      line['5/rrerpst'] = sched_e.line[:tot_inc]
+    end
 
     line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 

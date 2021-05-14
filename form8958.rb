@@ -325,6 +325,10 @@ class Form8958 < TaxForm
           zero_form.line[l, :overwrite] = BlankZero
         end
       end
+      unless split.empty?
+        my_form.line[:cp_split!] = 'X'
+        spouse_form.line[:cp_split!] = 'X'
+      end
 
       return [ my_form, spouse_form ]
 

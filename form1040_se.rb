@@ -18,6 +18,15 @@ class Form1040SE < TaxForm
     with_form('1040 Schedule C') do |sc|
       se_inc += sc.line[:net_profit]
     end
+    #
+    # Unreimbursed partnership expenses are not self-employment income
+    #
+    with_form('1040 Schedule E') do |se|
+      break unless se.line['28a', :present] && se.line['28i', :present]
+      se.line['28a', :all].zip(se.line['28i', :all]).each do |name, loss|
+        se_inc -= loss if name =~ /^UPE/
+      end
+    end
     line[2] = se_inc
 
     line['3/tot_inc'] = sum_lines('1a', '1b', 2)

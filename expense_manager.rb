@@ -59,7 +59,7 @@ class ExpenseManager < TaxForm
     @con_form.exportable = true
 
     cats, amts = line.to_a.reject { |x| x[0] == 'fill!' }.transpose
-    cats = cats.map { |c| CAT_NAMES[c] || c }
+    cats = cats.map { |c| present_name(c) }
     amts = amts.map { |a| a.round }
     @con_form.line['Type', :all] = cats
     @con_form.line['Amount', :all] = amts
@@ -73,6 +73,10 @@ class ExpenseManager < TaxForm
     'Rent_Equipment' => 'Rented Vehicles, Machinery, and Equipment',
     'Rent_Property' => 'Rented Business Property',
   }
+
+  def present_name(cat)
+    CAT_NAMES[cat] || cat
+  end
 
 end
 
