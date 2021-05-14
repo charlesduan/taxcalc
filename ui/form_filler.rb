@@ -184,7 +184,7 @@ class FormFiller
     else
       res = value.to_s.gsub("\n", "\\n")
     end
-    if res.is_a?(Numeric) && res < 0
+    if value.is_a?(Numeric) && value < 0
       res = "(#{res.sub(/^-/, '')})"
       offset += 1
     end

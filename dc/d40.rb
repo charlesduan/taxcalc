@@ -18,7 +18,7 @@ class FormD40 < TaxForm
     @bio = forms('Biographical').find { |x| x.line[:whose] == 'mine' }
     @sbio = forms('Biographical').find { |x| x.line[:whose] == 'spouse' }
 
-    line[:phone] = @bio.line[:phone]
+    line[:phone] = @bio.line[:phone].gsub(/\D+/, '')
     line[:tin] = @bio.line[:ssn].gsub('-', '')
     line[:dob] = @bio.line[:birthday].strftime("%m%d%Y")
     if @sbio

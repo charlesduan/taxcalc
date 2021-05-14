@@ -52,6 +52,7 @@ class Form1040 < TaxForm
   #
   def compute_early_schedules
     compute_form('1040 Schedule C')
+    compute_form('1040 Schedule E')
     compute_form('1040 Schedule SE')
     compute_form(2441)
   end
@@ -173,9 +174,9 @@ class Form1040 < TaxForm
       line['1.expl'] = 'DCB'
     }
     line['1/wages'] = wages
-
-    if has_form?(8958) && has_form?('Explanation of 8958')
-      line['1*note'] = 'From Form 8958, Line 1'
+    if forms('W-2').any? { |f| f.line[:cp_split!, :present] }
+      line['1/wages*note'] = "Line 1 based on community property allocation " \
+        "from Form 8958"
     end
 
     sched_b = compute_form('1040 Schedule B')
@@ -284,6 +285,10 @@ class Form1040 < TaxForm
 
 
     line['25a'] = forms('W-2').lines(2, :sum)
+    if forms('W-2').any? { |f| f.line[:cp_split!, :present] }
+      line['25a*note'] = "Line 25a based on community property allocation " \
+        "from Form 8958"
+    end
     line['25b'] = [
       forms('1099-MISC').lines(4, :sum),
       forms('1099-INT').lines(4, :sum),
@@ -381,16 +386,18 @@ class Form1040 < TaxForm
 
       ly = @manager.submanager(:last_year)
       # Last year's tax shown, defined under "tax shown on your 20xx return"
-      last_year_tax = ly.form(1040).line_16 - \
-        ly.form(1040).sum_lines(*%w(18a, 18b, 18c)) - \
-        ly.form('1040 Schedule 3').sum_lines(9, 12)
+      last_year_tax = ly.form(1040).line_16
+      last_year_tax -= ly.form(1040).sum_lines(*%w(18a, 18b, 18c))
+      last_year_tax -= ly.with_form(
+        '1040 Schedule 3', otherwise_return: 0
+      ) { |f| f.sum_lines(9, 12) }
 
       # First test under the exception.
       unless last_year_tax == 0
 
         # Second test under the exception: calculate threshold
         penalty_threshold = last_year_tax
-        last_year_agi = ly.form(1040).line[7]
+        last_year_agi = ly.form(1040).line[:agi]
         if last_year_agi > status.halve_mfs(150000)
           penalty_threshold = (1.1 * last_year_tax)
         end

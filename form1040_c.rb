@@ -33,6 +33,7 @@ class Form1040C < TaxForm
     line[:A] = @sp.line[:business]
     line[:B] = @sp.line[:code]
     line[:C] = @sp.line[:dba] if @sp.line[:dba, :present]
+    line[:ein!] = @sp.line[:ein]
     line[:D] = @sp.line[:ein].gsub(/-/, '')
     line[:E_addr] = @sp.line[:address]
     line[:E_city_zip] = @sp.line[:city_zip]
@@ -112,7 +113,7 @@ class Form1040C < TaxForm
     expense('20b', 'Rent_Property')
     expense(21, 'Repairs')
     # I'm not sure how line 22 differs from 18
-    expense(23, 'License')
+    expense(23, 'Licenses')
     expense('24a', 'Travel')
     expense('24b', 'Meals')
     expense(25, 'Utilities')
@@ -145,8 +146,12 @@ class Form1040C < TaxForm
       raise "Vehicle information not implemented"
     end
 
-    line[:Part_V_type, :all] = @expenses
-    line[:Part_V_amt, :all] = @expenses.map { |exp| @expense_manager.line[exp] }
+    line[:Part_V_type, :all] = @expenses.map { |exp|
+      @expense_manager.present_name(exp)
+    }
+    line[:Part_V_amt, :all] = @expenses.map { |exp|
+      @expense_manager.line[exp]
+    }
     line[48] = line[:Part_V_amt, :sum]
 
   end

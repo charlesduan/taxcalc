@@ -29,10 +29,8 @@ class PdfAssembler
     end
     command.push("AND", "-pad-multiple", "2") if @even_pages
     command.push("-o", @outfile)
-    popen(*command) do |io|
-      io.each do |line|
-        puts line
-      end
+    popen(*command, :err => '/dev/null') do |io|
+      puts io.read
     end
   end
 

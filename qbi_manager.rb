@@ -52,7 +52,7 @@ class QBIManager < TaxForm
       form.line[:C, :present] ? form.line[:C] : form.line[:name]
     end
     def tin
-      form.line[:D, :present] ? form.line[:D] : form.line[:ssn]
+      form.line[:ein!, :present] ? form.line[:ein!] : form.line[:ssn]
     end
 
     def is_sstb?
