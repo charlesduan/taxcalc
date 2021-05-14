@@ -3,7 +3,7 @@ require 'filing_status'
 FilingStatus.set_param('tax_table_column', single: 2, mfj: 3, mfs: 4, hoh: 5,
                        qw: 3)
 
-# Updated for 2019. The year must be updated in the compute_tax_table method.
+# Updated for 2020. The year must be updated in the compute_tax_table method.
 #
 # To update, go to the 1040 HTML instructions and copy the tax table directly
 # below. The commas and thousands separators are processed automatically.

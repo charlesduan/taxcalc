@@ -1,23 +1,8 @@
 \section{Phase Three: Form Filling}
 
-To fill in the forms, create a script that creates a FormManager object with the
-tax forms from phase 1 imported. Then create a MultiFormManager to handle the
-filling of forms. For each form to be filled in, use the fill\_form method of
-the MultiFormManager.
+To fill in the forms, run the script ``ui/fill.rb''. Options for the script are
+provided in the help text.
 
-The MultiFormManager can automatically produce continuation sheets when there is
-insufficient space. This requires providing two options:
-\begin{description}
-\item[continuation\_bio] Biographical text for the continuation sheets, just for
-identification purposes.
-\item[continuation\_display] Either :show, which will print the continuation
-page to the screen; :raw, which will print the raw troff code; or :append, which
-will compile the troff code and append the continuation sheet to the filled tax
-form.
-\end{description}
-
-
-
-
+(Filling the forms used to be much more of an ordeal.)
 
 

@@ -5,6 +5,24 @@ require_relative 'form_manager'
 require_relative 'interviewer'
 require_relative 'blank_zero'
 
+#
+# Represents a single form in a tax return. This class is intended to be
+# subclassed for particular forms. A proper subclass should implement the
+# following:
+#
+# - A constant +NAME+ that is a string identifying the class
+#
+# - A method +compute+ that performs computations for the form
+#
+# - A method +needed?+ that determines whether this form should be included on a
+#   return
+#
+# - A method +year+ that specifies the year for which this object's computations
+#   have been updated
+#
+# Additional computation methods should follow the naming convention
+# *compute_[name]*.
+#
 class TaxForm
 
   #
@@ -348,144 +366,146 @@ end
 
 
 
-########################################################################
-#
-# LINES CLASS
-#
-########################################################################
+class TaxForm
 
 
-class TaxForm; class Lines
-  def initialize(form)
-    @form = form
-    @lines_data = {}
-    @lines_order = []
-    @aliases = {}
-  end
-
-  include Enumerable
-
-  attr_reader :form
-
-  def each
-    @lines_order.each do |l|
-      yield(l, @lines_data[l])
+  #
+  # A collection of lines inside a TaxForm. This class implements the primary
+  # accessors and setters for values in a form, enabling a syntax of
+  # +form.line[2] = 100+ for example.
+  #
+  class Lines
+    def initialize(form)
+      @form = form
+      @lines_data = {}
+      @lines_order = []
+      @aliases = {}
     end
-  end
 
-  def resolve_alias(line)
-    line = line.to_s
-    if @aliases[line]
-      res = @aliases[line]
-      if @form != @form.manager.currently_computing && res.start_with?(line)
-        if @form.manager.currently_computing
-          warn("In #{@form.manager.currently_computing.name}, use alias for " +
-               "Form #{@form.name}, line #{res}")
-        else
-          warn("For #{@form.manager.name}, use alias for " +
-               "Form #{@form.name}, line #{res}")
+    include Enumerable
+
+    attr_reader :form
+
+    def each
+      @lines_order.each do |l|
+        yield(l, @lines_data[l])
+      end
+    end
+
+    def resolve_alias(line)
+      line = line.to_s
+      if @aliases[line]
+        res = @aliases[line]
+        if @form != @form.manager.currently_computing && res.start_with?(line)
+          if @form.manager.currently_computing
+            warn("In #{@form.manager.currently_computing.name}, use alias " +
+                 "for Form #{@form.name}, line #{res}")
+          else
+            warn("For #{@form.manager.name}, use alias for " +
+                 "Form #{@form.name}, line #{res}")
+          end
+        end
+        return res
+      end
+      return @aliases[line] if @aliases[line]
+      return line
+    end
+
+    def assign_aliases(line)
+      parts = line.split('/')
+      # If any of the parts are already aliases to anything other than this line
+      # itself, there's an ambiguity that raises an error.
+      parts.each do |p|
+        if @aliases[p] && @aliases[p] != line
+          raise "Ambiguous line alias #{line}"
         end
       end
-      return res
-    end
-    return @aliases[line] if @aliases[line]
-    return line
-  end
-
-  def assign_aliases(line)
-    parts = line.split('/')
-    # If any of the parts are already aliases to anything other than this line
-    # itself, there's an ambiguity that raises an error.
-    parts.each do |p|
-      if @aliases[p] && @aliases[p] != line
-        raise "Ambiguous line alias #{line}"
+      return unless parts.length > 1
+      parts.each do |p|
+        @aliases[p] = line
       end
     end
-    return unless parts.length > 1
-    parts.each do |p|
-      @aliases[p] = line
+
+    def line_name(line)
+      line = resolve_alias(line)
+      "Form #{@form.name}, line #{line}"
     end
-  end
 
-  def line_name(line)
-    line = resolve_alias(line)
-    "Form #{@form.name}, line #{line}"
-  end
-
-  def []=(*args)
-    @form.used = true
-    line, value = args.first.to_s, args.last
-    type = args.count == 3 ? args[1] : nil
-    case type
-    when :all
-      value = [ value ].flatten
-    when :add
-      value = [ @lines_data[line] || [], value ].flatten
-    else
-      unless type == :overwrite
-        warn("Overwriting value for #{line_name(line)}") if @lines_data[line]
+    def []=(*args)
+      @form.used = true
+      line, value = args.first.to_s, args.last
+      type = args.count == 3 ? args[1] : nil
+      case type
+      when :all
+        value = [ value ].flatten
+      when :add
+        value = [ @lines_data[line] || [], value ].flatten
+      else
+        unless type == :overwrite
+          warn("Overwriting value for #{line_name(line)}") if @lines_data[line]
+        end
+        if value.is_a?(Enumerable)
+          raise "#{line_name(line)}: not expecting an array"
+        end
       end
-      if value.is_a?(Enumerable)
-        raise "#{line_name(line)}: not expecting an array"
+      @lines_order.push(line) unless @lines_data[line]
+      form.explain("    #{line}:  #{value.inspect}")
+      @lines_data[line] = value
+      assign_aliases(line)
+    end
+
+    def [](line, type = nil)
+      line = resolve_alias(line)
+
+      unless @lines_data.include?(line)
+        return false if type == :present
+        return BlankZero if type == :opt or type == :sum
+        raise "#{line_name(line)} not defined"
       end
-    end
-    @lines_order.push(line) unless @lines_data[line]
-    form.explain("    #{line}:  #{value.inspect}")
-    @lines_data[line] = value
-    assign_aliases(line)
-  end
-
-  def [](line, type = nil)
-    line = resolve_alias(line)
-
-    unless @lines_data.include?(line)
-      return false if type == :present
-      return BlankZero if type == :opt or type == :sum
-      raise "#{line_name(line)} not defined"
-    end
-    data = @lines_data[line]
-    case type
-    when :present
-      true
-    when :all
-      [ data ].flatten
-    when :sum
-      [ data ].flatten.inject(:+) || BlankZero
-    else
-      raise "Line #{line} is an array" if data.is_a?(Enumerable)
-      data
-    end
-  end
-
-  def export(io = STDOUT)
-
-    io.puts("Form #{@form.name}")
-    @lines_order.each do |line|
       data = @lines_data[line]
-      prefix = "\t#{line}\t"
-      [ data ].flatten.each do |item|
-        item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
-        item = "'#{item}" if item.is_a?(String) && item =~ /\A\d+\z/
-        item = item.to_s.gsub("\n", "\\n")
-        io.puts("#{prefix}#{item}")
-        prefix = "\t#{'"'.ljust(line.length)}\t"
+      case type
+      when :present
+        true
+      when :all
+        [ data ].flatten
+      when :sum
+        [ data ].flatten.inject(:+) || BlankZero
+      else
+        raise "Line #{line} is an array" if data.is_a?(Enumerable)
+        data
       end
     end
-    io.puts()
 
-  end
+    def export(io = STDOUT)
 
-  def place_lines(*nums)
-    nums.each do |num|
-      num = resolve_alias(num)
-      if @lines_order.include?(num)
-        @lines_order.delete(num)
-        @lines_order.push(num)
+      io.puts("Form #{@form.name}")
+      @lines_order.each do |line|
+        data = @lines_data[line]
+        prefix = "\t#{line}\t"
+        [ data ].flatten.each do |item|
+          item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
+          item = "'#{item}" if item.is_a?(String) && item =~ /\A\d+\z/
+          item = item.to_s.gsub("\n", "\\n")
+          io.puts("#{prefix}#{item}")
+          prefix = "\t#{'"'.ljust(line.length)}\t"
+        end
+      end
+      io.puts()
+
+    end
+
+    def place_lines(*nums)
+      nums.each do |num|
+        num = resolve_alias(num)
+        if @lines_order.include?(num)
+          @lines_order.delete(num)
+          @lines_order.push(num)
+        end
       end
     end
-  end
 
-end; end
+  end
+end
 
 
 require_relative 'multi_form'

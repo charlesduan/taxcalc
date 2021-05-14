@@ -66,7 +66,11 @@ class FormFiller
     note_syms = {}
     @tax_form.line.each do |l, v|
       next unless l =~ /\*note$/
-      note_syms[l] = note_syms[$`] = "*" * count
+      ref_line = $`
+      unless @tax_form.line[ref_line]
+        warn("No line #{ref_line} corresponding to footnote")
+      end
+      note_syms[l] = note_syms[ref_line] = "*" * count
       count += 1
     end
     return note_syms

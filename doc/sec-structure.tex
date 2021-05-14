@@ -160,17 +160,14 @@ The line value may be any of the following:
 \item[blank zero] A single dash, representing a zero value.
 \item[number] A number, possibly with a decimal point and possibly led with a
 minus sign.
-\item[date] Formatted as mm/dd/yyyy.
+\item[date] Formatted as mm/dd/yyyy or yyyy-mm-dd. This is converted to a Ruby
+Date object.
 \item[array] A list of values, each of which is one of the above types. Arrays
 may be specified in two forms: A comma-separated list surrounded by square
 brackets, or another way described below.
-\item[boxed data] Formatted as
-$<$\emph{delim}|\emph{num}|\emph{data}$>$, where \emph{num} is a
-number of boxes (usually the length of \emph{data}), \emph{delim} is a separator
-for the boxes (usually a null string for splitting per character, but a social
-security number would take a hyphen to fit it into a three-box unit), and
-\emph{data} is a number or text string.
-\item[text string] Anything else.
+\item[text string] Anything else. To treat a value as a text string (for
+example, an ID number starting with a zero), place a single quote in front of
+it.
 \end{description}
 
 An array may be constructed by placing each array element on a separate line in
@@ -213,7 +210,8 @@ ones may not.
 The FormManager maintains a complete tax return and manages the forms in that
 return. Its methods mostly deal with adding, computing, and querying forms.
 
-One interesting feature is that a FormManager has a method ``forms(name)'' that
+\paragraph{Accessing forms.}
+A FormManager has a method ``forms(name)'' that
 returns an array of forms with the given name. The returned object is an Array
 delegate that has an additional method ``lines'' for querying all the lines of
 all the returned forms.

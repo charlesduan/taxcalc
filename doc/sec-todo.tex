@@ -1,6 +1,25 @@
+\section{Rethink List}
+
+These are architectural aspects of the system that I think I need to reconsider.
+
+\emph{Exclusion flag.} Right now, if a form is not needed, it is removed from
+the manager. That's a bit of a problem because a later form may attempt to
+compute it, meaning that it is computed multiple times. Furthermore, it is
+probably useful to keep the removed form around (1) to allow other elements of
+the program to see why it was discarded and (2) to allow the user to confirm
+that it is not needed.
+
+This should be implementable with just a flag to exclude a form from printing;
+that flag could be set by default for worksheets perhaps too. But I'd have to
+think first about the ramifications of including excludable forms, because in
+some cases the computations rely on the presence or absence of forms in
+determining what to do.
+
+
 \section{Wish List}
 
 These are features that I'd like to implement some day.
+
 
 \emph{Traceable computations.} Rather than storing result data, form lines could
 store objects that maintain a tree of computations. For example, if line 7 is
@@ -41,21 +60,8 @@ reference another form's lines by line number or alias, but the system will
 issue a warning if an aliased line is reference by number. It would be better if
 every reference to an external form's lines were by alias rather than number.
 
-%
-% DONE
-% \emph{Assertions without requiring input.} Many forms use an interview
-% question to confirm that the user does not meet a rare special condition.
-% Better would be for the forms to dump all these assertions into a file for the
-% user to review later.
-
 \emph{Rename managers.} The QBIManager class, for example---it would better be
 named QBIAnalysis.
-
-%
-% DONE
-%
-% \emph{Name registration.} Forms effectively have two names, a class name and a
-% textual name. Reconciling these into a single name would be helpful.
 
 \emph{Push instruction testing.} If a form produces a line value that is meant
 to be incorporated into another form, it would be helpful to have some sort of

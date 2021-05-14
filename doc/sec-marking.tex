@@ -1,41 +1,49 @@
 \section{Phase Two: Form Field Marking}
 
-The program that operates this phase is ``mark\_fields.rb''. It must be supplied
-with the tax form data produced in phase 1, using the ``-i'' argument. With no
-further arguments, the program lists the forms for which the fields have not
-been marked yet.
+The program that operates this phase is ``ui/mark.rb''. See the options help on
+running that script for details.
 
-To mark fields in a form, enter the form name as the first non-option argument
-to the command. If the form has not been marked yet, you must provide the name
-of the PDF file for the form as a second command line argument.
-
-The program will automatically save the location of the PDF file and the
+The script is provided with the following inputs:
+\begin{itemize}
+\item The computed TaxForm file(s), which are used to discern the lines for each
+form.
+\item The name of the form to work on.
+\item The location of a PDF file. The script can predict default URLs for
+several IRS forms and attempt to download them.
+\item Which pages of the PDF file to include, useful for worksheets contained
+within instructions.
+\end{itemize}
+The program will automatically save the location of the PDF files and the
 coordinates of the marked fields to a file, which by default is named
-``pos-data.txt''. This file name may be changed using the ``-p'' argument.
+``posdata.txt''.
 
 
+\subsection{Architecture of the Form Filling UI}
+
+Problematically, Ruby is the language in which the other components of this
+system are implemented, but it lacks good support for PDF processing and user
+interfaces. Currently I find that Node.js is better for the latter two, because
+of Mozilla's pdf.js library and Nodegui (which, as of 2021, is still in
+development but workable). To bridge the gap, the UI script actually runs in two
+parts: A Ruby wrapper that manages the data files, and a Node-based UI. The two
+communicate via Unix anonymous pipes, transmitting JSON objects between each
+other.
+
+If, in the future, Nodegui proves unworkable, it likely would not be difficult
+either to turn the UI component into an Electron app or to switch to a different
+framework entirely, retaining the Ruby wrapper as-is.
 
 
-\subsection{Boxed Data}
+\subsection{Split Lines}
 
-In some cases, the PDF form will have individual boxes for each character or
-portion of text, rather than a single field for all the text. The ``boxed data''
-feature enables filling in these form fields correctly.
+One feature that the marking script supports is ``split'' lines, where a line's
+text is separated across multiple boxes (for example, one per letter or dividing
+a social security number across dashes). The ``split'' checkbox on the UI
+accommodates this.
 
-To use this feature, the relevant TaxForm should call the method
-``box\_line(line, count, split)'' where line is the line number to be placed
-in boxes, count is the number of boxes available, and split is how to separate
-the line's data into segments (the default is an empty string, which means each
-character is separated individually). All this does is mark the relevant line in
-the form as a boxed-data line; computation proceeds unchanged.
-
-The format of boxed data in a tax form file is described above.
-
-When the form field marking program is invoked, it will detect boxed-data lines
-and treat them like arrays. Thus, each box will need to be marked individually.
-However, if there are more letters than boxes available, the program will
-truncate data values to fit.
-
+Internally, a split line is represented by a flag in the Ruby class
+Marking::Line. It cannot be an inherited class in order to enable switching
+a line from split to non-split without creating a new object.
 
 
 
