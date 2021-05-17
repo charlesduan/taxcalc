@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Pub590AWorksheet1_1 - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Pub590AWorksheet1_1">
+  <h1 id="class-Pub590AWorksheet1_1" class="class">
+    class Pub590AWorksheet1_1
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File pub590a_1_1.rb, line 10</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># The instructions call for filling line 1 with AGI from Form 1040, &quot;figured</span>
+  <span class="ruby-comment"># without Schedule 1 line [for IRA contributions]&quot;. This approach below</span>
+  <span class="ruby-comment"># attempts to capture that computation.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>] = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:tot_inc</span>] \
+    <span class="ruby-operator">-</span> <span class="ruby-identifier">form</span>(<span class="ruby-string">&#39;1040 Schedule 1&#39;</span>).<span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(10 11 12 13 14 15 16 17 18a)</span>) \
+    <span class="ruby-operator">-</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">sd_charitable_contributions</span>
+
+  <span class="ruby-comment"># Line 2 adds back the student loan interest deduction that would have been</span>
+  <span class="ruby-comment"># subtracted in the Schedule 1 computation above. Since it is omitted from</span>
+  <span class="ruby-comment"># the above computation, it is not included here.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">2</span>] = <span class="ruby-value">0</span>
+  <span class="ruby-comment"># Line 3 similarly restores the tuition and fees deduction, which was not</span>
+  <span class="ruby-comment"># subtracted from above.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>] = <span class="ruby-value">0</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># These relate to foreign earned income, foreign housing, savings bond</span>
+  <span class="ruby-comment"># interest, and adoption benefits.</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">2555</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">45</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">50</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">8815</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">8839</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">28</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8/magi&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">1</span>, <span class="ruby-value">2</span>, <span class="ruby-value">3</span>, <span class="ruby-value">4</span>, <span class="ruby-value">5</span>, <span class="ruby-value">6</span>, <span class="ruby-value">7</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File pub590a_1_1.rb, line 6</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

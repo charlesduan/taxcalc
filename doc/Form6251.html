@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form6251 - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-amt_tax">#amt_tax</a>
+    
+    <li ><a href="#method-i-check_line_13_conds">#check_line_13_conds</a>
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-compute_from_worksheets">#compute_from_worksheets</a>
+    
+    <li ><a href="#method-i-compute_line_10">#compute_line_10</a>
+    
+    <li ><a href="#method-i-compute_part_iii">#compute_part_iii</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form6251">
+  <h1 id="class-Form6251" class="class">
+    class Form6251
+  </h1>
+
+  <section class="description">
+    
+<p>Alternative Minimum Tax</p>
+
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-amt_tax" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">amt_tax</span><span
+            class="method-args">(amount)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="amt_tax-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 303</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">amt_tax</span>(<span class="ruby-identifier">amount</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">amount</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">halve_mfs</span>(<span class="ruby-value">197_900</span>)
+    <span class="ruby-keyword">return</span> (<span class="ruby-identifier">amount</span> <span class="ruby-operator">*</span> <span class="ruby-value">0.26</span>).<span class="ruby-identifier">round</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-keyword">return</span> (<span class="ruby-identifier">amount</span> <span class="ruby-operator">*</span> <span class="ruby-value">0.28</span>).<span class="ruby-identifier">round</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">halve_mfs</span>(<span class="ruby-value">3958</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-check_line_13_conds" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">check_line_13_conds</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="check_line_13_conds-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 291</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">check_line_13_conds</span>
+  <span class="ruby-identifier">cond1</span> = (<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2l&#39;</span>, <span class="ruby-value">:opt</span>] <span class="ruby-operator">!=</span> <span class="ruby-value">0</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2i&#39;</span>, <span class="ruby-value">:opt</span>] <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>)
+  <span class="ruby-identifier">cond2</span> = (<span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line_taxinc</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>)
+  <span class="ruby-identifier">cond3</span> = <span class="ruby-keyword">false</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1041 Schedule K-1&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">cond3</span> = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-operator">!</span>(<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;12.code&#39;</span>, <span class="ruby-value">:all</span>] <span class="ruby-operator">&amp;</span> <span class="ruby-node">%w(B C D E F)</span>).<span class="ruby-identifier">empty?</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">cond1</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">cond2</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">cond3</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Nonstandard Form 6251, Line 13 not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 16</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+  <span class="ruby-identifier">set_name_ssn</span>
+
+  <span class="ruby-comment"># If there are 1065 K-1 forms, ensure that they contain no AMT adjustments.</span>
+  <span class="ruby-identifier">with_forms</span>(<span class="ruby-string">&#39;1065 Schedule K-1&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">17</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Partnership adjustments for AMT not implemented.&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>] = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line_taxinc</span>
+
+  <span class="ruby-comment"># Schedule A tax deduction, or 1040 standard deduction.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2a&#39;</span>] = <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule A&#39;</span>, <span class="ruby-value">otherwise:</span> <span class="ruby-identifier">proc</span> {
+    <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>]
+  }) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line_salt</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule 1&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-comment"># 2b: undoing income attributed to state/local income tax refunds</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:taxrefund</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-comment"># It is assumed that all amounts in Schedule 1, line 1 relate to income</span>
+      <span class="ruby-comment"># taxes, because that is all that is presently implemented. There is a</span>
+      <span class="ruby-comment"># comment in that form as a reminder to update this computation if that</span>
+      <span class="ruby-comment"># changes.</span>
+
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>, <span class="ruby-value">:present</span>]
+        <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;AMT adjustment for Schedule 1, line 8 not implemented&quot;</span>
+        <span class="ruby-comment"># This is also relevant to line 2e below</span>
+      <span class="ruby-keyword">end</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2b&#39;</span>] = <span class="ruby-operator">-</span><span class="ruby-identifier">f</span>.<span class="ruby-identifier">line_taxrefund</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">4952</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Form 6251, line 2c (Form 4952 Investment Interest) not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># 2d: Depletion not implemented; only for mining, timber, etc.</span>
+  <span class="ruby-comment"># 2e: NOL deduction not implemented; we assumed Schedule 1 line 8 is blank.</span>
+  <span class="ruby-comment">#     (Net operating loss refers to situations where deductions exceed</span>
+  <span class="ruby-comment">#     income.)</span>
+  <span class="ruby-comment"># 2f: ATNOL not implemented so no deduction can be taken.</span>
+
+  <span class="ruby-comment"># 2g: Private activity bonds</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2g&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-INT&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">9</span>, <span class="ruby-value">:sum</span>) <span class="ruby-operator">+</span> \
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-DIV&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">12</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-value">8814</span>)
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Form 6251, line 2g inclusion of From 8814 not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># 2h: qualified small business stock</span>
+  <span class="ruby-identifier">with_forms</span>(<span class="ruby-value">8949</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-node">%w(I II)</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">part</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">f_line</span>, <span class="ruby-identifier">g_line</span> = <span class="ruby-node">&quot;#{part}.1f&quot;</span>, <span class="ruby-node">&quot;#{part}.1g&quot;</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">f_part</span>, <span class="ruby-value">:all</span>].<span class="ruby-identifier">include?</span>(<span class="ruby-string">&quot;Q&quot;</span>)
+        <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;AMT adjustment for QSBS not implemented&quot;</span>
+      <span class="ruby-keyword">end</span>
+      <span class="ruby-comment"># Because this appears only to apply to stock acquired before September</span>
+      <span class="ruby-comment"># 28, 2010, this code is unlikely ever to be used, so I am commenting it</span>
+      <span class="ruby-comment"># out so that I don&#39;t need to maintain it.</span>
+      <span class="ruby-comment">#</span>
+      <span class="ruby-comment"># next unless f.line[f_part, :present]</span>
+      <span class="ruby-comment"># f.line[f_part, :all].zip(f.line[g_part, :all]).each do |x|</span>
+      <span class="ruby-comment">#   l2h += x[1] if x[0] == &#39;Q&#39; # line 1f flag for QSBS exclusion</span>
+      <span class="ruby-comment"># end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-comment"># line[&#39;2h&#39;] = l2h</span>
+
+  <span class="ruby-comment"># 2i: incentive stock options.</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-value">3921</span>)
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Incentive stock options not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># 2j: estates/trusts</span>
+  <span class="ruby-identifier">l2j</span> = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-identifier">with_forms</span>(<span class="ruby-string">&#39;1041 Schedule K-1&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;12.code&#39;</span>, <span class="ruby-value">:all</span>].<span class="ruby-identifier">zip</span>(<span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>, <span class="ruby-value">:all</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">l2j</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">x</span>[<span class="ruby-value">1</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">x</span>[<span class="ruby-value">1</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;A&#39;</span>
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2j&#39;</span>] = <span class="ruby-identifier">l2j</span>
+
+  <span class="ruby-comment"># 2k: adjustments for disposition of property.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-node">%w(4797 4684 8949)</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Line 2k not implemented with form #{f}&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">f</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># 2l: depreciation adjustments.</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">4562</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-comment"># These should be all the right-hand columns of Form 4562 starting with</span>
+    <span class="ruby-comment"># Part II.</span>
+    <span class="ruby-node">%w(
+      14 15 16 17 19a.g 19b.g 19c.g 19d.g 19e.g 19f.g 19h.g 19i.g 20a.g 20b.g
+      20c.g 20d.g 21
+    )</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>, <span class="ruby-value">:present</span>]
+        <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;AMT depreciation adjustment not implemented&quot;</span>
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2l&#39;</span>] = <span class="ruby-constant">BlankZero</span>
+
+  <span class="ruby-comment"># 2m: passive activity loss. It is assumed that there aren&#39;t any passive</span>
+  <span class="ruby-comment"># activities.</span>
+  <span class="ruby-comment"># 2n: loss limitations. It is assumed that no losses were posted; if they</span>
+  <span class="ruby-comment"># were, then any limitations on losses need to be recalculated.</span>
+  <span class="ruby-comment"># 2o: circulation costs. It is assumed that the individual owns no</span>
+  <span class="ruby-comment"># periodicals.</span>
+  <span class="ruby-comment"># 2p: long-term contracts. These are contracts for the construction of</span>
+  <span class="ruby-comment"># property that will take more than a year. It is assumed there are none.</span>
+  <span class="ruby-comment"># 2q: mining costs. Assumed there are none.</span>
+  <span class="ruby-comment"># 2r: research/experimental costs. Assumed there are none.</span>
+  <span class="ruby-comment"># 2s: installment sales in 1986. Assumed there are none.</span>
+  <span class="ruby-comment"># 2t: intangible drilling costs. Assumed there are none.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># 3: Other adjustments. Assumed there aren&#39;t any. The Related Adjustments</span>
+  <span class="ruby-comment"># might be affected but this is unlikely.</span>
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;You have no other adjustments for AMT (line 3)&quot;</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(
+    1 2a 2b 2c 2d 2e 2f 2g 2h 2i 2j 2k 2l 2m 2n 2o 2p 2q 2r 2s 2t 3
+  )</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfs&#39;</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">745_200</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Form 6251 Line 4 adjustment not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule E&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;38c&#39;</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Form 6251 Line 4 REMIC adjustment not implemented&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># AMT computation</span>
+
+  <span class="ruby-comment"># Several things depend on the foreign tax credit computation.</span>
+  <span class="ruby-ivar">@ftc_form</span> = <span class="ruby-identifier">find_or_compute_form</span>(<span class="ruby-string">&#39;Foreign Tax Credit&#39;</span>)
+
+  <span class="ruby-comment"># Compute the exemption.</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">amt_exempt_max</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;6251 Line 5 Exemption Worksheet&#39;</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>]
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>] = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">amt_exemption</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Compute the balance over the exemption.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>] = [ <span class="ruby-value">0</span>, <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>] ].<span class="ruby-identifier">max</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>] <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">9</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] = <span class="ruby-value">0</span>
+    <span class="ruby-identifier">compute_line_10</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">11</span>] = <span class="ruby-value">0</span>
+    <span class="ruby-keyword">return</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Line 7</span>
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;You have no foreign income&quot;</span>)
+  <span class="ruby-identifier">l7test</span> = <span class="ruby-keyword">false</span>
+  <span class="ruby-identifier">l7test</span> = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line_qualdiv</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+  <span class="ruby-identifier">l7test</span> = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:cap_gain</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule D&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">l7test</span> = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:lt_gain</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span> <span class="ruby-keyword">and</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:tot_gain</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">l7test</span>
+    <span class="ruby-identifier">compute_part_iii</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">40</span>]
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] = <span class="ruby-identifier">amt_tax</span>(<span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>])
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># AMT foreign tax credit</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@ftc_form</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-value">1116</span>)
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;AMT foreign tax credit with Form 1116 not implemented&quot;</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>] = <span class="ruby-ivar">@ftc_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:fill!</span>]
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># AMT</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">9</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>, <span class="ruby-value">:opt</span>]
+
+  <span class="ruby-identifier">compute_line_10</span>
+
+  <span class="ruby-comment"># AMT additional tax</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;11/amt_tax&#39;</span>] = [ <span class="ruby-value">0</span>, <span class="ruby-identifier">line</span>[<span class="ruby-value">9</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>] ].<span class="ruby-identifier">max</span>
+
+  <span class="ruby-identifier">place_lines</span>(<span class="ruby-operator">*</span><span class="ruby-value">12</span><span class="ruby-operator">..</span><span class="ruby-value">40</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>, <span class="ruby-value">:present</span>]
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_from_worksheets" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_from_worksheets</span><span
+            class="method-args">(qdcgt_line, sdtw_line) { || ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns the requested line from the QDCGT worksheet if that&#39;s present; if not returns the requested line from the Schedule D Tax Worksheet if that&#39;s present; if not yields and returns that.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_from_worksheets-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 316</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_from_worksheets</span>(<span class="ruby-identifier">qdcgt_line</span>, <span class="ruby-identifier">sdtw_line</span>)
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 QDCGT Worksheet&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">qdcgt</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">qdcgt</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">qdcgt_line</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule D Tax Worksheet&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sdtw</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">sdtw</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">sdtw_line</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span>(<span class="ruby-keyword">yield</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_line_10" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_line_10</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute_line_10-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 211</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_line_10</span>
+  <span class="ruby-identifier">l10</span> = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:tax</span>]
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">4972</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">30</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-identifier">l10</span> <span class="ruby-operator">-=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">30</span>]
+    <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-identifier">l10</span> <span class="ruby-operator">-=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>]
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule 2&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">l10</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">2</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule 3&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">l10</span> <span class="ruby-operator">-=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">l10</span> <span class="ruby-operator">-=</span> <span class="ruby-ivar">@ftc_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:fill!</span>] <span class="ruby-keyword">if</span> <span class="ruby-ivar">@ftc_form</span>
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;You are not a farmer or fisherman&quot;</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>] = <span class="ruby-identifier">l10</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_part_iii" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_part_iii</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute_part_iii-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 233</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_part_iii</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>]
+
+  <span class="ruby-identifier">check_line_13_conds</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">13</span>] = <span class="ruby-identifier">compute_from_worksheets</span>(<span class="ruby-value">4</span>, <span class="ruby-value">13</span>) { <span class="ruby-constant">BlankZero</span> }
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] = <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule D&#39;</span>, <span class="ruby-value">otherwise_return:</span> <span class="ruby-constant">BlankZero</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sd</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">sd</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">19</span>, <span class="ruby-value">:opt</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">15</span>] = <span class="ruby-identifier">with_form</span>(
+    <span class="ruby-string">&#39;1040 Schedule D Tax Worksheet&#39;</span>, <span class="ruby-value">otherwise_return:</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">13</span>]
+  ) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sdtw</span><span class="ruby-operator">|</span>
+    [ <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">13</span>, <span class="ruby-value">14</span>), <span class="ruby-identifier">sdtw</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>] ].<span class="ruby-identifier">min</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">16</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>], <span class="ruby-identifier">line</span>[<span class="ruby-value">15</span>] ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">17</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">16</span>]
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">18</span>] = <span class="ruby-identifier">amt_tax</span>(<span class="ruby-identifier">line</span>[<span class="ruby-value">17</span>])
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">19</span>] = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">amt_cg_exempt</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">20</span>] = <span class="ruby-identifier">compute_from_worksheets</span>(<span class="ruby-value">5</span>, <span class="ruby-value">14</span>) {
+    [ <span class="ruby-value">0</span>, <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:taxinc</span>] ].<span class="ruby-identifier">max</span>
+  }
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>] = [ <span class="ruby-value">0</span>, <span class="ruby-identifier">line</span>[<span class="ruby-value">19</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">20</span>] ].<span class="ruby-identifier">max</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>], <span class="ruby-identifier">line</span>[<span class="ruby-value">13</span>] ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">23</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>], <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>] ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">24</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">23</span>]
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">25</span>] = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">amt_cg_upper</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">26</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">27</span>] = <span class="ruby-identifier">compute_from_worksheets</span>(<span class="ruby-value">5</span>, <span class="ruby-value">21</span>) {
+    [ <span class="ruby-value">0</span>, <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:taxinc</span>] ].<span class="ruby-identifier">max</span>
+  }
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">28</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">26</span>, <span class="ruby-value">27</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">29</span>] = [ <span class="ruby-value">0</span>, <span class="ruby-identifier">line</span>[<span class="ruby-value">25</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">28</span>] ].<span class="ruby-identifier">max</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">30</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">24</span>], <span class="ruby-identifier">line</span>[<span class="ruby-value">29</span>] ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">31</span>] = (<span class="ruby-identifier">line</span>[<span class="ruby-value">30</span>] <span class="ruby-operator">*</span> <span class="ruby-value">0.15</span>).<span class="ruby-identifier">round</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">32</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">23</span>, <span class="ruby-value">30</span>)
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">32</span>] <span class="ruby-operator">!=</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">33</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">32</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">34</span>] = (<span class="ruby-identifier">line</span>[<span class="ruby-value">33</span>] <span class="ruby-operator">*</span> <span class="ruby-value">0.2</span>).<span class="ruby-identifier">round</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-value">35</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">17</span>, <span class="ruby-value">32</span>, <span class="ruby-value">33</span>)
+      <span class="ruby-identifier">line</span>[<span class="ruby-value">36</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">35</span>]
+      <span class="ruby-identifier">line</span>[<span class="ruby-value">37</span>] = (<span class="ruby-identifier">line</span>[<span class="ruby-value">36</span>] <span class="ruby-operator">*</span> <span class="ruby-value">0.25</span>).<span class="ruby-identifier">round</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">38</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">18</span>, <span class="ruby-value">31</span>, <span class="ruby-value">34</span>, <span class="ruby-value">37</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">39</span>] = <span class="ruby-identifier">amt_tax</span>(<span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>])
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">40</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">38</span>], <span class="ruby-identifier">line</span>[<span class="ruby-value">39</span>] ].<span class="ruby-identifier">min</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form6251.rb, line 12</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

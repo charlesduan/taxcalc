@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form1065 - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form1065">
+  <h1 id="class-Form1065" class="class">
+    class Form1065
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form1065.rb, line 14</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+
+  <span class="ruby-comment"># A reminder to add those lines</span>
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;New lines added to Partner and Partnership forms&quot;</span>
+
+  <span class="ruby-identifier">bio</span> = <span class="ruby-identifier">form</span>(<span class="ruby-string">&#39;Partnership&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;name&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:name</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;address&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:address</span>) <span class="ruby-operator">+</span> \
+    (<span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:address2</span>, <span class="ruby-value">:present</span>) <span class="ruby-operator">?</span> <span class="ruby-string">&quot; &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:address2</span>) <span class="ruby-operator">:</span> <span class="ruby-string">&quot;&quot;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;city_zip&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:city_zip</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;A&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-string">&#39;business&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-string">&#39;product&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;C&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-string">&#39;code&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;D/ein&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-string">&#39;ein&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;E&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:start</span>)
+
+  <span class="ruby-comment"># Line F need not be filled in if the below condition is true.</span>
+  <span class="ruby-identifier">confirm</span>(
+    <span class="ruby-node">&quot;Partnership #{line_name} meets the 4 conditions &quot;</span> \
+    <span class="ruby-string">&quot;in Form 1065 Schedule B, line 4.&quot;</span>,
+  )
+
+  <span class="ruby-identifier">confirm</span>(
+    <span class="ruby-node">&quot;For partnership #{line_name}, no box in Form 1065 line G &quot;</span> \
+    <span class="ruby-string">&quot;needs to be checked.&quot;</span>
+  )
+
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-string">&#39;accounting&#39;</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;Cash&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;H.1&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;Accrual&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;H.2&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;H.3&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;H.other&#39;</span>] = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-string">&#39;accounting&#39;</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;I&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Partner&#39;</span>).<span class="ruby-identifier">count</span>
+
+  <span class="ruby-comment"># Line J need not be filled for partnerships with less than $35M in total</span>
+  <span class="ruby-comment"># receipts or $10M in assets, and which has no reportable entity partner (a</span>
+  <span class="ruby-comment"># 50% partner that must file Schedule M-3).</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Line K only applies if the partnership claims losses.</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1a&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-MISC&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">7</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1c&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1a&#39;</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1b&#39;</span>, <span class="ruby-value">:opt</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1c&#39;</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">2</span>, <span class="ruby-value">:opt</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">3</span>, <span class="ruby-value">4</span>, <span class="ruby-value">5</span>, <span class="ruby-value">6</span>, <span class="ruby-value">7</span>)
+
+  <span class="ruby-ivar">@asset_manager</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;Asset Manager&#39;</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@asset_manager</span>.<span class="ruby-identifier">has_current_assets?</span>
+    <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">4562</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-ivar">@asset_manager</span>.<span class="ruby-identifier">attach_safe_harbor_election</span>(<span class="ruby-keyword">self</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">20</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;Business Expense Manager&#39;</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:fill!</span>]
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">20</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">form</span>(<span class="ruby-string">&#39;Business Expense Manager&#39;</span>).<span class="ruby-identifier">make_continuation</span>(
+      <span class="ruby-keyword">self</span>, <span class="ruby-string">&#39;Line 20 Statement of Business Expenses&#39;</span>
+    )
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">9</span>, <span class="ruby-value">10</span>, <span class="ruby-value">11</span>, <span class="ruby-value">12</span>, <span class="ruby-value">13</span>, <span class="ruby-value">14</span>, <span class="ruby-value">15</span>, <span class="ruby-string">&#39;16c&#39;</span>, <span class="ruby-value">17</span>, <span class="ruby-value">18</span>, <span class="ruby-value">19</span>, <span class="ruby-value">20</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>]
+
+  <span class="ruby-comment"># The taxes on lines 23-24 appear to apply only to partnerships that aren&#39;t</span>
+  <span class="ruby-comment"># closely held. Line 25 applies to &quot;administrative adjustment requests&quot;</span>
+  <span class="ruby-comment"># under the Bipartisan Budget Act of 2015, which appears to occur only when</span>
+  <span class="ruby-comment"># the partnership seeks to adjust a previous filing.</span>
+
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>(<span class="ruby-value">:type</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;general&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1a&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;limited&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1b&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;llc&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1c&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;llp&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1d&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;foreign&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1e&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-regexp">/^other: /</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1f&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B1f.text&#39;</span>] = <span class="ruby-node">$&#39;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Invalid partnership type #{bio.line[&#39;type&#39;]}&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">confirm</span>(
+    <span class="ruby-string">&quot;The answer to every question on Schedule B (other than 2 and 4) is `no&#39;&quot;</span>
+  )
+
+  <span class="ruby-identifier">big_indiv</span>, <span class="ruby-identifier">big_inst</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Partner&#39;</span>).<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:share</span>] <span class="ruby-operator">&gt;=</span> <span class="ruby-value">0.5</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:capital</span>] <span class="ruby-operator">&gt;=</span> <span class="ruby-value">0.5</span>
+      <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:type</span>]
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-keyword">nil</span>
+    <span class="ruby-keyword">end</span>
+  }.<span class="ruby-identifier">compact</span>.<span class="ruby-identifier">partition</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-node">%w(Individual Estate)</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">x</span>) }
+  <span class="ruby-identifier">line</span>[<span class="ruby-identifier">big_inst</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-operator">?</span> <span class="ruby-string">&#39;B2a.no&#39;</span> <span class="ruby-operator">:</span> <span class="ruby-string">&#39;B2a.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-identifier">big_indiv</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-operator">?</span> <span class="ruby-string">&#39;B2b.no&#39;</span> <span class="ruby-operator">:</span> <span class="ruby-string">&#39;B2b.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B3a.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B3b.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B4.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B5.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B6.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B7.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B8.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B9.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B10a.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B10b.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B10c.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B12.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-comment"># Line 13 is unfilled</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Partner&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-string">&#39;nationality&#39;</span>, <span class="ruby-value">:all</span>).<span class="ruby-identifier">any?</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-identifier">x</span> <span class="ruby-operator">!=</span> <span class="ruby-string">&#39;domestic&#39;</span> }
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Foreign partners not currently handled&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B14.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B15&#39;</span>] = <span class="ruby-value">0</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B16a.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B17&#39;</span>] = <span class="ruby-value">0</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B18&#39;</span>] = <span class="ruby-value">0</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B19.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B20.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B21.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B22.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B23.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-comment"># Line 24, in 2019, was reversed so the answer is now no.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B24.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-identifier">confirm</span>(
+    <span class="ruby-string">&quot;You do not want to opt out of the centralized partnership audit regime&quot;</span>
+  )
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B25.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-identifier">pr_name</span> = <span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Enter the partnership representative&#39;s name:&quot;</span>)
+  <span class="ruby-identifier">pr_form</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Partner&#39;</span>).<span class="ruby-identifier">find</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-identifier">x</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;name&#39;</span>] <span class="ruby-operator">==</span> <span class="ruby-identifier">pr_name</span> }
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">pr_form</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;No partner named #{pr_name} for the partnership representative&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;PR.name&#39;</span>] = <span class="ruby-identifier">pr_name</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">pr_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;type&#39;</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;Individual&#39;</span>
+    <span class="ruby-comment"># The TIN is no longer on the form, but still need it for DC</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;PR.tin!&#39;</span>] = <span class="ruby-identifier">pr_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ssn&#39;</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;PR.address&#39;</span>] = <span class="ruby-identifier">pr_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;address&#39;</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;PR.address2&#39;</span>] = <span class="ruby-identifier">pr_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;address2&#39;</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;PR.phone&#39;</span>] = <span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Partnership representative phone:&quot;</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;No support for non-individual partnership representative&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B26.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B27&#39;</span>] = <span class="ruby-string">&#39;0&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B28.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;B29.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;K1&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;K5&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-INT&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">1</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-identifier">assert_no_forms</span>(<span class="ruby-string">&#39;1099-DIV&#39;</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-value">4562</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;K12&#39;</span>] = <span class="ruby-identifier">form</span>(<span class="ruby-value">4562</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;K14a&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;K1&#39;</span>]
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Somewhere around here, check that all partners are active</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;Analysis.1&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11)</span>)\
+    <span class="ruby-operator">-</span> <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(12 13a 13b 13c2 13d 16p)</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;Analysis.2a(ii)&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;Analysis.1&#39;</span>]
+
+  <span class="ruby-comment"># We assumed previously that the Schedule B line 6 answer was yes, so assets</span>
+  <span class="ruby-comment"># are less than $10 million and no M-3 is filed.</span>
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;No state in address&quot;</span> <span class="ruby-keyword">unless</span> (<span class="ruby-identifier">line</span>[<span class="ruby-value">:city_zip</span>] <span class="ruby-operator">=~</span> <span class="ruby-regexp">/ ([A-Z]{2}) \d{5}/</span>)
+  <span class="ruby-identifier">state</span> = <span class="ruby-node">$1</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-node">%w(
+    CT DE DC GA IL IN KY ME MD MA MI NH NJ NY NC OH PA RI SC TN VT VA WV WI
+  )</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">state</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:send_to!</span>] = <span class="ruby-string">&#39;Kansas City MO 64999-0011&#39;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:send_to!</span>] = <span class="ruby-string">&#39;Ogden UT 84201-0011&#39;</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form1065.rb, line 10</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

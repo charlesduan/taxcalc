@@ -70,7 +70,7 @@ class TaxComputation < TaxForm
   end
 
   def compute_tax_qdcgt
-    f = @manager.compute_form('1040 QDCGT Worksheet')
+    f = compute_form('1040 QDCGT Worksheet')
     return f.line[:tax]
   end
 
@@ -85,7 +85,6 @@ class QdcgtWorksheet < TaxForm
 
   def compute
     @f1040 = form(1040)
-    ftc = form('Tax Computation')
     confirm("You have no foreign income")
 
     line[1] = @f1040.line[:taxinc]
@@ -122,9 +121,11 @@ class QdcgtWorksheet < TaxForm
     line[20] = line[10] - line[19]        # qdcg income left to account for
     line[21] = (line[20] * 0.20).round    # taxed at 20% rate
 
-    line[22] = ftc.compute_tax_standard(line[5])
-    line[23] = sum_lines(18, 21, 22)
-    line[24] = ftc.compute_tax_standard(line[1])
+    with_form('Tax Computation', required?: true) do |ftc|
+      line[22] = compute_more(ftc, :tax_standard, line[5])
+      line[23] = sum_lines(18, 21, 22)
+      line[24] = compute_more(ftc, :tax_standard, line[1])
+    end
     line['25/tax'] = [ line[23], line[24] ].min
   end
 end

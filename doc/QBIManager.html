@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class QBIManager - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-QBIManager">
+  <h1 id="class-QBIManager" class="class">
+    class QBIManager
+  </h1>
+
+  <section class="description">
+    
+<p>Computes the qualified business income deduction. This class should produce a line :deduction that will be entered on the appropriate line of Form 1040. It should also compute Form 8995 or 8995-A as appropriate.</p>
+
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-qbi" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">qbi</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File qbi_manager.rb, line 68</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+
+  <span class="ruby-identifier">f1040</span> = <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>)
+
+  <span class="ruby-comment"># Find all QBI</span>
+  <span class="ruby-ivar">@qbi</span> = []
+  <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1065 Schedule K-1&#39;</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">next</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>] <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
+    <span class="ruby-ivar">@qbi</span>.<span class="ruby-identifier">push</span>(<span class="ruby-constant">PshipQBI</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>, <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>], <span class="ruby-identifier">f</span>))
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule C&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sch_c</span><span class="ruby-operator">|</span>
+    <span class="ruby-ivar">@qbi</span>.<span class="ruby-identifier">push</span>(<span class="ruby-constant">SoleProprietorQBI</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>, <span class="ruby-identifier">sch_c</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:net_profit</span>], <span class="ruby-identifier">sch_c</span>))
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&#39;You have no REIT dividends or publicly traded partnership income&#39;</span>)
+
+  <span class="ruby-comment"># Exclude SSTB (consulting income) if the income threshold is exceeded</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_income</span>] = <span class="ruby-identifier">f1040</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:agi</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">f1040</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>]
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_income</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">f1040</span>.<span class="ruby-identifier">status</span>.<span class="ruby-identifier">qbi_max</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:sstb_excluded?</span>] = <span class="ruby-keyword">true</span>
+    <span class="ruby-ivar">@qbi</span>.<span class="ruby-identifier">reject!</span>(<span class="ruby-operator">&amp;</span><span class="ruby-value">:sstb</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@qbi</span>.<span class="ruby-identifier">map</span>(<span class="ruby-operator">&amp;</span><span class="ruby-value">:amount</span>).<span class="ruby-identifier">inject</span>(<span class="ruby-value">0</span>, <span class="ruby-value">:+</span>) <span class="ruby-operator">&lt;=</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>] = <span class="ruby-constant">BlankZero</span>
+    <span class="ruby-keyword">return</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_income</span>] <span class="ruby-operator">&lt;=</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">qbi_threshold</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">8995</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>]
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;8995-A&#39;</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>]
+  <span class="ruby-keyword">end</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File qbi_manager.rb, line 14</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

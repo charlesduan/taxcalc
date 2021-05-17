@@ -147,7 +147,7 @@ class IraAnalysis < TaxForm
     raise "Inconsistent state" unless line[:total_distrib] == 0
     line[:taxable_distrib] = line[:total_distrib]
     @contrib_continuation = proc {
-      @pub590a_w1_2 = @manager.compute_form("Pub. 590-A Worksheet 1-2")
+      @pub590a_w1_2 = compute_form("Pub. 590-A Worksheet 1-2")
       line[:deductible_contrib] = @pub590a_w1_2.line[7]
       line[:nondeductible_contrib] = @pub590a_w1_2.line[8]
     }
@@ -184,7 +184,7 @@ class IraAnalysis < TaxForm
 
   def compute_contributions_and_distributions_continuation
 
-    @pub590a_w1_2 = @manager.compute_form("Pub. 590-A Worksheet 1-2")
+    @pub590a_w1_2 = compute_form("Pub. 590-A Worksheet 1-2")
 
     # Step 2 is done here by setting line nondeductible_contrib
     line[:deductible_contrib] = @pub590a_w1_2.line[:deductible_contrib]

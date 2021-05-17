@@ -69,7 +69,13 @@ class FormManager
     if form.manager != self
       raise 'Adding form, but wrong manager'
     end
-    form.check_year
+
+    #
+    # Checks the year of the form.
+    #
+    if form.year != self.year
+      warn("Form #{name} is for #{form.year}, but manager is #{year}")
+    end
 
     if @forms[name]
       @forms[name] = [ @forms[name], form ].flatten
@@ -156,7 +162,7 @@ class FormManager
   # this is a continuation of computation, the object cannot be created) and a
   # symbol representing the name of the computation method (compute_[method]).
   #
-  def compute_more(form, method)
+  def compute_more(form, method, *args)
     raise "Invalid form for compute_more" unless form.is_a?(TaxForm)
     method = "compute_#{method}".to_sym
     unless form.respond_to?(method)
@@ -165,7 +171,7 @@ class FormManager
 
     form.explain("Computing Form #{form.name} (#{method}) for #{name}")
     @compute_stack.push(form)
-    form.send(method)
+    form.send(method, *args)
     @compute_stack.pop
     form.explain("Done computing Form #{form.name} (#{method})")
   end
@@ -196,13 +202,21 @@ class FormManager
 
   #
   # Retrieves a single form with the given name. Produces an error if no form
-  # with that name is present or if multiple forms with that name are present.
+  # with that name is present or if multiple forms with that name are present. A
+  # block may be given, in which case that block will be used to select among
+  # multiple matching forms; still, only one form should ultimately match.
   #
   def form(name)
     name = name.to_s
     raise "No form #{name}" unless @forms[name]
-    raise "Multiple forms #{name}" if @forms[name].is_a?(Enumerable)
-    f = @forms[name]
+    if @forms[name].is_a?(Enumerable)
+      forms = @forms[name]
+      forms = forms.select { |f| yield(f) } if block_given?
+      raise "Multiple forms #{name}" if forms.count != 1
+      f = forms.first
+    else
+      f = @forms[name]
+    end
     f.used = true
     return f
   end
@@ -233,10 +247,11 @@ class FormManager
 
   # Performs a block if the named form exists and returns the result; otherwise
   # performs an alternate block and/or returns an alternate value.
-  def with_form(name, otherwise: nil, otherwise_return: nil)
+  def with_form(name, otherwise: nil, otherwise_return: nil, required?: false)
     if has_form?(name)
       return yield(form(name))
     else
+      raise "Form #{name} required but not present" if required?
       otherwise_return ||= otherwise.call if otherwise
       return otherwise_return
     end

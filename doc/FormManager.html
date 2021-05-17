@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class FormManager - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="Object.html">Object</a>
+  
+</div>
+
+    <div id="includes-section" class="nav-section">
+  <h3>Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><span class="include">Enumerable</span>
+  
+  
+  </ul>
+</div>
+
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-c-new">::new</a>
+    
+    <li ><a href="#method-i-add_form">#add_form</a>
+    
+    <li ><a href="#method-i-add_submanager">#add_submanager</a>
+    
+    <li ><a href="#method-i-add_submanager_from_file">#add_submanager_from_file</a>
+    
+    <li ><a href="#method-i-all_forms">#all_forms</a>
+    
+    <li ><a href="#method-i-compute_form">#compute_form</a>
+    
+    <li ><a href="#method-i-compute_more">#compute_more</a>
+    
+    <li ><a href="#method-i-confirm">#confirm</a>
+    
+    <li ><a href="#method-i-copy_form">#copy_form</a>
+    
+    <li ><a href="#method-i-copy_no_forms">#copy_no_forms</a>
+    
+    <li ><a href="#method-i-currently_computing">#currently_computing</a>
+    
+    <li ><a href="#method-i-each">#each</a>
+    
+    <li ><a href="#method-i-empty-3F">#empty?</a>
+    
+    <li ><a href="#method-i-ensure_no_forms">#ensure_no_forms</a>
+    
+    <li ><a href="#method-i-explain">#explain</a>
+    
+    <li ><a href="#method-i-explaining-3F">#explaining?</a>
+    
+    <li ><a href="#method-i-export_all">#export_all</a>
+    
+    <li ><a href="#method-i-form">#form</a>
+    
+    <li ><a href="#method-i-forms">#forms</a>
+    
+    <li ><a href="#method-i-has_form-3F">#has_form?</a>
+    
+    <li ><a href="#method-i-import">#import</a>
+    
+    <li ><a href="#method-i-import_tabular">#import_tabular</a>
+    
+    <li ><a href="#method-i-interview">#interview</a>
+    
+    <li ><a href="#method-i-list_forms">#list_forms</a>
+    
+    <li ><a href="#method-i-no_form">#no_form</a>
+    
+    <li ><a href="#method-i-remove_form">#remove_form</a>
+    
+    <li ><a href="#method-i-submanager">#submanager</a>
+    
+    <li ><a href="#method-i-with_form">#with_form</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-FormManager">
+  <h1 id="class-FormManager" class="class">
+    class FormManager
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-interviewer" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">interviewer</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-name" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">name</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-year" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">year</span><span
+            class="attribute-access-type">[RW]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(name = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 9</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">initialize</span>(<span class="ruby-identifier">name</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-ivar">@name</span> = <span class="ruby-identifier">name</span>
+  <span class="ruby-ivar">@forms</span> = {}
+  <span class="ruby-ivar">@no_forms</span> = {}
+  <span class="ruby-ivar">@ordered_forms</span> = []
+  <span class="ruby-ivar">@interviewer</span> = <span class="ruby-constant">Interviewer</span>.<span class="ruby-identifier">new</span>
+  <span class="ruby-ivar">@explain</span> = {}
+  <span class="ruby-ivar">@submanagers</span> = {}
+  <span class="ruby-ivar">@year</span> = <span class="ruby-keyword">nil</span>
+  <span class="ruby-ivar">@compute_stack</span> = []
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-add_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_form</span><span
+            class="method-args">(form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Adds a form to this manager. Checks to ensure that there was no No Form flag for this form, and also that the form belongs to this manager.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="add_form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 64</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">add_form</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-identifier">name</span> = <span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>.<span class="ruby-identifier">to_s</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@no_forms</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Adding form #{name} after No Form flag given&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">form</span>.<span class="ruby-identifier">manager</span> <span class="ruby-operator">!=</span> <span class="ruby-keyword">self</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&#39;Adding form, but wrong manager&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Checks the year of the form.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">form</span>.<span class="ruby-identifier">year</span> <span class="ruby-operator">!=</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">year</span>
+    <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;Form #{name} is for #{form.year}, but manager is #{year}&quot;</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>]
+    <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>] = [ <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>], <span class="ruby-identifier">form</span> ].<span class="ruby-identifier">flatten</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">form</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-ivar">@ordered_forms</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">form</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-add_submanager" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_submanager</span><span
+            class="method-args">(name, manager)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Add a submanager.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="add_submanager-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 369</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">add_submanager</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">manager</span>)
+  <span class="ruby-keyword">unless</span> [ <span class="ruby-value">:last_year</span>, <span class="ruby-value">:spouse</span> ].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;Unexpected submanager name #{name}&quot;</span>)
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-ivar">@submanagers</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">manager</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-add_submanager_from_file" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_submanager_from_file</span><span
+            class="method-args">(name, file, sub_name = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Add a submanager and read a file.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="add_submanager_from_file-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 379</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">add_submanager_from_file</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">file</span>, <span class="ruby-identifier">sub_name</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">sub_name</span> = <span class="ruby-node">&quot;#@name, submanager #{name}&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">sub_name</span>
+  <span class="ruby-identifier">manager</span> = <span class="ruby-constant">FormManager</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">sub_name</span>)
+  <span class="ruby-identifier">manager</span>.<span class="ruby-identifier">import</span>(<span class="ruby-identifier">file</span>)
+  <span class="ruby-identifier">add_submanager</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">manager</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-all_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">all_forms</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="all_forms-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 199</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">all_forms</span>
+  <span class="ruby-ivar">@ordered_forms</span>.<span class="ruby-identifier">dup</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_form</span><span
+            class="method-args">(f, *args) { |form| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Takes either a Form object or a Form class name. Adds it to this <a href="FormManager.html"><code>FormManager</code></a>, and then computes it. Then queries whether the form is needed (using its needed? method), and removes it if not needed.</p>
+
+<p>The step of adding and then removing the form is necessary in case computing the form requires computing any subforms that expect the form under computation to be present.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 132</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_form</span>(<span class="ruby-identifier">f</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">f</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-constant">TaxForm</span>
+    <span class="ruby-identifier">form</span> = <span class="ruby-identifier">f</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-constant">Class</span>
+    <span class="ruby-identifier">form</span> = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Invalid type #{f}&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">form</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">TaxForm</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-constant">String</span>, <span class="ruby-constant">Numeric</span>
+    <span class="ruby-identifier">form</span> = <span class="ruby-constant">TaxForm</span>.<span class="ruby-identifier">by_name</span>(<span class="ruby-identifier">f</span>.<span class="ruby-identifier">to_s</span>).<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Unexpected type #{f.class} for compute_form&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">add_form</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">explain</span>(<span class="ruby-node">&quot;Computing Form #{form.name} for #{name}&quot;</span>)
+  <span class="ruby-ivar">@compute_stack</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">compute</span>
+  <span class="ruby-identifier">needed</span> = <span class="ruby-identifier">form</span>.<span class="ruby-identifier">needed?</span>
+  <span class="ruby-ivar">@compute_stack</span>.<span class="ruby-identifier">pop</span>
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">explain</span>(<span class="ruby-node">&quot;Done computing Form #{form.name}&quot;</span>)
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">needed</span>
+    <span class="ruby-identifier">form</span>.<span class="ruby-identifier">explain</span>(<span class="ruby-node">&quot;Removing Form #{form.name} as not needed&quot;</span>)
+    <span class="ruby-identifier">remove_form</span>(<span class="ruby-identifier">form</span>)
+    <span class="ruby-keyword">return</span> <span class="ruby-keyword">nil</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">form</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span> <span class="ruby-keyword">and</span> <span class="ruby-identifier">form</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">form</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_more" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_more</span><span
+            class="method-args">(form, method, *args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Continues computation of a form. The parameters are a <a href="TaxForm.html"><code>TaxForm</code></a> object (since this is a continuation of computation, the object cannot be created) and a symbol representing the name of the computation method (<a href="method">compute_</a>).</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_more-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 165</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_more</span>(<span class="ruby-identifier">form</span>, <span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Invalid form for compute_more&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">form</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">TaxForm</span>)
+  <span class="ruby-identifier">method</span> = <span class="ruby-node">&quot;compute_#{method}&quot;</span>.<span class="ruby-identifier">to_sym</span>
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">form</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-identifier">method</span>)
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Form #{form.name} has no method #{method}&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">explain</span>(<span class="ruby-node">&quot;Computing Form #{form.name} (#{method}) for #{name}&quot;</span>)
+  <span class="ruby-ivar">@compute_stack</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">method</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-ivar">@compute_stack</span>.<span class="ruby-identifier">pop</span>
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">explain</span>(<span class="ruby-node">&quot;Done computing Form #{form.name} (#{method})&quot;</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-confirm" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">confirm</span><span
+            class="method-args">(prompt, form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="confirm-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 335</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">confirm</span>(<span class="ruby-identifier">prompt</span>, <span class="ruby-identifier">form</span>)
+  <span class="ruby-ivar">@interviewer</span>.<span class="ruby-identifier">confirm</span>(<span class="ruby-identifier">prompt</span>, <span class="ruby-identifier">form</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-copy_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">copy_form</span><span
+            class="method-args">(other_form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Copy a form, perhaps from another manager.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="copy_form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 117</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">copy_form</span>(<span class="ruby-identifier">other_form</span>)
+  <span class="ruby-identifier">new_form</span> = <span class="ruby-identifier">other_form</span>.<span class="ruby-identifier">copy</span>(<span class="ruby-keyword">self</span>)
+  <span class="ruby-identifier">new_form</span>.<span class="ruby-identifier">exportable</span> = <span class="ruby-keyword">false</span>
+  <span class="ruby-identifier">add_form</span>(<span class="ruby-identifier">new_form</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">new_form</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-copy_no_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">copy_no_forms</span><span
+            class="method-args">(manager)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Copy records of no forms to another manager.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="copy_no_forms-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 110</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">copy_no_forms</span>(<span class="ruby-identifier">manager</span>)
+  <span class="ruby-ivar">@no_forms</span>.<span class="ruby-identifier">keys</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">nf</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">manager</span>.<span class="ruby-identifier">no_form</span>(<span class="ruby-identifier">nf</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-currently_computing" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">currently_computing</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns the form that is currently being computed</p>
+          
+          
+
+          
+          <div class="method-source-code" id="currently_computing-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 180</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">currently_computing</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-ivar">@compute_stack</span>.<span class="ruby-identifier">last</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-each" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">each</span><span
+            class="method-args">(&amp;block)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="each-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 40</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">each</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-ivar">@ordered_forms</span>.<span class="ruby-identifier">each</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-empty-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">empty?</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>RETRIEVAL OF FORMS</p>
+          
+          
+
+          
+          <div class="method-source-code" id="empty-3F-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 191</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">empty?</span>
+  <span class="ruby-ivar">@forms</span>.<span class="ruby-identifier">empty?</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-ensure_no_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">ensure_no_forms</span><span
+            class="method-args">(name)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="ensure_no_forms-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 241</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">ensure_no_forms</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@no_forms</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;Warning: No forms #{name} found for #{@name}.&quot;</span>)
+    <span class="ruby-ivar">@no_forms</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-value">1</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-explain" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">explain</span><span
+            class="method-args">(form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Request that forms of a given name display explanations during computation. This affects the form&#39;s <code>explain</code> method.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="explain-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 349</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">explain</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-ivar">@explain</span>[<span class="ruby-identifier">form</span>.<span class="ruby-identifier">to_s</span>] = <span class="ruby-keyword">true</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-explaining-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">explaining?</span><span
+            class="method-args">(form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Test whether the given form should have explanations printed out.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="explaining-3F-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 356</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">explaining?</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-ivar">@explain</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>.<span class="ruby-identifier">to_s</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-export_all" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">export_all</span><span
+            class="method-args">(io = STDOUT, all = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="export_all-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 33</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">export_all</span>(<span class="ruby-identifier">io</span> = <span class="ruby-constant">STDOUT</span>, <span class="ruby-identifier">all</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-ivar">@ordered_forms</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;Form #{f.name} was not used&quot;</span>) <span class="ruby-keyword">unless</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">used</span>
+    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">export</span>(<span class="ruby-identifier">io</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">all</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">exportable</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">form</span><span
+            class="method-args">(name) { |f| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Retrieves a single form with the given name. Produces an error if no form with that name is present or if multiple forms with that name are present. A block may be given, in which case that block will be used to select among multiple matching forms; still, only one form should ultimately match.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 209</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">form</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-identifier">name</span> = <span class="ruby-identifier">name</span>.<span class="ruby-identifier">to_s</span>
+  <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;No form #{name}&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>]
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>].<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Enumerable</span>)
+    <span class="ruby-identifier">forms</span> = <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>]
+    <span class="ruby-identifier">forms</span> = <span class="ruby-identifier">forms</span>.<span class="ruby-identifier">select</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">f</span>) } <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Multiple forms #{name}&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">forms</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">!=</span> <span class="ruby-value">1</span>
+    <span class="ruby-identifier">f</span> = <span class="ruby-identifier">forms</span>.<span class="ruby-identifier">first</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">f</span> = <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">f</span>.<span class="ruby-identifier">used</span> = <span class="ruby-keyword">true</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">f</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">forms</span><span
+            class="method-args">(name) { |f| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Retrieves all forms with the given name, as a <a href="MultiForm.html"><code>MultiForm</code></a> object. Produces a warning if there are no forms with that name and there is no “No Forms” flag for this form name.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="forms-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 229</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">forms</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-identifier">name</span> = <span class="ruby-identifier">name</span>.<span class="ruby-identifier">to_s</span>
+  <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@forms</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-identifier">ensure_no_forms</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">mf</span> = <span class="ruby-constant">MultiForm</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>] <span class="ruby-operator">||</span> [])
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+    <span class="ruby-identifier">mf</span> = <span class="ruby-identifier">mf</span>.<span class="ruby-identifier">select</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">f</span>) }
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">mf</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-has_form-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">has_form?</span><span
+            class="method-args">(name)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="has_form-3F-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 195</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">has_form?</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-ivar">@forms</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">name</span>.<span class="ruby-identifier">to_s</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-import" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">import</span><span
+            class="method-args">(file)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Import forms from a file into this <a href="FormManager.html"><code>FormManager</code></a>. The specified file is opened and read to create <a href="NamedForm.html"><code>NamedForm</code></a> objects that are stored to this <a href="FormManager.html"><code>FormManager</code></a>. Also, “No Form” directives can be provided.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="import-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 273</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">import</span>(<span class="ruby-identifier">file</span>)
+  <span class="ruby-identifier">open</span>(<span class="ruby-identifier">file</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">io</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">begin</span>
+      <span class="ruby-keyword">until</span> <span class="ruby-identifier">io</span>.<span class="ruby-identifier">eof?</span>
+        <span class="ruby-identifier">line</span> = <span class="ruby-identifier">io</span>.<span class="ruby-identifier">gets</span>
+        <span class="ruby-keyword">next</span> <span class="ruby-keyword">unless</span> (<span class="ruby-identifier">line</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">line</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/\w/</span>)
+        <span class="ruby-keyword">next</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/^\s*#/</span>
+
+        <span class="ruby-keyword">unless</span> (<span class="ruby-identifier">line</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/^((No )?Form|Table) /</span>)
+          <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Invalid start of form&quot;</span>
+        <span class="ruby-keyword">end</span>
+        <span class="ruby-identifier">type</span> = <span class="ruby-node">$1</span>
+        <span class="ruby-identifier">name</span> = <span class="ruby-node">$&#39;</span>.<span class="ruby-identifier">strip</span>
+        <span class="ruby-keyword">case</span> <span class="ruby-identifier">type</span>
+        <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;Table&#39;</span>
+          <span class="ruby-identifier">import_tabular</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">io</span>)
+        <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;No Form&#39;</span>
+          <span class="ruby-ivar">@no_forms</span>[<span class="ruby-identifier">name</span>] = <span class="ruby-value">1</span>
+          <span class="ruby-keyword">next</span>
+        <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;Form&#39;</span>
+          <span class="ruby-identifier">new_form</span> = <span class="ruby-constant">NamedForm</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">name</span>, <span class="ruby-keyword">self</span>)
+          <span class="ruby-identifier">new_form</span>.<span class="ruby-identifier">import</span>(<span class="ruby-identifier">io</span>)
+          <span class="ruby-identifier">add_form</span>(<span class="ruby-identifier">new_form</span>)
+        <span class="ruby-keyword">else</span>
+          <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Unknown form type #{type}&quot;</span>
+        <span class="ruby-keyword">end</span>
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">rescue</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">e</span>
+      <span class="ruby-identifier">warn</span>(
+        <span class="ruby-node">&quot;Error during import: #{file}, line #{io.lineno}: #{e}\n&quot;</span> <span class="ruby-operator">+</span> \
+        <span class="ruby-node">&quot;#{e.backtrace.join(&quot;\n&quot;)}\n&quot;</span>
+      )
+      <span class="ruby-identifier">exit</span> <span class="ruby-value">1</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-import_tabular" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">import_tabular</span><span
+            class="method-args">(name, io = STDIN)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="import_tabular-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 310</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">import_tabular</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">io</span> = <span class="ruby-constant">STDIN</span>)
+  <span class="ruby-identifier">lines</span> = <span class="ruby-keyword">nil</span>
+  <span class="ruby-identifier">io</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">text</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">break</span> <span class="ruby-keyword">if</span> (<span class="ruby-identifier">text</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/^\s*$/</span>)
+    <span class="ruby-keyword">unless</span> <span class="ruby-identifier">lines</span>
+      <span class="ruby-identifier">lines</span> = <span class="ruby-identifier">text</span>.<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">split</span>(<span class="ruby-regexp">/\s+/</span>)
+      <span class="ruby-keyword">next</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">elts</span> = <span class="ruby-identifier">lines</span>.<span class="ruby-identifier">zip</span>(<span class="ruby-identifier">text</span>.<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">split</span>(<span class="ruby-regexp">/\s+/</span>, <span class="ruby-identifier">lines</span>.<span class="ruby-identifier">count</span>)).<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">l</span>, <span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+      <span class="ruby-constant">Interviewer</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">l</span>, <span class="ruby-identifier">x</span>)
+    }
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Invalid table line #{text}&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">lines</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">elts</span>.<span class="ruby-identifier">count</span>
+
+    <span class="ruby-identifier">new_form</span> = <span class="ruby-constant">NamedForm</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">name</span>, <span class="ruby-keyword">self</span>)
+    <span class="ruby-identifier">lines</span>.<span class="ruby-identifier">zip</span>(<span class="ruby-identifier">elts</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span>, <span class="ruby-identifier">e</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">new_form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>] = <span class="ruby-identifier">e</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">add_form</span>(<span class="ruby-identifier">new_form</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-interview" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">interview</span><span
+            class="method-args">(prompt, form = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="interview-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 331</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">interview</span>(<span class="ruby-identifier">prompt</span>, <span class="ruby-identifier">form</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-ivar">@interviewer</span>.<span class="ruby-identifier">ask</span>(<span class="ruby-identifier">prompt</span>, <span class="ruby-identifier">form</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-list_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">list_forms</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="list_forms-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 44</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">list_forms</span>
+  <span class="ruby-ivar">@forms</span>.<span class="ruby-identifier">keys</span>.<span class="ruby-identifier">sort</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">name</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">name</span>].<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Enumerable</span>)
+      <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;#{name} (#{@forms[name].count})&quot;</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;#{name}&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-no_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">no_form</span><span
+            class="method-args">(form_name)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Flag that no forms with this name will be provided to this manager. This is for error-checking to ensure that a form has not inadvertently been omitted.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="no_form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 105</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">no_form</span>(<span class="ruby-identifier">form_name</span>)
+  <span class="ruby-ivar">@no_forms</span>[<span class="ruby-identifier">form_name</span>.<span class="ruby-identifier">to_s</span>] = <span class="ruby-value">1</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-remove_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">remove_form</span><span
+            class="method-args">(form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Remove a form from this manager.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="remove_form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 89</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">remove_form</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>] <span class="ruby-operator">==</span> <span class="ruby-identifier">form</span>
+    <span class="ruby-ivar">@forms</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">arr</span> = <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>]
+    <span class="ruby-identifier">arr</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">form</span>)
+    <span class="ruby-keyword">case</span> <span class="ruby-identifier">arr</span>.<span class="ruby-identifier">count</span>
+    <span class="ruby-keyword">when</span> <span class="ruby-value">0</span> <span class="ruby-keyword">then</span> <span class="ruby-ivar">@forms</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>)
+    <span class="ruby-keyword">when</span> <span class="ruby-value">1</span> <span class="ruby-keyword">then</span> <span class="ruby-ivar">@forms</span>[<span class="ruby-identifier">form</span>.<span class="ruby-identifier">name</span>] = <span class="ruby-identifier">arr</span>[<span class="ruby-value">0</span>]
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-ivar">@ordered_forms</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">form</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-submanager" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">submanager</span><span
+            class="method-args">(name)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Use a submanager.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="submanager-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 389</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">submanager</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-ivar">@submanagers</span>[<span class="ruby-identifier">name</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-with_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">with_form</span><span
+            class="method-args">(name, otherwise: nil, otherwise_return: nil, required?: false) { |form(name)| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Performs a block if the named form exists and returns the result; otherwise performs an alternate block and/or returns an alternate value.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="with_form-source">
+            <pre><span class="ruby-comment"># File form_manager.rb, line 250</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">with_form</span>(<span class="ruby-identifier">name</span>, <span class="ruby-value">otherwise:</span> <span class="ruby-keyword">nil</span>, <span class="ruby-value">otherwise_return:</span> <span class="ruby-keyword">nil</span>, <span class="ruby-value">required?:</span> <span class="ruby-keyword">false</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-keyword">return</span> <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">form</span>(<span class="ruby-identifier">name</span>))
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Form #{name} required but not present&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">required?</span>
+    <span class="ruby-identifier">otherwise_return</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">otherwise</span>.<span class="ruby-identifier">call</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">otherwise</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">otherwise_return</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

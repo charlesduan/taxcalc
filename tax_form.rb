@@ -55,54 +55,67 @@ class TaxForm
     # The form lines in this form
     @lines = Lines.new(self)
 
-    # The FormManager associated with this form
     @manager = manager
-
-    # Whether this form should be exported (basically everything but a
-    # NamedForm)
     @exportable = true
-
-    # Whether this form has been used for any purpose. This is for
-    # error-checking to ensure that forms have not been unprocessed.
     @used = false
   end
 
+  #
+  # Whether this form has been used for any purpose. This is for
+  # error-checking to ensure that forms have not been unprocessed.
+  #
   attr_accessor :used
+
+  #
+  # Whether this form should be exported (basically everything but a
+  # NamedForm).
+  #
   attr_accessor :exportable
+
+  #
+  # The FormManager associated with this form.
+  #
   attr_accessor :manager
 
-  def copy(new_manager_or_obj)
-    if new_manager_or_obj.is_a?(FormManager)
-      new_copy = self.class.new(new_manager_or_obj)
-    else
-      new_copy = new_manager_or_obj
-    end
-    new_copy.exportable = @exportable
-    line.each do |lnum, val|
-      if val.is_a?(Enumerable)
-        new_copy.line[lnum, :all] = val.dup
-      else
-        new_copy.line[lnum] = val
-      end
-    end
-    return new_copy
-  end
-
+  #
+  # Returns the name of this form as given in the TaxForm::NAME constant.
+  # Subclasses should redefine the constant appropriately.
+  #
   def name
     return self.class.const_get(:NAME)
   end
 
+  #
+  # The year that this TaxForm was last updated. Subclasses should override this
+  # method to return the year that the class was last updated.
+  #
   def year
     warn "Form #{name} has no year set"
     return 0
   end
 
-  def check_year
-    if @manager.year && @manager.year != year
-      warn("Form #{name} is for #{year}, but manager is #{@manager.year}")
-    end
+  #
+  # Whether the form is needed to be included in the completed return. This
+  # method should be overridden by subclasses. At the moment, when this method
+  # returns true, the form is removed from the manager, but it might be
+  # preferable to keep it around with just a flag of some sort.
+  #
+  def needed?
+    true
   end
 
+  ########################################################################
+  #
+  # ACCESSING LINES OF THE FORM
+  #
+  ########################################################################
+
+  #
+  # Returns the value of a form line. Given no parameters, returns the
+  # TaxForm::Lines object associated with this form, such that square bracket
+  # notation can be used. Otherwise, passes any arguments as square-bracket
+  # arguments to the TaxForm::Lines object.
+  #
   def line(*args)
     if args.count == 0
       @lines
@@ -111,6 +124,10 @@ class TaxForm
     end
   end
 
+  #
+  # An alternate way of accessing lines. If the given method is of the form
+  # line_[name], then it will be converted to the call +line[name, *args]+.
+  #
   def method_missing(sym, *args)
     if sym.to_s =~ /^line_?/
       l = $'
@@ -125,99 +142,52 @@ class TaxForm
     end
   end
 
+  #
+  # Sums a list of lines. The lines are not required to be present.
+  #
   def sum_lines(*args)
-    args.map { |l| line[l, :opt] }.inject(:+)
-  end
-
-  def form(num)
-    @manager.form(num)
-  end
-
-  def forms(num, &block)
-    @manager.forms(num, &block)
-  end
-
-  def assert_no_forms(*args)
-    args.each do |num|
-      if has_form?(num)
-        raise "Form #{num} present but not implemented for #{name}"
-      else
-        @manager.ensure_no_forms(num)
-      end
-    end
+    args.map { |l| line[l, :opt] }.sum
   end
 
   #
-  # Assert that the following lines are unfilled in any forms with the given
-  # name.
+  # Copies a line value from another form.
   #
-  def assert_no_lines(fnum, *lnums)
-    lnums.each do |num|
-      if forms(fnum).lines(num, :present)
-        raise "Form #{fnum}, line #{num} present but not implemented in #{name}"
-      end
-    end
-  end
-
-  def assert_form_unnecessary(form_name)
-    assert_question("Does #{form_name} apply to you?", false)
-  end
-
-  def assert_question(question, answer)
-    if interview(question) != answer
-      raise 'Processing for that response is not implemented'
-    end
-  end
-
-  def interview(prompt)
-    @manager.interview(prompt, self)
-  end
-
-  def confirm(prompt)
-    @manager.confirm(prompt, self)
-  end
-
   def copy_line(l, form)
     line[l] = form.line[l] if form.line[l, :present]
   end
 
+  #
+  # Rearranges lines already computed.
+  #
   def place_lines(*nums)
     line.place_lines(*nums)
   end
 
-  def has_form?(name)
-    @manager.has_form?(name)
+  #
+  # Sets the :name and :ssn lines based on an appropriate Biographical form.
+  #
+  def set_name_ssn(lname = :ssn)
+    set_name
+    line[lname] = forms('Biographical').find { |x|
+      x.line[:whose] == 'mine'
+    }.line[:ssn]
   end
 
-  # Convenience for FormManager.with_form
-  def with_form(*args, **params, &block)
-    @manager.with_form(*args, **params, &block)
-  end
-
-  def with_forms(name)
-    if @manager.has_form?(name)
-      @manager.forms(name).each do |f|
-        yield(f)
+  #
+  # Sets the :name line based on an appropriate Biographical form.
+  #
+  def set_name
+    bio = forms('Biographical').find { |x|
+      x.line[:whose] == 'mine'
+    }
+    names = bio.line[:first_name] + ' ' + bio.line[:last_name]
+    with_form(1040) do |f|
+      if f.sbio && f.status.is('mfj')
+        names += ' & ' + f.sbio.line[:first_name] + ' ' + \
+          f.sbio.line[:last_name]
       end
     end
-  end
-
-  def compute_form(name, *args, &block)
-    @manager.compute_form(name, *args, &block)
-  end
-
-  def compute_more(form, method)
-    @manager.compute_more(form, method)
-  end
-
-  def find_or_compute_form(name)
-    if has_form?(name)
-      f = form(name)
-    else
-      f = compute_form(name)
-    end
-    yield(f) if block_given? and f
-    return f
+    line[:name] = names
   end
 
   #
@@ -279,6 +249,38 @@ class TaxForm
     return default
   end
 
+
+
+
+  ########################################################################
+  #
+  # INPUT AND OUTPUT
+  #
+  ########################################################################
+
+  #
+  # Copies this form to another FormManager.
+  #
+  def copy(new_manager_or_obj)
+    if new_manager_or_obj.is_a?(FormManager)
+      new_copy = self.class.new(new_manager_or_obj)
+    else
+      new_copy = new_manager_or_obj
+    end
+    new_copy.exportable = @exportable
+    line.each do |lnum, val|
+      if val.is_a?(Enumerable)
+        new_copy.line[lnum, :all] = val.dup
+      else
+        new_copy.line[lnum] = val
+      end
+    end
+    return new_copy
+  end
+
+  #
+  # Imports a form from a IO stream.
+  #
   def import(io = STDIN)
     last_line = nil
     io.each do |text|
@@ -297,39 +299,66 @@ class TaxForm
     end
   end
 
+  #
+  # Exports the form to the IO stream. This delegates to TaxForm::Lines#export.
+  #
   def export(io = STDOUT)
     @lines.export(io)
   end
 
-  def needed?
-    true
-  end
-
+  #
+  # Outputs an explanatory message during this TaxForm's computation.
+  #
   def explain(text)
     if @manager.explaining?(self)
       STDERR.puts(text)
     end
   end
 
-  def set_name_ssn(lname = :ssn)
-    set_name
-    line[lname] = forms('Biographical').find { |x|
-      x.line[:whose] == 'mine'
-    }.line[:ssn]
+
+
+  ########################################################################
+  #
+  # ACCESSING OTHER FORMS
+  #
+  ########################################################################
+
+
+
+  #
+  # Convenience for FormManager#form.
+  #
+  def form(num, &block)
+    @manager.form(num, &block)
   end
 
-  def set_name
-    bio = forms('Biographical').find { |x|
-      x.line[:whose] == 'mine'
-    }
-    names = bio.line[:first_name] + ' ' + bio.line[:last_name]
-    with_form(1040) do |f|
-      if f.sbio && f.status.is('mfj')
-        names += ' & ' + f.sbio.line[:first_name] + ' ' + \
-          f.sbio.line[:last_name]
+  #
+  # Convenience for FormManager#form.
+  #
+  def forms(num, &block)
+    @manager.forms(num, &block)
+  end
+
+  #
+  # Convenience for FormManager#has_form?.
+  #
+  def has_form?(name)
+    @manager.has_form?(name)
+  end
+
+  #
+  # Convenience for FormManager.with_form
+  #
+  def with_form(*args, **params, &block)
+    @manager.with_form(*args, **params, &block)
+  end
+
+  def with_forms(name)
+    if @manager.has_form?(name)
+      @manager.forms(name).each do |f|
+        yield(f)
       end
     end
-    line[:name] = names
   end
 
   #
@@ -343,6 +372,10 @@ class TaxForm
     }
   end
 
+  #
+  # Finds a single form that matches this form's given line. Line #match_forms,
+  # but must return exactly one form.
+  #
   def match_form(form_name, line_name, other_line_name = nil)
     fs = match_forms(form_name, line_name, other_line_name)
     if fs.count == 0
@@ -352,6 +385,85 @@ class TaxForm
     else
       return fs[0]
     end
+  end
+
+  ########################################################################
+  #
+  # COMPUTING OTHER FORMS
+  #
+  ########################################################################
+
+
+  #
+  # Convenience method for FormManager#compute.
+  #
+  def compute_form(name, *args, &block)
+    @manager.compute_form(name, *args, &block)
+  end
+
+  #
+  # Convenience method for FormManager#compute_more.
+  #
+  def compute_more(*args)
+    @manager.compute_more(*args)
+  end
+
+  #
+  # If a form is not present, computes it. Then returns the form and/or executes
+  # the given block on the form.
+  #
+  # TODO: This method is problematic for a number of reasons: It fails to impose
+  # a particular ordering of computations, and it sometimes computes forms
+  # duplicatively (if a form is not needed, for example).
+  #
+  def find_or_compute_form(name)
+    if has_form?(name)
+      f = form(name)
+    else
+      f = compute_form(name)
+    end
+    yield(f) if block_given? and f
+    return f
+  end
+
+
+  #
+  # Conforms that no forms of the given types are present.
+  #
+  def assert_no_forms(*args)
+    args.each do |num|
+      if has_form?(num)
+        raise "Form #{num} present but not implemented for #{name}"
+      else
+        @manager.ensure_no_forms(num)
+      end
+    end
+  end
+
+  #
+  # Assert that the following lines are unfilled in any forms with the given
+  # name.
+  #
+  def assert_no_lines(fnum, *lnums)
+    lnums.each do |num|
+      if forms(fnum).lines(num, :present)
+        raise "Form #{fnum}, line #{num} present but not implemented in #{name}"
+      end
+    end
+  end
+
+  #
+  # Convenience method for FormManager#interview.
+  #
+  def interview(prompt)
+    @manager.interview(prompt, self)
+  end
+
+  #
+  # Convenience method for FormManager#confirm.
+  #
+  def confirm(prompt)
+    @manager.confirm(prompt, self)
   end
 
   # Computes a person's age as of the end of the relevant tax year. Per the IRS

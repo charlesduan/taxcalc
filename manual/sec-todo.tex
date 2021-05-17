@@ -9,11 +9,30 @@ probably useful to keep the removed form around (1) to allow other elements of
 the program to see why it was discarded and (2) to allow the user to confirm
 that it is not needed.
 
+Retaining the unnecessary form also allows for error checking to make sure that
+a form is not computed twice improperly.
+
 This should be implementable with just a flag to exclude a form from printing;
 that flag could be set by default for worksheets perhaps too. But I'd have to
 think first about the ramifications of including excludable forms, because in
 some cases the computations rely on the presence or absence of forms in
 determining what to do.
+
+\emph{Hypothetical form computation.} Occasionally it is useful to compute a
+hypothetical form when other data is incomplete. (Form 2441 requires this, for
+example.) This could be done either by setting some sort of ``hypothetical''
+flag in the manager during these computations (such that any forms produced are
+only hypothetical) or by making a deep copy of the manager and computing the
+hypothetical form.
+
+
+\emph{Template forms.} There is currently no good, consistent way to ensure that
+input forms are properly filled, and no good way to show the user what to fill.
+The documentation below is a halfway solution, but better would be to implement
+a data description system that would allow for structured filling of those
+interview-like forms.
+
+
 
 
 \section{Wish List}

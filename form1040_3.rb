@@ -43,7 +43,7 @@ class Form1040_3 < TaxForm
     end
 
     # Line 5, energy saving
-    assert_question("Did you install any energy saving devices?", false)
+    confirm("You installed no any energy saving devices")
 
     # Line 6: Other credits.
     # - Form 3800: None of the general business credits seem applicable.

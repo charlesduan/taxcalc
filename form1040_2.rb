@@ -16,11 +16,11 @@ class Form1040_2 < TaxForm
     assert_no_forms('1095-A') # Line 2; advance health premium credit
     line[2] = BlankZero
 
-    amt_test = @manager.compute_form(
+    amt_test = compute_form(
       "1040 Worksheet to See If You Should Fill In Form 6251"
     )
     if amt_test.line[:fill_yes, :present]
-      line[1] = @manager.compute_form(6251).line['amt_tax']
+      line[1] = compute_form(6251).line['amt_tax']
       place_lines(2)
     end
 

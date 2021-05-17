@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class TaxForm::Lines - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../";
+  var index_rel_prefix = "../";
+</script>
+
+<script src="../js/jquery.js"></script>
+<script src="../js/darkfish.js"></script>
+
+<link href="../css/fonts.css" rel="stylesheet">
+<link href="../css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="../index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="../table_of_contents.html#pages">Pages</a>
+    <a href="../table_of_contents.html#classes">Classes</a>
+    <a href="../table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="../Object.html">Object</a>
+  
+</div>
+
+    <div id="includes-section" class="nav-section">
+  <h3>Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><span class="include">Enumerable</span>
+  
+  
+  </ul>
+</div>
+
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-c-new">::new</a>
+    
+    <li ><a href="#method-i-5B-5D">#[]</a>
+    
+    <li ><a href="#method-i-5B-5D-3D">#[]=</a>
+    
+    <li ><a href="#method-i-assign_aliases">#assign_aliases</a>
+    
+    <li ><a href="#method-i-each">#each</a>
+    
+    <li ><a href="#method-i-export">#export</a>
+    
+    <li ><a href="#method-i-line_name">#line_name</a>
+    
+    <li ><a href="#method-i-place_lines">#place_lines</a>
+    
+    <li ><a href="#method-i-resolve_alias">#resolve_alias</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-TaxForm::Lines">
+  <h1 id="class-TaxForm::Lines" class="class">
+    class TaxForm::Lines
+  </h1>
+
+  <section class="description">
+    
+<p>A collection of lines inside a <a href="../TaxForm.html"><code>TaxForm</code></a>. This class implements the primary accessors and setters for values in a form, enabling a syntax of +<a href="2">form.line</a> = 100+ for example.</p>
+
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-form" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">form</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 490</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">initialize</span>(<span class="ruby-identifier">form</span>)
+  <span class="ruby-ivar">@form</span> = <span class="ruby-identifier">form</span>
+  <span class="ruby-ivar">@lines_data</span> = {}
+  <span class="ruby-ivar">@lines_order</span> = []
+  <span class="ruby-ivar">@aliases</span> = {}
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-5B-5D" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">[]</span><span
+            class="method-args">(line, type = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="5B-5D-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 569</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">[]</span>(<span class="ruby-identifier">line</span>, <span class="ruby-identifier">type</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">line</span> = <span class="ruby-identifier">resolve_alias</span>(<span class="ruby-identifier">line</span>)
+
+  <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@lines_data</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">line</span>)
+    <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">type</span> <span class="ruby-operator">==</span> <span class="ruby-value">:present</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-constant">BlankZero</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">type</span> <span class="ruby-operator">==</span> <span class="ruby-value">:opt</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">type</span> <span class="ruby-operator">==</span> <span class="ruby-value">:sum</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;#{line_name(line)} not defined&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">data</span> = <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">line</span>]
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">type</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">:present</span>
+    <span class="ruby-keyword">true</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">:all</span>
+    [ <span class="ruby-identifier">data</span> ].<span class="ruby-identifier">flatten</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">:sum</span>
+    [ <span class="ruby-identifier">data</span> ].<span class="ruby-identifier">flatten</span>.<span class="ruby-identifier">inject</span>(<span class="ruby-value">:+</span>) <span class="ruby-operator">||</span> <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Line #{line} is an array&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">data</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Enumerable</span>)
+    <span class="ruby-identifier">data</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-5B-5D-3D" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">[]=</span><span
+            class="method-args">(*args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="5B-5D-3D-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 546</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">[]=</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-ivar">@form</span>.<span class="ruby-identifier">used</span> = <span class="ruby-keyword">true</span>
+  <span class="ruby-identifier">line</span>, <span class="ruby-identifier">value</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-identifier">args</span>.<span class="ruby-identifier">last</span>
+  <span class="ruby-identifier">type</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">==</span> <span class="ruby-value">3</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">args</span>[<span class="ruby-value">1</span>] <span class="ruby-operator">:</span> <span class="ruby-keyword">nil</span>
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">type</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">:all</span>
+    <span class="ruby-identifier">value</span> = [ <span class="ruby-identifier">value</span> ].<span class="ruby-identifier">flatten</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">:add</span>
+    <span class="ruby-identifier">value</span> = [ <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">line</span>] <span class="ruby-operator">||</span> [], <span class="ruby-identifier">value</span> ].<span class="ruby-identifier">flatten</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-keyword">unless</span> <span class="ruby-identifier">type</span> <span class="ruby-operator">==</span> <span class="ruby-value">:overwrite</span>
+      <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;Overwriting value for #{line_name(line)}&quot;</span>) <span class="ruby-keyword">if</span> <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">line</span>]
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Enumerable</span>)
+      <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;#{line_name(line)}: not expecting an array&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-ivar">@lines_order</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">line</span>) <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">line</span>]
+  <span class="ruby-identifier">form</span>.<span class="ruby-identifier">explain</span>(<span class="ruby-node">&quot;    #{line}:  #{value.inspect}&quot;</span>)
+  <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">line</span>] = <span class="ruby-identifier">value</span>
+  <span class="ruby-identifier">assign_aliases</span>(<span class="ruby-identifier">line</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-assign_aliases" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">assign_aliases</span><span
+            class="method-args">(line)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="assign_aliases-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 526</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">assign_aliases</span>(<span class="ruby-identifier">line</span>)
+  <span class="ruby-identifier">parts</span> = <span class="ruby-identifier">line</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&#39;/&#39;</span>)
+  <span class="ruby-comment"># If any of the parts are already aliases to anything other than this line</span>
+  <span class="ruby-comment"># itself, there&#39;s an ambiguity that raises an error.</span>
+  <span class="ruby-identifier">parts</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">p</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">p</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">p</span>] <span class="ruby-operator">!=</span> <span class="ruby-identifier">line</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Ambiguous line alias #{line}&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">parts</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>
+  <span class="ruby-identifier">parts</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">p</span><span class="ruby-operator">|</span>
+    <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">p</span>] = <span class="ruby-identifier">line</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-each" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">each</span><span
+            class="method-args">() { |l, lines_data| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="each-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 501</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">each</span>
+  <span class="ruby-ivar">@lines_order</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">l</span>, <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">l</span>])
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-export" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">export</span><span
+            class="method-args">(io = STDOUT)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="export-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 591</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">export</span>(<span class="ruby-identifier">io</span> = <span class="ruby-constant">STDOUT</span>)
+
+  <span class="ruby-identifier">io</span>.<span class="ruby-identifier">puts</span>(<span class="ruby-node">&quot;Form #{@form.name}&quot;</span>)
+  <span class="ruby-ivar">@lines_order</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">data</span> = <span class="ruby-ivar">@lines_data</span>[<span class="ruby-identifier">line</span>]
+    <span class="ruby-identifier">prefix</span> = <span class="ruby-node">&quot;\t#{line}\t&quot;</span>
+    [ <span class="ruby-identifier">data</span> ].<span class="ruby-identifier">flatten</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">item</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">item</span> = <span class="ruby-identifier">item</span>.<span class="ruby-identifier">strftime</span>(<span class="ruby-string">&quot;%-m/%-d/%Y&quot;</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">item</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Date</span>)
+      <span class="ruby-identifier">item</span> = <span class="ruby-node">&quot;&#39;#{item}&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">item</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">item</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/\A\d+\z/</span>
+      <span class="ruby-identifier">item</span> = <span class="ruby-identifier">item</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-string">&quot;\n&quot;</span>, <span class="ruby-string">&quot;\\n&quot;</span>)
+      <span class="ruby-identifier">io</span>.<span class="ruby-identifier">puts</span>(<span class="ruby-node">&quot;#{prefix}#{item}&quot;</span>)
+      <span class="ruby-identifier">prefix</span> = <span class="ruby-node">&quot;\t#{&#39;&quot;&#39;.ljust(line.length)}\t&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">io</span>.<span class="ruby-identifier">puts</span>()
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-line_name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">line_name</span><span
+            class="method-args">(line)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="line_name-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 541</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">line_name</span>(<span class="ruby-identifier">line</span>)
+  <span class="ruby-identifier">line</span> = <span class="ruby-identifier">resolve_alias</span>(<span class="ruby-identifier">line</span>)
+  <span class="ruby-node">&quot;Form #{@form.name}, line #{line}&quot;</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-place_lines" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">place_lines</span><span
+            class="method-args">(*nums)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="place_lines-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 609</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">place_lines</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">nums</span>)
+  <span class="ruby-identifier">nums</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">num</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">num</span> = <span class="ruby-identifier">resolve_alias</span>(<span class="ruby-identifier">num</span>)
+    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@lines_order</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">num</span>)
+      <span class="ruby-ivar">@lines_order</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">num</span>)
+      <span class="ruby-ivar">@lines_order</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">num</span>)
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-resolve_alias" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">resolve_alias</span><span
+            class="method-args">(line)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="resolve_alias-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 507</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">resolve_alias</span>(<span class="ruby-identifier">line</span>)
+  <span class="ruby-identifier">line</span> = <span class="ruby-identifier">line</span>.<span class="ruby-identifier">to_s</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">line</span>]
+    <span class="ruby-identifier">res</span> = <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">line</span>]
+    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@form</span> <span class="ruby-operator">!=</span> <span class="ruby-ivar">@form</span>.<span class="ruby-identifier">manager</span>.<span class="ruby-identifier">currently_computing</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">res</span>.<span class="ruby-identifier">start_with?</span>(<span class="ruby-identifier">line</span>)
+      <span class="ruby-keyword">if</span> <span class="ruby-ivar">@form</span>.<span class="ruby-identifier">manager</span>.<span class="ruby-identifier">currently_computing</span>
+        <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;In #{@form.manager.currently_computing.name}, use alias &quot;</span> <span class="ruby-operator">+</span>
+             <span class="ruby-node">&quot;for Form #{@form.name}, line #{res}&quot;</span>)
+      <span class="ruby-keyword">else</span>
+        <span class="ruby-identifier">warn</span>(<span class="ruby-node">&quot;For #{@form.manager.name}, use alias for &quot;</span> <span class="ruby-operator">+</span>
+             <span class="ruby-node">&quot;Form #{@form.name}, line #{res}&quot;</span>)
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">res</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">line</span>] <span class="ruby-keyword">if</span> <span class="ruby-ivar">@aliases</span>[<span class="ruby-identifier">line</span>]
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">line</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

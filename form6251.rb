@@ -136,7 +136,7 @@ class Form6251 < TaxForm
     #
     # 3: Other adjustments. Assumed there aren't any. The Related Adjustments
     # might be affected but this is unlikely.
-    assert_question("Do you have other adjustments for AMT (line 3)?", false)
+    confirm("You have no other adjustments for AMT (line 3)")
 
     line[4] = sum_lines(*%w(
       1 2a 2b 2c 2d 2e 2f 2g 2h 2i 2j 2k 2l 2m 2n 2o 2p 2q 2r 2s 2t 3
@@ -157,7 +157,7 @@ class Form6251 < TaxForm
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
-      line[5] = @manager.compute_form('6251 Line 5 Exemption Worksheet').line[6]
+      line[5] = compute_form('6251 Line 5 Exemption Worksheet').line[6]
     else
       line[5] = form(1040).status.amt_exemption
     end
@@ -225,7 +225,7 @@ class Form6251 < TaxForm
     end
     l10 -= @ftc_form.line[:fill!] if @ftc_form
 
-    assert_question("Are you a farmer or fisherman?", false)
+    confirm("You are not a farmer or fisherman")
 
     line[10] = l10
   end

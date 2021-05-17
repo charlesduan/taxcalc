@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class IraAnalysis - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-compute_8606_lines_2_to_5">#compute_8606_lines_2_to_5</a>
+    
+    <li ><a href="#method-i-compute_8606_parts_ii_iii_for_contrib_distrib">#compute_8606_parts_ii_iii_for_contrib_distrib</a>
+    
+    <li ><a href="#method-i-compute_continuation">#compute_continuation</a>
+    
+    <li ><a href="#method-i-compute_contributions_and_distributions">#compute_contributions_and_distributions</a>
+    
+    <li ><a href="#method-i-compute_contributions_and_distributions_continuation">#compute_contributions_and_distributions_continuation</a>
+    
+    <li ><a href="#method-i-compute_contributions_only">#compute_contributions_only</a>
+    
+    <li ><a href="#method-i-compute_distributions_only">#compute_distributions_only</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-IraAnalysis">
+  <h1 id="class-IraAnalysis" class="class">
+    class IraAnalysis
+  </h1>
+
+  <section class="description">
+    
+<p>Computes 1040 information relating to IRA distributions and contributions. Its purpose is to compute the following:</p>
+<ul><li>
+<p>Line taxable_distrib: The taxable amount of IRA distributions to be shown on Form 1040.</p>
+</li><li>
+<p>Line total_distrib: The total amount of distributions, also show on Form 1040.</p>
+</li><li>
+<p>Line deductible_contrib: The deductible portion of IRA contributions.</p>
+</li><li>
+<p>Line nondeductible_contrib: The non-deductible portion of IRA contributions (used for Form 8606).</p>
+</li><li>
+<p>Form 8606, as necessary.</p>
+</li></ul>
+
+<p>The IRA Analysis has two methods: compute and compute_continuation. The former computes the *_distrib values; the latter deductible_contrib and Form 8606.</p>
+
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-form8606" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">form8606</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-pub590a_w1_1" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">pub590a_w1_1</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-pub590a_w1_2" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">pub590a_w1_2</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-pub590b_w1_1" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">pub590b_w1_1</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 34</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># I. Gathering information</span>
+  <span class="ruby-comment">#</span>
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&#39;You have no qualified disaster distribution (Form 8915)&#39;</span>)
+
+  <span class="ruby-comment"># Collect contributions.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:this_year_contrib</span>] = <span class="ruby-identifier">forms</span>(
+    <span class="ruby-string">&#39;Traditional IRA Contribution&#39;</span>
+  ).<span class="ruby-identifier">lines</span>(<span class="ruby-value">:amount</span>, <span class="ruby-value">:sum</span>)
+
+  <span class="ruby-comment"># Collect distributions, which are reported on 1099-R.</span>
+  <span class="ruby-identifier">all_1099rs</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-R&#39;</span>)
+  <span class="ruby-identifier">all_1099rs</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">next</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">x</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ira-sep-simple?&#39;</span>]
+    <span class="ruby-keyword">next</span> <span class="ruby-keyword">if</span> [ <span class="ruby-value">1</span>, <span class="ruby-value">2</span>, <span class="ruby-value">3</span>, <span class="ruby-value">4</span>, <span class="ruby-value">5</span>, <span class="ruby-value">7</span> ].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>])
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Non-IRA 1099-R forms not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># The destination could also be a traditional-to-traditional rollover, a</span>
+  <span class="ruby-comment"># Roth-to-Roth rollover, a qualified charitable distribution, an HSA funding</span>
+  <span class="ruby-comment"># distribution, or cash. The &quot;destination&quot; field in Form 1099-R should</span>
+  <span class="ruby-comment"># reflect these. To implement any other destinations for an IRA</span>
+  <span class="ruby-comment"># distribution, see the 1040 line 4a instructions.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-identifier">distrib</span> = {
+    <span class="ruby-string">&#39;roth&#39;</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-constant">BlankZero</span>,
+    <span class="ruby-string">&#39;cash&#39;</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-constant">BlankZero</span>
+  }
+  <span class="ruby-identifier">all_1099rs</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">distrib</span>[<span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:destination</span>]] <span class="ruby-operator">+=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>]
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:destination</span>] <span class="ruby-operator">!=</span> <span class="ruby-string">&#39;roth&#39;</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Cannot handle 1099-R distributions that are not Roth conversions&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">distrib</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">d</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-node">&quot;distrib_#{d}&quot;</span>] = <span class="ruby-identifier">v</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:total_distrib</span>] = <span class="ruby-identifier">all_1099rs</span>.<span class="ruby-identifier">lines</span>(<span class="ruby-value">1</span>, <span class="ruby-value">:sum</span>)
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># II. Computing</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Computation must be split into two parts because of the following ordering</span>
+  <span class="ruby-comment"># of things:</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># 1. 1040 asks for taxable IRA distributions, which invokes IRA Analysis</span>
+  <span class="ruby-comment"># 2. 1040 performs additional income computations</span>
+  <span class="ruby-comment"># 3. 1040 asks for deductible IRA contributions, which invokes IRA Analysis</span>
+  <span class="ruby-comment">#    but depends on values from step 2</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Accordingly, each computation method implemented below will construct a</span>
+  <span class="ruby-comment"># continuation proc that handles the computations for step 3.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:this_year_contrib</span>] <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+
+    <span class="ruby-identifier">compute_distributions_only</span>
+
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">all_1099rs</span>.<span class="ruby-identifier">empty?</span>
+      <span class="ruby-comment"># Contributions but no distributions.</span>
+      <span class="ruby-identifier">compute_contributions_only</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-comment"># Both contributions and distributions.</span>
+      <span class="ruby-identifier">compute_contributions_and_distributions</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_8606_lines_2_to_5" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_8606_lines_2_to_5</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Computes the values of lines 2-5 of Form 8606 (which are stored as lines in this <a href="IraAnalysis.html"><code>IraAnalysis</code></a> form, to be copied later by Form 8606 itself).</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_8606_lines_2_to_5-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 230</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_8606_lines_2_to_5</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">submanager</span>(<span class="ruby-value">:last_year</span>).<span class="ruby-identifier">has_form?</span>(<span class="ruby-value">8606</span>)
+    <span class="ruby-comment"># For 2021, change line 14 to :tot_basis</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_2&#39;</span>] = <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">submanager</span>(<span class="ruby-value">:last_year</span>).<span class="ruby-identifier">form</span>(<span class="ruby-value">8606</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>]
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_2&#39;</span>] = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_3&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">:nondeductible_contrib</span>, <span class="ruby-string">&#39;8606_2&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_4&#39;</span>] = [
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Traditional IRA Contribution&#39;</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:date</span>].<span class="ruby-identifier">year</span> <span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">year</span>
+    }.<span class="ruby-identifier">lines</span>(<span class="ruby-value">:amount</span>, <span class="ruby-value">:sum</span>),
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:nondeductible_contrib</span>]
+  ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_5&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_3&#39;</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_4&#39;</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_8606_parts_ii_iii_for_contrib_distrib" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_8606_parts_ii_iii_for_contrib_distrib</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Computes Part II and III of Form 8606 when there are both contributions and distributions.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_8606_parts_ii_iii_for_contrib_distrib-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 251</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_8606_parts_ii_iii_for_contrib_distrib</span>
+
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;No Pub. 590-B Worksheet 1-1&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@pub590b_w1_1</span>
+
+  <span class="ruby-comment"># Part II</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:distrib_roth</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_16&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">:distrib_roth</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_17&#39;</span>] = <span class="ruby-ivar">@pub590b_w1_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:nontax_distrib</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_18&#39;</span>] = <span class="ruby-ivar">@pub590b_w1_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_roth_conv</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_18*note&#39;</span>] = <span class="ruby-string">&#39;Lines 17 and 18 from Pub. 590-B Worksheet 1-1&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Part III</span>
+  <span class="ruby-identifier">roth_forms</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-R&#39;</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-node">%w(B J T)</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>]) }
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">roth_forms</span>.<span class="ruby-identifier">empty?</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Form 8606 part III is not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_continuation" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_continuation</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>This method is called to continue computation when Form 1040 requires the deductible contributions amount.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_continuation-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 110</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_continuation</span>
+  <span class="ruby-ivar">@contrib_continuation</span>.<span class="ruby-identifier">call</span>
+
+  <span class="ruby-comment"># Compute Form 8606</span>
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">8606</span>)
+
+  <span class="ruby-comment"># Check that the required lines were all computed</span>
+  [
+    <span class="ruby-value">:total_distrib</span>, <span class="ruby-value">:taxable_distrib</span>,
+    <span class="ruby-value">:deductible_contrib</span>, <span class="ruby-value">:nondeductible_contrib</span>
+  ].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Missing #{l} from IRA Analysis&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>, <span class="ruby-value">:present</span>]
+  <span class="ruby-keyword">end</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_contributions_and_distributions" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_contributions_and_distributions</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>This method and the next are called when there were both contributions and distributions made in this tax year.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_contributions_and_distributions-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 160</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_contributions_and_distributions</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># This follows the instructions in Pub. 590-B, &quot;Contribution and</span>
+  <span class="ruby-comment"># distribution in the same year&quot;.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-ivar">@pub590b_w1_1</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&quot;Pub. 590-B Worksheet 1-1&quot;</span>)
+
+  <span class="ruby-comment"># Step 8 of the instructions: copies 590-B W1-1 line 9 or 11, coded as</span>
+  <span class="ruby-comment"># :taxable_distrib, to Form 8606 line 15a. (Also computes 15b and 15c</span>
+  <span class="ruby-comment"># incidentally.)</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_15a&#39;</span>] = <span class="ruby-ivar">@pub590b_w1_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_distrib</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_15b&#39;</span>] = <span class="ruby-constant">BlankZero</span> <span class="ruby-comment"># Qualified disaster distributions</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_15c&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_15a&#39;</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_15b&#39;</span>]
+
+  <span class="ruby-comment"># This will compute lines 18 and 25c</span>
+  <span class="ruby-identifier">compute_8606_parts_ii_iii_for_contrib_distrib</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_distrib</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(8606_15c 8606_18 8606_25c)</span>)
+
+  <span class="ruby-ivar">@contrib_continuation</span> = <span class="ruby-identifier">proc</span> {
+    <span class="ruby-identifier">compute_contributions_and_distributions_continuation</span>
+  }
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_contributions_and_distributions_continuation" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_contributions_and_distributions_continuation</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute_contributions_and_distributions_continuation-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 185</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_contributions_and_distributions_continuation</span>
+
+  <span class="ruby-ivar">@pub590a_w1_2</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&quot;Pub. 590-A Worksheet 1-2&quot;</span>)
+
+  <span class="ruby-comment"># Step 2 is done here by setting line nondeductible_contrib</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:deductible_contrib</span>] = <span class="ruby-ivar">@pub590a_w1_2</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:deductible_contrib</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:nondeductible_contrib</span>] = <span class="ruby-ivar">@pub590a_w1_2</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:nondeductible_contrib</span>]
+
+  <span class="ruby-comment"># Step 3 says to complete lines 2-5 of Form 8606. Rather than invoking that</span>
+  <span class="ruby-comment"># form, the computations occur here, and Form 8606 is coded to copy the</span>
+  <span class="ruby-comment"># information.</span>
+  <span class="ruby-identifier">compute_8606_lines_2_to_5</span>
+
+  <span class="ruby-comment"># Step 4.</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_5&#39;</span>] <span class="ruby-operator">&lt;</span> <span class="ruby-ivar">@pub590b_w1_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:nontax_distrib</span>]
+    <span class="ruby-comment"># In this case (where the IRA basis in the current tax year was less than</span>
+    <span class="ruby-comment"># the nontaxable portion of the distribution), we complete Form 8606 lines</span>
+    <span class="ruby-comment"># 6-15c and stop. That will be done when Form 8606 is computed.</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:compute_8606_rest?</span>] = <span class="ruby-keyword">true</span>
+    <span class="ruby-comment"># The problem is that this instruction appears to be circular: It requires</span>
+    <span class="ruby-comment"># computing line 15c *after* line 15c was used as part of the computation</span>
+    <span class="ruby-comment"># of MAGI in Pub. 590-A Worksheet 1-1. The best guess I have is that Pub.</span>
+    <span class="ruby-comment"># 590-B Worksheet 1-1 computes a &quot;fake&quot; value for the taxable part of the</span>
+    <span class="ruby-comment"># IRA distribution for purposes of computing the 590-A Worksheet 1-1 MAGI,</span>
+    <span class="ruby-comment"># and then the deductible contribution can be calculated, allowing the</span>
+    <span class="ruby-comment"># rest of Form 8606 to be computed, which then sets the final value of the</span>
+    <span class="ruby-comment"># taxable part of the distribution.</span>
+    <span class="ruby-comment">#</span>
+    <span class="ruby-comment"># So far, I don&#39;t run into this problem since my contributions are clearly</span>
+    <span class="ruby-comment"># not deductible, but in case this condition is ever reached, I need to</span>
+    <span class="ruby-comment"># revisit to see what numbers are produced.</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;IRS instructions are ambiguous here&quot;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-comment"># Steps 5-6.</span>
+    <span class="ruby-comment"># In this case, we do not compute Form 8606 lines 6-12, instead entering</span>
+    <span class="ruby-comment"># various numbers onto the lines.</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:compute_8606_rest?</span>] = <span class="ruby-keyword">false</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_13&#39;</span>] = <span class="ruby-ivar">@pub590b_w1_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:nontax_distrib</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8606_13*note&#39;</span>] = <span class="ruby-string">&#39;Line 13 from Pub. 590-B Worksheet 1-1&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_contributions_only" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_contributions_only</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Performs computations when there are no distributions. The taxable_distrib is naturally zero, and we use Pub. 590-A Worksheet 1-2 to compute the deductible and nondeductible contributions.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_contributions_only-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 146</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_contributions_only</span>
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Inconsistent state&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:total_distrib</span>] <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_distrib</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">:total_distrib</span>]
+  <span class="ruby-ivar">@contrib_continuation</span> = <span class="ruby-identifier">proc</span> {
+    <span class="ruby-ivar">@pub590a_w1_2</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&quot;Pub. 590-A Worksheet 1-2&quot;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:deductible_contrib</span>] = <span class="ruby-ivar">@pub590a_w1_2</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:nondeductible_contrib</span>] = <span class="ruby-ivar">@pub590a_w1_2</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>]
+  }
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_distributions_only" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_distributions_only</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Performs computations when there were distributions only.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_distributions_only-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 129</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_distributions_only</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:deductible_contrib</span>] = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:nondeductible_contrib</span>] = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># I was unconvinced that the code for this method originally written was</span>
+  <span class="ruby-comment"># correct, and since this case will not be true for me any time soon, I am</span>
+  <span class="ruby-comment"># leaving it unimplemented.</span>
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Not implemented&quot;</span>
+  <span class="ruby-ivar">@contrib_continuation</span> = <span class="ruby-identifier">proc</span> { }
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File ira_analysis.rb, line 28</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

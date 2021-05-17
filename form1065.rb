@@ -12,6 +12,10 @@ class Form1065 < TaxForm
   end
 
   def compute
+
+    # A reminder to add those lines
+    raise "New lines added to Partner and Partnership forms"
+
     bio = form('Partnership')
     line['name'] = bio.line(:name)
     line['address'] = bio.line(:address) + \
@@ -20,7 +24,7 @@ class Form1065 < TaxForm
     line['A'] = bio.line('business')
     line['B'] = bio.line('product')
     line['C'] = bio.line('code')
-    line['D'] = bio.line('ein')
+    line['D/ein'] = bio.line('ein')
     line['E'] = bio.line(:start)
 
     # Line F need not be filled in if the below condition is true.
@@ -55,14 +59,14 @@ class Form1065 < TaxForm
     line[3] = line['1c'] - line[2, :opt]
     line[8] = sum_lines(3, 4, 5, 6, 7)
 
-    @asset_manager = @manager.compute_form('Asset Manager')
+    @asset_manager = compute_form('Asset Manager')
     if @asset_manager.has_current_assets?
-      @manager.compute_form(4562)
+      compute_form(4562)
     end
 
     @asset_manager.attach_safe_harbor_election(self)
 
-    line[20] = @manager.compute_form('Business Expense Manager').line[:fill!]
+    line[20] = compute_form('Business Expense Manager').line[:fill!]
     if line[20] > 0
       form('Business Expense Manager').make_continuation(
         self, 'Line 20 Statement of Business Expenses'
@@ -171,6 +175,9 @@ class Form1065 < TaxForm
 
     line['K14a'] = line['K1']
 
+    #
+    # Somewhere around here, check that all partners are active
+    #
     line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11))\
       - sum_lines(*%w(12 13a 13b 13c2 13d 16p))
 

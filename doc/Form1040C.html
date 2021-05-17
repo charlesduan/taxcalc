@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form1040C - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    <div id="includes-section" class="nav-section">
+  <h3>Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><a class="include" href="HomeOfficeManager.html">HomeOfficeManager</a>
+  
+  
+  </ul>
+</div>
+
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-expense">#expense</a>
+    
+    <li ><a href="#method-i-initialize_expenses">#initialize_expenses</a>
+    
+    <li ><a href="#method-i-needed-3F">#needed?</a>
+    
+    <li ><a href="#method-i-other_expenses_total">#other_expenses_total</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form1040C">
+  <h1 id="class-Form1040C" class="class">
+    class Form1040C
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form1040_c.rb, line 20</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-string">&#39;Sole Proprietorship&#39;</span>)
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-string">&#39;1099-MISC&#39;</span>) <span class="ruby-keyword">or</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-string">&#39;1099-NEC&#39;</span>)
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;No sole proprietorship form for 1099-MISC or -NEC&quot;</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">return</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-ivar">@f1040</span> = <span class="ruby-identifier">form</span>(<span class="ruby-string">&#39;1040&#39;</span>)
+  <span class="ruby-ivar">@sp</span> = <span class="ruby-identifier">form</span>(<span class="ruby-string">&#39;Sole Proprietorship&#39;</span>)
+
+  <span class="ruby-identifier">set_name_ssn</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:A</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:business</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:B</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:code</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:C</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:dba</span>] <span class="ruby-keyword">if</span> <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:dba</span>, <span class="ruby-value">:present</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:ein!</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ein</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:D</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ein</span>].<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp">/-/</span>, <span class="ruby-string">&#39;&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:E_addr</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:address</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:E_city_zip</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:city_zip</span>]
+
+  <span class="ruby-keyword">case</span> <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:accounting</span>].<span class="ruby-identifier">downcase</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;cash&#39;</span>    <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;F.1&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;accrual&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;F.2&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;F.3&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;F.3.specify&#39;</span>] = <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:accounting</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:materially_participated?</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;G.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;G.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@sp</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:start</span>].<span class="ruby-identifier">year</span> <span class="ruby-operator">==</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">year</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;H&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-ivar">@asset_manager</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;Asset Manager&#39;</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@asset_manager</span>.<span class="ruby-identifier">has_current_assets?</span>
+    <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">compute_form</span>(<span class="ruby-value">4562</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-ivar">@asset_manager</span>.<span class="ruby-identifier">attach_safe_harbor_election</span>(<span class="ruby-keyword">self</span>)
+
+  <span class="ruby-ivar">@expense_manager</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;Business Expense Manager&#39;</span>)
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:Commissions</span>, <span class="ruby-value">:present</span>] \
+      <span class="ruby-keyword">or</span> <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:Contracts</span>, <span class="ruby-value">:present</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;I.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Did you file you sole proprietorship Forms 1099?&quot;</span>)
+      <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;J.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;J.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;I.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-MISC&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">3</span>, <span class="ruby-value">:sum</span>) <span class="ruby-operator">+</span> \
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-MISC&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">10</span>, <span class="ruby-value">:sum</span>) <span class="ruby-operator">+</span> \
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-NEC&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">1</span>, <span class="ruby-value">:sum</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">2</span>, <span class="ruby-value">:opt</span>]
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;The sole proprietorship had no costs of goods sold&quot;</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>, <span class="ruby-value">:opt</span>]
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;The sole proprietorship had no line 6 miscellaneous income&quot;</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">5</span>, <span class="ruby-value">6</span>)
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Business expenses. First collect all the expense types.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-identifier">initialize_expenses</span>
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">8</span>, <span class="ruby-string">&#39;Advertising&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">9</span>, <span class="ruby-string">&#39;Car&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">10</span>, <span class="ruby-string">&#39;Commissions&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">11</span>, <span class="ruby-string">&#39;Contracts&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">12</span>, <span class="ruby-string">&#39;Depletion&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">13</span>] = <span class="ruby-ivar">@asset_manager</span>.<span class="ruby-identifier">depreciation_total</span>
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">14</span>, <span class="ruby-string">&#39;Employee_Benefits&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">15</span>, <span class="ruby-string">&#39;Insurance&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-string">&#39;16a&#39;</span>, <span class="ruby-string">&#39;Mortgage_Interest&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-string">&#39;16b&#39;</span>, <span class="ruby-string">&#39;Other_Interest&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">17</span>, <span class="ruby-string">&#39;Professional_Services&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">18</span>, <span class="ruby-string">&#39;Supplies&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">19</span>, <span class="ruby-string">&#39;Employee_Plans&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-string">&#39;20a&#39;</span>, <span class="ruby-string">&#39;Rent_Equipment&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-string">&#39;20b&#39;</span>, <span class="ruby-string">&#39;Rent_Property&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">21</span>, <span class="ruby-string">&#39;Repairs&#39;</span>)
+  <span class="ruby-comment"># I&#39;m not sure how line 22 differs from 18</span>
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">23</span>, <span class="ruby-string">&#39;Licenses&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-string">&#39;24a&#39;</span>, <span class="ruby-string">&#39;Travel&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-string">&#39;24b&#39;</span>, <span class="ruby-string">&#39;Meals&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">25</span>, <span class="ruby-string">&#39;Utilities&#39;</span>)
+  <span class="ruby-identifier">expense</span>(<span class="ruby-value">26</span>, <span class="ruby-string">&#39;Wages&#39;</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;27a&#39;</span>] = <span class="ruby-identifier">other_expenses_total</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">28</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(8 9 10 11 12 13 14 15 16a 16b 17 18 19 20a 20b 21
+                       22 23 24a 24b 25 26 27a 27b)</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">29</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">7</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">28</span>]
+
+  <span class="ruby-identifier">home_office_sole_proprietorship</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">home_sf</span>, <span class="ruby-identifier">biz_sf</span>, <span class="ruby-identifier">amount</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">30</span>] = <span class="ruby-identifier">amount</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;30(a)&#39;</span>] = <span class="ruby-identifier">home_sf</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;30(b)&#39;</span>] = <span class="ruby-identifier">biz_sf</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;31/net_profit&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">29</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">30</span>, <span class="ruby-value">:opt</span>]
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">31</span>] <span class="ruby-operator">&lt;</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Sole proprietorship loss at-risk not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Cost of goods sold, part III, is assumed not necessary</span>
+  <span class="ruby-comment">#</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">9</span>, <span class="ruby-value">:present</span>]
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Vehicle information not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:Part_V_type</span>, <span class="ruby-value">:all</span>] = <span class="ruby-ivar">@expenses</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">exp</span><span class="ruby-operator">|</span>
+    <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">present_name</span>(<span class="ruby-identifier">exp</span>)
+  }
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:Part_V_amt</span>, <span class="ruby-value">:all</span>] = <span class="ruby-ivar">@expenses</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">exp</span><span class="ruby-operator">|</span>
+    <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">exp</span>]
+  }
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">48</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">:Part_V_amt</span>, <span class="ruby-value">:sum</span>]
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-expense" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">expense</span><span
+            class="method-args">(line_no, category)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="expense-source">
+            <pre><span class="ruby-comment"># File form1040_c.rb, line 165</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">expense</span>(<span class="ruby-identifier">line_no</span>, <span class="ruby-identifier">category</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@expenses</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">category</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-identifier">line_no</span>] = <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">category</span>].<span class="ruby-identifier">round</span>
+    <span class="ruby-ivar">@expenses</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">category</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-initialize_expenses" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">initialize_expenses</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="initialize_expenses-source">
+            <pre><span class="ruby-comment"># File form1040_c.rb, line 159</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">initialize_expenses</span>
+  <span class="ruby-ivar">@expenses</span> = <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">line</span>.<span class="ruby-identifier">to_a</span>.<span class="ruby-identifier">map</span>(<span class="ruby-operator">&amp;</span><span class="ruby-value">:first</span>).<span class="ruby-identifier">reject</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">x</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;fill!&#39;</span>
+  }
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-needed-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">needed?</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="needed-3F-source">
+            <pre><span class="ruby-comment"># File form1040_c.rb, line 16</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">needed?</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-string">&#39;Sole Proprietorship&#39;</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-other_expenses_total" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">other_expenses_total</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Assuming that all other @expenses values have been deleted by the expense() method, this totals everything left.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="other_expenses_total-source">
+            <pre><span class="ruby-comment"># File form1040_c.rb, line 176</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">other_expenses_total</span>
+  <span class="ruby-ivar">@expenses</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-ivar">@expense_manager</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">x</span>] }.<span class="ruby-identifier">sum</span>.<span class="ruby-identifier">round</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form1040_c.rb, line 12</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

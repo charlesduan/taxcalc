@@ -20,13 +20,13 @@ class FormFP31 < TaxForm
 
     line[:A] = bio.line[:business]
     line[:B] = interview('Number of DC locations:')
-    assert_question("Is this business a hotel or motel?", false)
-    assert_question("Does this business lease personal property?", false)
+    confirm("This business is not a hotel or motel")
+    confirm("This business does not lease personal property")
     line[:D_no] = 'X'
-    assert_question("Are you a qualified high-tech company?", false)
+    confirm("This business is not a qualified high-tech company")
     line[:E_no] = 'X'
     line[:F_no] = 'X' # by virtue of D's question
-    assert_question("Do other companies do business from this address?", false)
+    confirm("Other companies do not do business from this address")
     line[:G_no] = "X"
     line[:name_p2] = line[:name]
     line[:ein_p2] = line[:ein]
@@ -98,7 +98,12 @@ class FormFP31ABCD1D2 < TaxForm
       line["_A6.#{type}"] = type_totals_6[type].round
     end
 
-    assert_question('Do you have any office supplies?', false)
+    # assert_question('Do you have any office supplies?', false)
+    #
+    # I don't understand why I made the above assertion, so I need to look into
+    # this next year
+    #
+    raise "Review office supplies issue here"
     line['B.total'] = 0
   end
 

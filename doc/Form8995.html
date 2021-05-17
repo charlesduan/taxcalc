@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form8995 - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form8995">
+  <h1 id="class-Form8995" class="class">
+    class Form8995
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form8995.rb, line 11</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+  <span class="ruby-identifier">set_name_ssn</span>
+
+  <span class="ruby-identifier">qbi_manager</span> = <span class="ruby-identifier">form</span>(<span class="ruby-string">&#39;QBI Manager&#39;</span>)
+  <span class="ruby-identifier">qbi_manager</span>.<span class="ruby-identifier">qbi</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">qbi</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">add_table_row</span>({
+      <span class="ruby-string">&#39;1a&#39;</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">qbi</span>.<span class="ruby-identifier">name</span>,
+      <span class="ruby-string">&#39;1b&#39;</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">qbi</span>.<span class="ruby-identifier">tin</span>,
+      <span class="ruby-string">&#39;1c&#39;</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">qbi</span>.<span class="ruby-identifier">amount</span>
+    })
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">2</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1c&#39;</span>, <span class="ruby-value">:sum</span>]
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Carryforward loss. In future years, reference last year&#39;s Form 8995 line</span>
+  <span class="ruby-comment"># 16. (Unclear where this information is on Form 8995-A.)</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>] = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] = [ <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">2</span>, <span class="ruby-value">3</span>), <span class="ruby-value">0</span> ].<span class="ruby-identifier">max</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>] = (<span class="ruby-value">0.2</span> <span class="ruby-operator">*</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>]).<span class="ruby-identifier">round</span>
+
+  <span class="ruby-comment"># Lines 6-9</span>
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&#39;You have no REIT dividends or publicly traded partnership income&#39;</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">5</span>, <span class="ruby-value">9</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">11</span>] = <span class="ruby-identifier">qbi_manager</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:taxable_income</span>]
+  <span class="ruby-identifier">line_12</span> = <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule D&#39;</span>, <span class="ruby-value">otherwise:</span> <span class="ruby-identifier">proc</span> {
+    <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">:qualdiv</span>, <span class="ruby-value">:cap_gain</span>)
+  }) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sched_d</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:qualdiv</span>] <span class="ruby-operator">+</span> [
+      [ <span class="ruby-identifier">sched_d</span>.<span class="ruby-identifier">line_15</span>, <span class="ruby-identifier">sched_d</span>.<span class="ruby-identifier">line_16</span> ].<span class="ruby-identifier">min</span>, <span class="ruby-value">0</span>
+    ].<span class="ruby-identifier">max</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">13</span>] = [ <span class="ruby-identifier">line_11</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">line_12</span>, <span class="ruby-value">0</span> ].<span class="ruby-identifier">max</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] = (<span class="ruby-value">0.2</span> <span class="ruby-operator">*</span> <span class="ruby-identifier">line_13</span>).<span class="ruby-identifier">round</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;15/deduction&#39;</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>], <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;16/tot_carryforward&#39;</span>] = [ <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">2</span>, <span class="ruby-value">3</span>), <span class="ruby-constant">BlankZero</span> ].<span class="ruby-identifier">min</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;17/reit_ptp_carryforward&#39;</span>] = [ <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">6</span>, <span class="ruby-value">7</span>), <span class="ruby-constant">BlankZero</span> ].<span class="ruby-identifier">min</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form8995.rb, line 7</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

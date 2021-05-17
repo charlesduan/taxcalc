@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form1040_2 - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-needed-3F">#needed?</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form1040_2">
+  <h1 id="class-Form1040_2" class="class">
+    class Form1040_2
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form1040_2.rb, line 11</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+  <span class="ruby-identifier">set_name_ssn</span>
+
+  <span class="ruby-comment"># Bizarrely, Form 6251 (AMT) requires Schedule 2, Line 2. So it is computed</span>
+  <span class="ruby-comment"># first.</span>
+  <span class="ruby-identifier">assert_no_forms</span>(<span class="ruby-string">&#39;1095-A&#39;</span>) <span class="ruby-comment"># Line 2; advance health premium credit</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">2</span>] = <span class="ruby-constant">BlankZero</span>
+
+  <span class="ruby-identifier">amt_test</span> = <span class="ruby-identifier">compute_form</span>(
+    <span class="ruby-string">&quot;1040 Worksheet to See If You Should Fill In Form 6251&quot;</span>
+  )
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">amt_test</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:fill_yes</span>, <span class="ruby-value">:present</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">1</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">6251</span>).<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;amt_tax&#39;</span>]
+    <span class="ruby-identifier">place_lines</span>(<span class="ruby-value">2</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;3/add_tax&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">1</span>, <span class="ruby-value">2</span>)
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Part II</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule SE&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sched_se</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>] = <span class="ruby-identifier">sched_se</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:se_tax</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Line 5: unreported social security/medicare tax</span>
+  <span class="ruby-comment"># Assumed that there were no tips earned</span>
+  <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;W-2&#39;</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>, <span class="ruby-value">:opt</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>, <span class="ruby-value">:opt</span>] <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Possibly need Form 8919&quot;</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">5</span>, <span class="ruby-value">:opt</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>, <span class="ruby-value">:opt</span>] <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Possibly need Form 8919&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Additional Medicare tax</span>
+  <span class="ruby-identifier">l8</span> = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">8959</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f8959</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8a&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-identifier">l8</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">f8959</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:add_mc_tax</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Net investment income tax</span>
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">8960</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f8960</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8b&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-identifier">l8</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">f8960</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:niit</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>] = <span class="ruby-identifier">l8</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;10/other_tax&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">4</span>, <span class="ruby-value">5</span>, <span class="ruby-value">6</span>, <span class="ruby-string">&#39;7a&#39;</span>, <span class="ruby-string">&#39;7b&#39;</span>, <span class="ruby-value">8</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-needed-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">needed?</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="needed-3F-source">
+            <pre><span class="ruby-comment"># File form1040_2.rb, line 64</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">needed?</span>
+  <span class="ruby-comment"># Schedule 2 is needed, even if it reports zero, if the AMT computation is</span>
+  <span class="ruby-comment"># performed.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">3</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-value">6251</span>) <span class="ruby-operator">||</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form1040_2.rb, line 7</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

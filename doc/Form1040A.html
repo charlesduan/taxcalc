@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form1040A - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-compute_mortgage_interest">#compute_mortgage_interest</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form1040A">
+  <h1 id="class-Form1040A" class="class">
+    class Form1040A
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form1040_a.rb, line 12</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+  <span class="ruby-identifier">set_name_ssn</span>
+
+  <span class="ruby-comment"># Medical expenses not implemented</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;4/med_ded&#39;</span>] = <span class="ruby-constant">BlankZero</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;5a/salt_inc&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;State Tax&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">:amount</span>, <span class="ruby-value">:sum</span>) <span class="ruby-operator">+</span> \
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;W-2&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">17</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;5b/salt_real&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1098&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">10</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;5d/salt_all&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(5a 5b 5c)</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;5e/salt_lim&#39;</span>] = [
+    <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">halve_mfs</span>(<span class="ruby-value">10_000</span>), <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;5d&#39;</span>]
+  ].<span class="ruby-identifier">min</span>
+
+  <span class="ruby-comment"># This is for foreign taxes and the GST. The former is better dealt with as</span>
+  <span class="ruby-comment"># a credit; the latter applies only to transfers of over $11 million.</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;6/other_tax&#39;</span>] = <span class="ruby-constant">BlankZero</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;7/salt&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-string">&#39;5e&#39;</span>, <span class="ruby-value">6</span>)
+
+  <span class="ruby-identifier">compute_mortgage_interest</span>
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;You did not have any investment interest&quot;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;9/inv_int&#39;</span>] = <span class="ruby-constant">BlankZero</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-string">&#39;8e&#39;</span>, <span class="ruby-value">9</span>)
+
+  <span class="ruby-identifier">cg</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Charity Gift&#39;</span>)
+  <span class="ruby-identifier">cg</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:amount</span>] <span class="ruby-operator">&gt;=</span> <span class="ruby-value">250</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-operator">!</span><span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:documented?</span>]
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Charity gift over $250 not documented&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">11</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Charity Gift&#39;</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:cash?</span>]
+  }.<span class="ruby-identifier">lines</span>(<span class="ruby-value">:amount</span>, <span class="ruby-value">:sum</span>).<span class="ruby-identifier">round</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Charity Gift&#39;</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-operator">!</span><span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:cash?</span>]
+  }.<span class="ruby-identifier">lines</span>(<span class="ruby-value">:amount</span>, <span class="ruby-value">:sum</span>).<span class="ruby-identifier">round</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">12</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">500</span>
+    <span class="ruby-identifier">find_or_compute_form</span>(<span class="ruby-value">8283</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">11</span>, <span class="ruby-value">12</span>, <span class="ruby-value">13</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0.2</span> <span class="ruby-operator">*</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line_agi</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Pub. 526 limit on charitable contributions not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&#39;You had no casualty or theft losses&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;15/cas_theft&#39;</span>] = <span class="ruby-constant">BlankZero</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;17/total&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">4</span>, <span class="ruby-value">7</span>, <span class="ruby-value">10</span>, <span class="ruby-value">14</span>, <span class="ruby-value">15</span>, <span class="ruby-value">16</span>)
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">17</span>] <span class="ruby-operator">&lt;</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">status</span>.<span class="ruby-identifier">standard_deduction</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">18</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_mortgage_interest" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_mortgage_interest</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute_mortgage_interest-source">
+            <pre><span class="ruby-comment"># File form1040_a.rb, line 72</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_mortgage_interest</span>
+  <span class="ruby-identifier">confirm</span>(<span class="ruby-string">&quot;You did not receive non-1098 mortgage interest&quot;</span>)
+
+  <span class="ruby-comment"># This calculates the various limits on home mortgage interest</span>
+  <span class="ruby-comment"># deductibility.</span>
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;Pub. 936 Home Mortgage Interest Worksheet&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">p936w</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">p936w</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">16</span>] <span class="ruby-operator">!=</span> <span class="ruby-value">0</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Not able to handle mortgage interest deduction limit&quot;</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8a&#39;</span>] = <span class="ruby-identifier">p936w</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ded_hm_int</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">p936w</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># There is some complicated business involving apportioning home mortgage</span>
+  <span class="ruby-comment"># interest where there is a home office, if the non-simplified calculation</span>
+  <span class="ruby-comment"># for the home office deduction is used. Since that also triggers recapture</span>
+  <span class="ruby-comment"># at the time the home is sold, I assume that only the simplified method</span>
+  <span class="ruby-comment"># will be used.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Home Office&#39;</span>).<span class="ruby-identifier">all?</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:method</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;simplified&#39;</span> }
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Cannot yet handle adjustment of Schedule A for home offices&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;8e&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(8a 8b 8c)</span>)
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form1040_a.rb, line 8</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

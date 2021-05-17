@@ -81,8 +81,9 @@ class Form1040D < TaxForm
       line[:fill!] = line[16]
       if line[15] > 0
         line['17yes'] = 'X'
-        assert_form_unnecessary('Schedule D 28% Rate Gain Worksheet')
-        assert_form_unnecessary('Schedule D Section 1250 Gain Worksheet')
+        raise "Need to check for special Schedule D forms"
+        #assert_form_unnecessary('Schedule D 28% Rate Gain Worksheet')
+        #assert_form_unnecessary('Schedule D Section 1250 Gain Worksheet')
 
         line['20yes'] = 'X'
         return

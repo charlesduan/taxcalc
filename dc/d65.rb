@@ -93,7 +93,7 @@ class FormD65 < TaxForm
     line[:page2_name] = line[:business_name]
     line[:page2_ein] = line[:ein]
 
-    assert_question('Did you have non-DC gross receipts of income?', false)
+    confirm('You have no non-DC gross receipts of income')
     line['F1.1'] = line[1]
     line['F1.2'] = line[1]
     line['F2'] = (line['F1.2'] * 1.0 / line['F1.1']).round(6)

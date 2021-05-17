@@ -141,11 +141,6 @@ class Form1040 < TaxForm
     end
     line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
 
-    #unless (MONTHS - forms('1095-B').lines[:months, :all]).empty?
-    #  assert_question('Did you have health insurance the whole year?', true)
-    #end
-    #line['fyhcc'] = 'X'
-
     #
     # Dependents
     #

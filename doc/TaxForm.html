@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class TaxForm - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="Object.html">Object</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-c-by_name">::by_name</a>
+    
+    <li ><a href="#method-c-inherited">::inherited</a>
+    
+    <li ><a href="#method-c-new">::new</a>
+    
+    <li ><a href="#method-i-add_table_row">#add_table_row</a>
+    
+    <li ><a href="#method-i-age">#age</a>
+    
+    <li ><a href="#method-i-assert_no_forms">#assert_no_forms</a>
+    
+    <li ><a href="#method-i-assert_no_lines">#assert_no_lines</a>
+    
+    <li ><a href="#method-i-compute_form">#compute_form</a>
+    
+    <li ><a href="#method-i-compute_more">#compute_more</a>
+    
+    <li ><a href="#method-i-confirm">#confirm</a>
+    
+    <li ><a href="#method-i-copy">#copy</a>
+    
+    <li ><a href="#method-i-copy_line">#copy_line</a>
+    
+    <li ><a href="#method-i-explain">#explain</a>
+    
+    <li ><a href="#method-i-export">#export</a>
+    
+    <li ><a href="#method-i-find_or_compute_form">#find_or_compute_form</a>
+    
+    <li ><a href="#method-i-form">#form</a>
+    
+    <li ><a href="#method-i-forms">#forms</a>
+    
+    <li ><a href="#method-i-has_form-3F">#has_form?</a>
+    
+    <li ><a href="#method-i-import">#import</a>
+    
+    <li ><a href="#method-i-interview">#interview</a>
+    
+    <li ><a href="#method-i-line">#line</a>
+    
+    <li ><a href="#method-i-match_form">#match_form</a>
+    
+    <li ><a href="#method-i-match_forms">#match_forms</a>
+    
+    <li ><a href="#method-i-match_table_value">#match_table_value</a>
+    
+    <li class="calls-super" ><a href="#method-i-method_missing">#method_missing</a>
+    
+    <li ><a href="#method-i-name">#name</a>
+    
+    <li ><a href="#method-i-needed-3F">#needed?</a>
+    
+    <li ><a href="#method-i-place_lines">#place_lines</a>
+    
+    <li ><a href="#method-i-set_name">#set_name</a>
+    
+    <li ><a href="#method-i-set_name_ssn">#set_name_ssn</a>
+    
+    <li ><a href="#method-i-sum_lines">#sum_lines</a>
+    
+    <li ><a href="#method-i-with_form">#with_form</a>
+    
+    <li ><a href="#method-i-with_forms">#with_forms</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-TaxForm">
+  <h1 id="class-TaxForm" class="class">
+    class TaxForm
+  </h1>
+
+  <section class="description">
+    
+<p>Represents a single form in a tax return. This class is intended to be subclassed for particular forms. A proper subclass should implement the following:</p>
+<ul><li>
+<p>A constant <code>NAME</code> that is a string identifying the class</p>
+</li><li>
+<p>A method <code>compute</code> that performs computations for the form</p>
+</li><li>
+<p>A method <code>needed?</code> that determines whether this form should be included on a return</p>
+</li><li>
+<p>A method <code>year</code> that specifies the year for which this object&#39;s computations have been updated</p>
+</li></ul>
+
+<p>Additional computation methods should follow the naming convention *<a href="name">compute_</a>*.</p>
+
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="FORM_TYPES">FORM_TYPES
+        
+        <dd><p>Register subclasses by their names.</p>
+        
+      
+        <dt id="UNREGISTERED_FORMS">UNREGISTERED_FORMS
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-exportable" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">exportable</span><span
+            class="attribute-access-type">[RW]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>Whether this form should be exported (basically everything but a <a href="NamedForm.html"><code>NamedForm</code></a>).</p>
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-manager" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">manager</span><span
+            class="attribute-access-type">[RW]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The <a href="FormManager.html"><code>FormManager</code></a> associated with this form.</p>
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-used" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">used</span><span
+            class="attribute-access-type">[RW]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>Whether this form has been used for any purpose. This is for error-checking to ensure that forms have not been unprocessed.</p>
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-by_name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">by_name</span><span
+            class="method-args">(name)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="by_name-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 37</span>
+<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier ruby-title">by_name</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-constant">UNREGISTERED_FORMS</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">subclass</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">n</span> = <span class="ruby-identifier">subclass</span>.<span class="ruby-identifier">const_get</span>(<span class="ruby-value">:NAME</span>).<span class="ruby-identifier">to_s</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-constant">FORM_TYPES</span>[<span class="ruby-identifier">n</span>]
+      <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Duplicate TaxForm type #{n} (#{subclass})&quot;</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-constant">FORM_TYPES</span>[<span class="ruby-identifier">n</span>] = <span class="ruby-identifier">subclass</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-constant">UNREGISTERED_FORMS</span>.<span class="ruby-identifier">clear</span>
+
+  <span class="ruby-identifier">res</span> = <span class="ruby-constant">FORM_TYPES</span>[<span class="ruby-identifier">name</span>.<span class="ruby-identifier">to_s</span>]
+  <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Unknown Form #{name.to_s}&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">res</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">res</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-inherited" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">inherited</span><span
+            class="method-args">(subclass)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="inherited-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 33</span>
+<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier ruby-title">inherited</span>(<span class="ruby-identifier">subclass</span>)
+  <span class="ruby-constant">UNREGISTERED_FORMS</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">subclass</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(manager)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 53</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">initialize</span>(<span class="ruby-identifier">manager</span>)
+
+  <span class="ruby-comment"># The form lines in this form</span>
+  <span class="ruby-ivar">@lines</span> = <span class="ruby-constant">Lines</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>)
+
+  <span class="ruby-ivar">@manager</span> = <span class="ruby-identifier">manager</span>
+  <span class="ruby-ivar">@exportable</span> = <span class="ruby-keyword">true</span>
+  <span class="ruby-ivar">@used</span> = <span class="ruby-keyword">false</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-add_table_row" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_table_row</span><span
+            class="method-args">(hash)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Given a hash where the keys represent line names, treats each of those lines as a table where each line is a column, and adds the values of the hash as the next row of that table. This is done by first ensuring that each line&#39;s value is an array of an equal number of elements, and then appending the values of the hash to each of those arrays. Consider, for example:</p>
+
+<pre>Line 1a: 3, 4, 5
+Line 1b: x, y
+Line 1c: 6
+Line 1d: a, b</pre>
+
+<p>Calling <a href="TaxForm.html#method-i-add_table_row"><code>add_table_row</code></a>(&#39;1a&#39; =&gt; 8, &#39;1c&#39; =&gt; 9, &#39;1d&#39; =&gt; &#39;c&#39;) would yield:</p>
+
+<pre>Line 1a: 3, 4, 5, 8
+Line 1b: x, y
+Line 1c: 6, -, -, 9
+Line 1d: a, b, -, c</pre>
+
+<p>where a dash is BlankZero. (Lines are described above as “columns” of a table because on IRS forms, usually that is how the lines are presented.)</p>
+
+<p>In using this method, it is important for one column of the table always to contain data for every row. Otherwise, there is a possibility that the new row will be packed in with another one. For example, if the above call were changed to <a href="TaxForm.html#method-i-add_table_row"><code>add_table_row</code></a>(&#39;1c&#39; =&gt; 9, &#39;1d&#39; =&gt; c), it would yield:</p>
+
+<pre>Line 1a: 3, 4, 5
+Line 1b: x, y
+Line 1c: 6, -, 9
+Line 1d: a, b, c</pre>
+
+<p>so now there appears to be a row of “5, -, 9, c” whereas the table should have had “5, -, -, -” as a row of its own.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="add_table_row-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 228</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">add_table_row</span>(<span class="ruby-identifier">hash</span>)
+  <span class="ruby-identifier">max_rows</span> = <span class="ruby-identifier">hash</span>.<span class="ruby-identifier">keys</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-identifier">x</span>, <span class="ruby-value">:present</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">x</span>, <span class="ruby-value">:all</span>].<span class="ruby-identifier">count</span> <span class="ruby-operator">:</span> <span class="ruby-value">0</span>
+  }.<span class="ruby-identifier">max</span>
+  <span class="ruby-identifier">hash</span>.<span class="ruby-identifier">keys</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">arr</span> = <span class="ruby-identifier">line</span>[<span class="ruby-identifier">x</span>, <span class="ruby-value">:present</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">x</span>, <span class="ruby-value">:all</span>] <span class="ruby-operator">:</span> []
+    <span class="ruby-identifier">line</span>[<span class="ruby-identifier">x</span>, <span class="ruby-value">:all</span>] = <span class="ruby-identifier">arr</span> <span class="ruby-operator">+</span> ([ <span class="ruby-constant">BlankZero</span> ] <span class="ruby-operator">*</span> (<span class="ruby-identifier">max_rows</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">arr</span>.<span class="ruby-identifier">count</span>) <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">hash</span>[<span class="ruby-identifier">x</span>])
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-age" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">age</span><span
+            class="method-args">(bio = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Computes a person&#39;s age as of the end of the relevant tax year. Per the IRS rule that a birthday on January 1 of a year counts as the last year, we subtract one day from the birthday.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="age-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 472</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">age</span>(<span class="ruby-identifier">bio</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">bio</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">bio</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">year</span> <span class="ruby-operator">-</span> (<span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:birthday</span>] <span class="ruby-operator">-</span> <span class="ruby-value">1</span>).<span class="ruby-identifier">year</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-assert_no_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">assert_no_forms</span><span
+            class="method-args">(*args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Conforms that no forms of the given types are present.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="assert_no_forms-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 433</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">assert_no_forms</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">num</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">num</span>)
+      <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Form #{num} present but not implemented for #{name}&quot;</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">ensure_no_forms</span>(<span class="ruby-identifier">num</span>)
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-assert_no_lines" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">assert_no_lines</span><span
+            class="method-args">(fnum, *lnums)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Assert that the following lines are unfilled in any forms with the given name.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="assert_no_lines-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 447</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">assert_no_lines</span>(<span class="ruby-identifier">fnum</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">lnums</span>)
+  <span class="ruby-identifier">lnums</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">num</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">forms</span>(<span class="ruby-identifier">fnum</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-identifier">num</span>, <span class="ruby-value">:present</span>)
+      <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Form #{fnum}, line #{num} present but not implemented in #{name}&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_form</span><span
+            class="method-args">(name, *args, &amp;block)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience method for FormManager#compute.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_form-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 400</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_form</span>(<span class="ruby-identifier">name</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">compute_form</span>(<span class="ruby-identifier">name</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_more" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_more</span><span
+            class="method-args">(*args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience method for <a href="FormManager.html#method-i-compute_more"><code>FormManager#compute_more</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_more-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 407</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_more</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">compute_more</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-confirm" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">confirm</span><span
+            class="method-args">(prompt)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience method for <a href="FormManager.html#method-i-confirm"><code>FormManager#confirm</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="confirm-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 465</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">confirm</span>(<span class="ruby-identifier">prompt</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">confirm</span>(<span class="ruby-identifier">prompt</span>, <span class="ruby-keyword">self</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-copy" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">copy</span><span
+            class="method-args">(new_manager_or_obj)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Copies this form to another <a href="FormManager.html"><code>FormManager</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="copy-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 264</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">copy</span>(<span class="ruby-identifier">new_manager_or_obj</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">new_manager_or_obj</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">FormManager</span>)
+    <span class="ruby-identifier">new_copy</span> = <span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">new_manager_or_obj</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">new_copy</span> = <span class="ruby-identifier">new_manager_or_obj</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">new_copy</span>.<span class="ruby-identifier">exportable</span> = <span class="ruby-ivar">@exportable</span>
+  <span class="ruby-identifier">line</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">lnum</span>, <span class="ruby-identifier">val</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">val</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Enumerable</span>)
+      <span class="ruby-identifier">new_copy</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">lnum</span>, <span class="ruby-value">:all</span>] = <span class="ruby-identifier">val</span>.<span class="ruby-identifier">dup</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">new_copy</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">lnum</span>] = <span class="ruby-identifier">val</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">new_copy</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-copy_line" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">copy_line</span><span
+            class="method-args">(l, form)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Copies a line value from another form.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="copy_line-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 155</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">copy_line</span>(<span class="ruby-identifier">l</span>, <span class="ruby-identifier">form</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>] = <span class="ruby-identifier">form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">form</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>, <span class="ruby-value">:present</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-explain" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">explain</span><span
+            class="method-args">(text)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Outputs an explanatory message during this TaxForm&#39;s computation.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="explain-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 312</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">explain</span>(<span class="ruby-identifier">text</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">explaining?</span>(<span class="ruby-keyword">self</span>)
+    <span class="ruby-constant">STDERR</span>.<span class="ruby-identifier">puts</span>(<span class="ruby-identifier">text</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-export" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">export</span><span
+            class="method-args">(io = STDOUT)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Exports the form to the IO stream. This delegates to <a href="TaxForm/Lines.html#method-i-export"><code>TaxForm::Lines#export</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="export-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 305</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">export</span>(<span class="ruby-identifier">io</span> = <span class="ruby-constant">STDOUT</span>)
+  <span class="ruby-ivar">@lines</span>.<span class="ruby-identifier">export</span>(<span class="ruby-identifier">io</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-find_or_compute_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">find_or_compute_form</span><span
+            class="method-args">(name) { |f| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>If a form is not present, computes it. Then returns the form and/or executes the given block on the form.</p>
+
+<p>TODO: This method is problematic for a number of reasons: It fails to impose a particular ordering of computations, and it sometimes computes forms duplicatively (if a form is not needed, for example).</p>
+          
+          
+
+          
+          <div class="method-source-code" id="find_or_compute_form-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 419</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">find_or_compute_form</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-identifier">f</span> = <span class="ruby-identifier">form</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">f</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">f</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span> <span class="ruby-keyword">and</span> <span class="ruby-identifier">f</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">f</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">form</span><span
+            class="method-args">(num, &amp;block)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience for <a href="FormManager.html#method-i-form"><code>FormManager#form</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="form-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 331</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">form</span>(<span class="ruby-identifier">num</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">form</span>(<span class="ruby-identifier">num</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">forms</span><span
+            class="method-args">(num, &amp;block)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience for <a href="FormManager.html#method-i-form"><code>FormManager#form</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="forms-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 338</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">forms</span>(<span class="ruby-identifier">num</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">forms</span>(<span class="ruby-identifier">num</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-has_form-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">has_form?</span><span
+            class="method-args">(name)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience for <a href="FormManager.html#method-i-has_form-3F"><code>FormManager#has_form?</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="has_form-3F-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 345</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">has_form?</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">name</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-import" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">import</span><span
+            class="method-args">(io = STDIN)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Imports a form from a IO stream.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="import-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 284</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">import</span>(<span class="ruby-identifier">io</span> = <span class="ruby-constant">STDIN</span>)
+  <span class="ruby-identifier">last_line</span> = <span class="ruby-keyword">nil</span>
+  <span class="ruby-identifier">io</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">text</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">break</span> <span class="ruby-keyword">if</span> (<span class="ruby-identifier">text</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/^\s*$/</span>)
+    <span class="ruby-identifier">line_no</span>, <span class="ruby-identifier">data</span> = <span class="ruby-identifier">text</span>.<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">split</span>(<span class="ruby-regexp">/\s+/</span>, <span class="ruby-value">2</span>)
+    <span class="ruby-identifier">data</span> <span class="ruby-operator">||=</span> <span class="ruby-string">&#39;&#39;</span>
+    <span class="ruby-identifier">data</span> = <span class="ruby-constant">Interviewer</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">line_no</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;&quot;&#39;</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">last_line</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">line_no</span>, <span class="ruby-identifier">data</span>)
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">line_no</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;&quot;&#39;</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-identifier">last_line</span>, <span class="ruby-value">:all</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-identifier">last_line</span>, <span class="ruby-value">:all</span>], <span class="ruby-identifier">data</span> ].<span class="ruby-identifier">flatten</span>
+    <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">data</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Enumerable</span>)
+      <span class="ruby-identifier">line</span>[<span class="ruby-identifier">line_no</span>, <span class="ruby-value">:all</span>] = <span class="ruby-identifier">data</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-identifier">line_no</span>] = <span class="ruby-identifier">data</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">last_line</span> = <span class="ruby-identifier">line_no</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">line_no</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;&quot;&#39;</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-interview" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">interview</span><span
+            class="method-args">(prompt)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience method for <a href="FormManager.html#method-i-interview"><code>FormManager#interview</code></a>.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="interview-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 458</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">interview</span>(<span class="ruby-identifier">prompt</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">interview</span>(<span class="ruby-identifier">prompt</span>, <span class="ruby-keyword">self</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-line" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">line</span><span
+            class="method-args">(*args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns the value of a form line. Given no parameters, returns the <a href="TaxForm/Lines.html"><code>TaxForm::Lines</code></a> object associated with this form, such that square bracket notation can be used. Otherwise, passes any arguments as square-bracket arguments to the <a href="TaxForm/Lines.html"><code>TaxForm::Lines</code></a> object.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="line-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 119</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">line</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+    <span class="ruby-ivar">@lines</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-ivar">@lines</span>[<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>]
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-match_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">match_form</span><span
+            class="method-args">(form_name, line_name, other_line_name = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Finds a single form that matches this form&#39;s given line. Line <a href="TaxForm.html#method-i-match_forms"><code>match_forms</code></a>, but must return exactly one form.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="match_form-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 379</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">match_form</span>(<span class="ruby-identifier">form_name</span>, <span class="ruby-identifier">line_name</span>, <span class="ruby-identifier">other_line_name</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">fs</span> = <span class="ruby-identifier">match_forms</span>(<span class="ruby-identifier">form_name</span>, <span class="ruby-identifier">line_name</span>, <span class="ruby-identifier">other_line_name</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">fs</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;No Form #{form_name} matching #{name} on line #{line_name}&quot;</span>
+  <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">fs</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Multiple Forms #{form_name} match #{name} on line #{line_name}&quot;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">fs</span>[<span class="ruby-value">0</span>]
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-match_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">match_forms</span><span
+            class="method-args">(form_name, line_name, other_line_name = nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>This performs a database join-like operation that identifies all forms of a certain type that have a value in a line matching this form.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="match_forms-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 368</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">match_forms</span>(<span class="ruby-identifier">form_name</span>, <span class="ruby-identifier">line_name</span>, <span class="ruby-identifier">other_line_name</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">other_line_name</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">line_name</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">forms</span>(<span class="ruby-identifier">form_name</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-identifier">line_name</span>] <span class="ruby-operator">==</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-identifier">other_line_name</span>]
+  }
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-match_table_value" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">match_table_value</span><span
+            class="method-args">(l1, l2, find:, default: nil) { || ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Given two lines acting as columns of a table, match a given value in the first line and return the corresponding value in the second. If the value is not found, executes the given block and/or returns the default value.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="match_table_value-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 243</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">match_table_value</span>(<span class="ruby-identifier">l1</span>, <span class="ruby-identifier">l2</span>, <span class="ruby-value">find:</span>, <span class="ruby-value">default:</span> <span class="ruby-keyword">nil</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l1</span>, <span class="ruby-value">:present</span>]
+    <span class="ruby-identifier">index</span> = <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l1</span>, <span class="ruby-value">:all</span>].<span class="ruby-identifier">find_index</span>(<span class="ruby-identifier">find</span>)
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l2</span>, <span class="ruby-value">:all</span>][<span class="ruby-identifier">index</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">index</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">default</span> <span class="ruby-operator">||=</span> <span class="ruby-keyword">yield</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">default</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-method_missing" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">method_missing</span><span
+            class="method-args">(sym, *args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>An alternate way of accessing lines. If the given method is of the form <a href="name">line_</a>, then it will be converted to the call +line[name, *args]+.</p>
+          
+          
+            <div class="method-calls-super">
+              Calls superclass method
+              
+            </div>
+          
+
+          
+          <div class="method-source-code" id="method_missing-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 131</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">method_missing</span>(<span class="ruby-identifier">sym</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">sym</span>.<span class="ruby-identifier">to_s</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/^line_?/</span>
+    <span class="ruby-identifier">l</span> = <span class="ruby-node">$&#39;</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">l</span> <span class="ruby-operator">=~</span> <span class="ruby-regexp">/=$/</span>
+      <span class="ruby-identifier">l</span> = <span class="ruby-node">$`</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>] = <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>]
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-keyword">super</span>(<span class="ruby-identifier">sym</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">name</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns the name of this form as given in the TaxForm::NAME constant. Subclasses should redefine the constant appropriately.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="name-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 84</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">name</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">const_get</span>(<span class="ruby-value">:NAME</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-needed-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">needed?</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Whether the form is needed to be included in the completed return. This method should be overridden by subclasses. At the moment, when this method returns true, the form is removed from the manager, but it might be preferable to keep it around with just a flag of some sort.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="needed-3F-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 103</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">needed?</span>
+  <span class="ruby-keyword">true</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-place_lines" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">place_lines</span><span
+            class="method-args">(*nums)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Rearranges lines already computed.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="place_lines-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 162</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">place_lines</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">nums</span>)
+  <span class="ruby-identifier">line</span>.<span class="ruby-identifier">place_lines</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">nums</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-set_name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">set_name</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Sets the :name line based on an appropriate Biographical form.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="set_name-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 179</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">set_name</span>
+  <span class="ruby-identifier">bio</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Biographical&#39;</span>).<span class="ruby-identifier">find</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">x</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:whose</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;mine&#39;</span>
+  }
+  <span class="ruby-identifier">names</span> = <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:first_name</span>] <span class="ruby-operator">+</span> <span class="ruby-string">&#39; &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:last_name</span>]
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">1040</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">sbio</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfj&#39;</span>)
+      <span class="ruby-identifier">names</span> <span class="ruby-operator">+=</span> <span class="ruby-string">&#39; &amp; &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:first_name</span>] <span class="ruby-operator">+</span> <span class="ruby-string">&#39; &#39;</span> <span class="ruby-operator">+</span> \
+        <span class="ruby-identifier">f</span>.<span class="ruby-identifier">sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:last_name</span>]
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:name</span>] = <span class="ruby-identifier">names</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-set_name_ssn" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">set_name_ssn</span><span
+            class="method-args">(lname = :ssn)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Sets the :name and :ssn lines based on an appropriate Biographical form.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="set_name_ssn-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 169</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">set_name_ssn</span>(<span class="ruby-identifier">lname</span> = <span class="ruby-value">:ssn</span>)
+  <span class="ruby-identifier">set_name</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-identifier">lname</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Biographical&#39;</span>).<span class="ruby-identifier">find</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">x</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:whose</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;mine&#39;</span>
+  }.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ssn</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-sum_lines" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">sum_lines</span><span
+            class="method-args">(*args)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Sums a list of lines. The lines are not required to be present.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="sum_lines-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 148</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>, <span class="ruby-value">:opt</span>] }.<span class="ruby-identifier">sum</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-with_form" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">with_form</span><span
+            class="method-args">(*args, **params, &amp;block)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Convenience for <a href="FormManager.html#method-i-with_form"><code>FormManager.with_form</code></a></p>
+          
+          
+
+          
+          <div class="method-source-code" id="with_form-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 352</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">with_form</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">**</span><span class="ruby-identifier">params</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">with_form</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">**</span><span class="ruby-identifier">params</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-with_forms" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">with_forms</span><span
+            class="method-args">(name) { |f| ... }</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="with_forms-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 356</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">with_forms</span>(<span class="ruby-identifier">name</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">name</span>)
+    <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">forms</span>(<span class="ruby-identifier">name</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">f</span>)
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>The year that this <a href="TaxForm.html"><code>TaxForm</code></a> was last updated. Subclasses should override this method to return the year that the class was last updated.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File tax_form.rb, line 92</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-identifier">warn</span> <span class="ruby-node">&quot;Form #{name} has no year set&quot;</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-value">0</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

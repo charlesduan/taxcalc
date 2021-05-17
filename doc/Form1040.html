@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class Form1040 - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+  var index_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="TaxForm.html">TaxForm</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li class="calls-super" ><a href="#method-c-new">::new</a>
+    
+    <li ><a href="#method-i-compute">#compute</a>
+    
+    <li ><a href="#method-i-compute_early_schedules">#compute_early_schedules</a>
+    
+    <li ><a href="#method-i-compute_penalty">#compute_penalty</a>
+    
+    <li ><a href="#method-i-full_name">#full_name</a>
+    
+    <li ><a href="#method-i-sd_charitable_contributions">#sd_charitable_contributions</a>
+    
+    <li ><a href="#method-i-year">#year</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-Form1040">
+  <h1 id="class-Form1040" class="class">
+    class Form1040
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="MONTHS">MONTHS
+        
+        <dd>
+        
+      
+        <dt id="NAME">NAME
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-bio" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">bio</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-force_itemize" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">force_itemize</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-sbio" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">sbio</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-status" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">status</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(manager)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+            <div class="method-calls-super">
+              Calls superclass method
+              <a href="TaxForm.html#method-c-new"><code>TaxForm::new</code></a>
+            </div>
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 36</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">initialize</span>(<span class="ruby-identifier">manager</span>)
+  <span class="ruby-keyword">super</span>(<span class="ruby-identifier">manager</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-compute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="compute-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 60</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute</span>
+
+
+  <span class="ruby-ivar">@bio</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Biographical&#39;</span>).<span class="ruby-identifier">find</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-identifier">x</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:whose</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;mine&#39;</span> }
+  <span class="ruby-ivar">@sbio</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Biographical&#39;</span>).<span class="ruby-identifier">find</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-identifier">x</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:whose</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;spouse&#39;</span> }
+
+  <span class="ruby-ivar">@status</span> = <span class="ruby-constant">FilingStatus</span>.<span class="ruby-identifier">for</span>(<span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Enter your filing status:&quot;</span>))
+  <span class="ruby-identifier">line</span>[<span class="ruby-node">&quot;status.#{status.name}&quot;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfs&#39;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&quot;status.name&quot;</span>] = <span class="ruby-ivar">@sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:first_name</span>] <span class="ruby-operator">+</span> <span class="ruby-string">&#39; &#39;</span> <span class="ruby-operator">+</span> \
+      <span class="ruby-ivar">@sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;last_name&#39;</span>]
+  <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;hoh&#39;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;status.name&#39;</span>] = <span class="ruby-identifier">interview</span>(
+      <span class="ruby-string">&#39;Name of head-of-household qualifying child, if not a dependent:&#39;</span>
+    )
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-value">:first_name</span>, <span class="ruby-ivar">@bio</span>)
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-value">:last_name</span>, <span class="ruby-ivar">@bio</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:ssn</span>] = <span class="ruby-ivar">@bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ssn</span>]
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfj&#39;</span>)
+    <span class="ruby-identifier">copy_line</span>(<span class="ruby-value">:first_name</span>, <span class="ruby-ivar">@sbio</span>)
+    <span class="ruby-identifier">copy_line</span>(<span class="ruby-value">:last_name</span>, <span class="ruby-ivar">@sbio</span>)
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-node">%w(mfj mfs)</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:spouse_ssn</span>] = <span class="ruby-ivar">@sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ssn</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;home_address&#39;</span>, <span class="ruby-ivar">@bio</span>)
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;apt_no&#39;</span>, <span class="ruby-ivar">@bio</span>)
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;city_zip&#39;</span>, <span class="ruby-ivar">@bio</span>)
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;foreign_country&#39;</span>, <span class="ruby-ivar">@bio</span>)
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;foreign_state&#39;</span>, <span class="ruby-ivar">@bio</span>)
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;foreign_zip&#39;</span>, <span class="ruby-ivar">@bio</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;campaign.you&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">interview</span>(
+    <span class="ruby-string">&#39;Do you want to donate to the Presidential Election Campaign?&#39;</span>
+  )
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;campaign.spouse&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfj&#39;</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">interview</span>(
+    <span class="ruby-string">&#39;Does your spouse want to donate to the Presidential Election Campaign?&#39;</span>
+  )
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;more_than_4_deps&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Dependent&#39;</span>).<span class="ruby-identifier">count</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">4</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Can someone claim you as a dependent?&quot;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ysd.dependent&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Can someone claim your spouse as a dependent?&quot;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ssd.dependent&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">interview</span>(<span class="ruby-string">&quot;Did you transact in virtual currency?&quot;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;bitcoin.yes&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;bitcoin.no&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># The introduction of the standard-deduction charity deduction introduces a</span>
+  <span class="ruby-comment"># circularity into the 1040 computation: To determine automatically whether</span>
+  <span class="ruby-comment"># to itemize or take the standard deduction, we must compute Schedule A,</span>
+  <span class="ruby-comment"># which requires computing the line 11 AGI, but the SD charity deduction</span>
+  <span class="ruby-comment"># must be determined at line 10. As a result, the user must determine</span>
+  <span class="ruby-comment"># itemization manually.</span>
+  <span class="ruby-comment">#</span>
+  <span class="ruby-ivar">@itemize</span> = <span class="ruby-identifier">interview</span>(<span class="ruby-string">&#39;Do you want to itemize deductions?&#39;</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfs&#39;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ssd.isrdsa&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@itemize</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">interview</span>(
+      <span class="ruby-string">&#39;Are you a dual-status alien?&#39;</span>
+    )
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:birthday</span>] <span class="ruby-operator">&lt;</span> <span class="ruby-constant">Date</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">year</span> <span class="ruby-operator">-</span> <span class="ruby-value">64</span>, <span class="ruby-value">1</span>, <span class="ruby-value">2</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ysd.65yo&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ysd.blind?&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:blind?</span>]
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:birthday</span>] <span class="ruby-operator">&lt;</span> <span class="ruby-constant">Date</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">year</span> <span class="ruby-operator">-</span> <span class="ruby-value">64</span>, <span class="ruby-value">1</span>, <span class="ruby-value">2</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ssd.65yo&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;ssd.blind?&#39;</span>] = <span class="ruby-string">&#39;X&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:blind?</span>]
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># Dependents</span>
+  <span class="ruby-comment">#</span>
+
+  <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Dependent&#39;</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">dep</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">row</span> = {
+      <span class="ruby-value">:dep_1</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">dep</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:name</span>],
+      <span class="ruby-value">:dep_2</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">dep</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ssn</span>],
+      <span class="ruby-value">:dep_3</span> <span class="ruby-operator">=&gt;</span> <span class="ruby-identifier">dep</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:relationship</span>],
+    }
+    <span class="ruby-keyword">case</span> <span class="ruby-identifier">dep</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:qualifying</span>]
+    <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;child&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">row</span>[<span class="ruby-value">:dep_4_ctc</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;other&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-identifier">row</span>[<span class="ruby-value">:dep_4_other</span>] = <span class="ruby-string">&#39;X&#39;</span>
+    <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;none&#39;</span>
+    <span class="ruby-keyword">else</span> <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Unknown dependent qualifying type #{dep.line[:qualifying]}&quot;</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">add_table_row</span>(<span class="ruby-identifier">row</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">compute_early_schedules</span>
+
+  <span class="ruby-comment"># Wages, salaries, tips</span>
+  <span class="ruby-identifier">wages</span> = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;W-2&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">1</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">2441</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">wages</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:tax_benefit</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1.expl&#39;</span>] = <span class="ruby-string">&#39;DCB&#39;</span>
+  }
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1/wages&#39;</span>] = <span class="ruby-identifier">wages</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;W-2&#39;</span>).<span class="ruby-identifier">any?</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:cp_split!</span>, <span class="ruby-value">:present</span>] }
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1/wages*note&#39;</span>] = <span class="ruby-string">&quot;Line 1 based on community property allocation &quot;</span> \
+      <span class="ruby-string">&quot;from Form 8958&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">sched_b</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule B&#39;</span>)
+
+  <span class="ruby-identifier">assert_no_forms</span>(<span class="ruby-string">&#39;1099-OID&#39;</span>)
+
+  <span class="ruby-comment"># Tax-exempt interest</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2a&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-INT&#39;</span>).<span class="ruby-identifier">lines</span>[<span class="ruby-value">8</span>, <span class="ruby-value">:sum</span>] <span class="ruby-operator">+</span> \
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-DIV&#39;</span>).<span class="ruby-identifier">lines</span>[<span class="ruby-value">10</span>, <span class="ruby-value">:sum</span>]
+  <span class="ruby-comment"># Taxable interest</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;2b/taxable_int&#39;</span>] = <span class="ruby-identifier">sched_b</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">4</span>]
+
+  <span class="ruby-comment"># Qualified dividends</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;3a/qualdiv&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-DIV&#39;</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1b&#39;</span>, <span class="ruby-value">:present</span>]
+  }.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-keyword">unless</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:qexception?</span>, <span class="ruby-value">:present</span>]
+      <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Indicate that no exception applies to 1099-DIV &quot;</span> <span class="ruby-operator">+</span> \
+        <span class="ruby-string">&quot;with qualified dividends, using the qexception? line&quot;</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:qexception?</span>] <span class="ruby-operator">?</span> <span class="ruby-value">0</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;1b&#39;</span>]
+  }.<span class="ruby-identifier">inject</span>(<span class="ruby-value">:+</span>) <span class="ruby-operator">+</span> <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1065 Schedule K-1&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-string">&#39;6b&#39;</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-comment"># Ordinary dividends</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;3b/taxable_div&#39;</span>] = <span class="ruby-identifier">sched_b</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">6</span>]
+
+  <span class="ruby-comment"># IRAs, pensions, and annuities</span>
+  <span class="ruby-identifier">ira_analysis</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;IRA Analysis&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;4a&#39;</span>] = <span class="ruby-identifier">ira_analysis</span>.<span class="ruby-identifier">line_total_distrib</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;4b/taxable_ira&#39;</span>] = <span class="ruby-identifier">ira_analysis</span>.<span class="ruby-identifier">line_taxable_distrib</span>
+
+  <span class="ruby-comment"># Pensions and annuities</span>
+  <span class="ruby-identifier">assert_no_forms</span>(<span class="ruby-string">&#39;SSA-1099&#39;</span>, <span class="ruby-string">&#39;RRB-1099&#39;</span>)
+  <span class="ruby-comment">#line[&#39;5b/taxable_pension&#39;] = BlankZero</span>
+  <span class="ruby-comment">#line[&#39;6b/taxable_ss&#39;] = BlankZero</span>
+
+  <span class="ruby-comment"># Capital gains/losses</span>
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule D&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;7/cap_gain&#39;</span>] = <span class="ruby-identifier">with_form</span>(
+    <span class="ruby-string">&#39;1040 Schedule D&#39;</span>, <span class="ruby-value">otherwise_return:</span> <span class="ruby-constant">BlankZero</span>
+  ) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">sched_d</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">sched_d</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:fill!</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Other income, Schedule 1</span>
+  <span class="ruby-identifier">sched_1</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule 1&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">8</span>] = <span class="ruby-identifier">sched_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:add_inc</span>]
+
+  <span class="ruby-comment"># Total income</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;9/tot_inc&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(1 2b 3b 4b 5b 6b 7 8)</span>)
+
+  <span class="ruby-identifier">compute_more</span>(<span class="ruby-identifier">sched_1</span>, <span class="ruby-value">:adjustments</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;10a&#39;</span>] = <span class="ruby-identifier">sched_1</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:adj_inc</span>]
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;10b&#39;</span>] = <span class="ruby-identifier">sd_charitable_contributions</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;10c&#39;</span>] = <span class="ruby-identifier">sched_1</span>.<span class="ruby-identifier">sum_lines</span>(<span class="ruby-string">&#39;10a&#39;</span>, <span class="ruby-string">&#39;10b&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;11/agi&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">9</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;10c&#39;</span>]
+
+  <span class="ruby-comment"># Compute Schedule A, the presence of which will indicate whether deductions</span>
+  <span class="ruby-comment"># are to be itemized.</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@itemize</span>
+    <span class="ruby-identifier">sched_a</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule A&#39;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;12/deduction&#39;</span>] = <span class="ruby-identifier">sched_a</span>.<span class="ruby-identifier">line_total</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-node">%w(
+      ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
+    )</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-identifier">l</span>, <span class="ruby-value">:present</span>]
+        <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Cannot handle special standard deduction for #{l}&quot;</span>
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;12/deduction&#39;</span>] = <span class="ruby-identifier">status</span>.<span class="ruby-identifier">standard_deduction</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Qualified business income deduction</span>
+  <span class="ruby-identifier">taxable_income</span> = <span class="ruby-identifier">line_agi</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">line_deduction</span>; <span class="ruby-comment"># AGI minus deduction</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;13/qbid&#39;</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;QBI Manager&#39;</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:deduction</span>]
+
+  <span class="ruby-comment"># Total deductions</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">12</span>, <span class="ruby-value">13</span>)
+  <span class="ruby-comment"># Taxable income</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;15/taxinc&#39;</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">11</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>], <span class="ruby-value">0</span> ].<span class="ruby-identifier">max</span>
+
+  <span class="ruby-comment">#</span>
+  <span class="ruby-comment"># PAGE 2</span>
+  <span class="ruby-comment">#</span>
+
+  <span class="ruby-comment"># Tax</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;16/tax&#39;</span>] = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;Tax Computation&#39;</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:tax</span>]
+
+  <span class="ruby-identifier">sched_2</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule 2&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">17</span>] = <span class="ruby-identifier">sched_2</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:add_tax</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">sched_2</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;18/pre_ctc_tax&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">16</span>, <span class="ruby-value">17</span>)
+
+  <span class="ruby-comment"># Child tax credit and other credits</span>
+  <span class="ruby-identifier">ctcw</span> = <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Child Tax Credit Worksheet&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">19</span>] = <span class="ruby-identifier">ctcw</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:fill!</span>]
+
+  <span class="ruby-identifier">sched_3</span> = <span class="ruby-identifier">find_or_compute_form</span>(<span class="ruby-string">&#39;1040 Schedule 3&#39;</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">20</span>] = <span class="ruby-identifier">sched_3</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:nref_credits</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">sched_3</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">19</span>, <span class="ruby-value">20</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">22</span>] = [ <span class="ruby-identifier">line</span>[<span class="ruby-value">18</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">21</span>], <span class="ruby-value">0</span> ].<span class="ruby-identifier">max</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">23</span>] = <span class="ruby-identifier">sched_2</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:other_tax</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">sched_2</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;24/tot_tax&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">22</span>, <span class="ruby-value">23</span>)
+
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;25a&#39;</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;W-2&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">2</span>, <span class="ruby-value">:sum</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;W-2&#39;</span>).<span class="ruby-identifier">any?</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:cp_split!</span>, <span class="ruby-value">:present</span>] }
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;25a*note&#39;</span>] = <span class="ruby-string">&quot;Line 25a based on community property allocation &quot;</span> \
+      <span class="ruby-string">&quot;from Form 8958&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;25b&#39;</span>] = [
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-MISC&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">4</span>, <span class="ruby-value">:sum</span>),
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-INT&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">4</span>, <span class="ruby-value">:sum</span>),
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-DIV&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">4</span>, <span class="ruby-value">:sum</span>),
+    <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;1099-NEC&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-value">4</span>, <span class="ruby-value">:sum</span>),
+  ].<span class="ruby-identifier">sum</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-value">8959</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;25c&#39;</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:mc_wh</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;25d&#39;</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(25a 25b 25c 25d)</span>)
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">26</span>] = <span class="ruby-identifier">forms</span>(<span class="ruby-string">&#39;Estimated Tax&#39;</span>).<span class="ruby-identifier">lines</span>(<span class="ruby-string">&#39;amount&#39;</span>, <span class="ruby-value">:sum</span>) <span class="ruby-operator">+</span> \
+    <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">submanager</span>(<span class="ruby-value">:last_year</span>).<span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>(<span class="ruby-value">:refund_applied</span>, <span class="ruby-value">:opt</span>)
+
+  <span class="ruby-comment"># 27: earned income credit. Inapplicable for mfs status.</span>
+  <span class="ruby-comment"># 28: refundable child tax credit.</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">ctcw</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;11.yes&#39;</span>, <span class="ruby-value">:present</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">ctcw</span>.<span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;12.yes&#39;</span>, <span class="ruby-value">:present</span>]
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Refundable child tax credit not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-comment"># 29: American Opportunity (education) credit. Inapplicable for mfs status.</span>
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule 3&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;18d&#39;</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">14</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-comment"># Recovery rebate credit.</span>
+  <span class="ruby-identifier">max_eip</span> = <span class="ruby-identifier">status</span>.<span class="ruby-identifier">double_mfj</span>(<span class="ruby-value">1200</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:dep_4_ctc</span>, <span class="ruby-value">:present</span>]
+    <span class="ruby-identifier">max_eip</span> <span class="ruby-operator">+=</span> <span class="ruby-value">500</span> <span class="ruby-operator">*</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:dep_4_ctc</span>, <span class="ruby-value">:all</span>].<span class="ruby-identifier">count</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-identifier">x</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;X&#39;</span> }
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">if</span> (<span class="ruby-identifier">line</span>[<span class="ruby-value">:agi</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">status</span>.<span class="ruby-identifier">rrc_threshold</span>) <span class="ruby-operator">*</span> <span class="ruby-value">0.05</span> <span class="ruby-operator">&lt;</span> <span class="ruby-identifier">max_eip</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Recovery rebate credit not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">31</span>] = <span class="ruby-identifier">sched_3</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:ref_credits</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">sched_3</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">32</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-value">27</span><span class="ruby-operator">..</span><span class="ruby-value">31</span>)
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">33</span>] = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-string">&#39;25d&#39;</span>, <span class="ruby-value">26</span>, <span class="ruby-value">32</span>)
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">33</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">24</span>]
+
+    <span class="ruby-comment"># Refund</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;34/tax_refund&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">33</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">24</span>]
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;35a&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">34</span>] <span class="ruby-comment"># Assume it&#39;s all refunded</span>
+    
+    <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;Refund Direct Deposit&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;35b&#39;</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:routing</span>]
+      <span class="ruby-identifier">line</span>[<span class="ruby-node">&quot;35c.#{f.line[:type]}&quot;</span>] = <span class="ruby-string">&#39;X&#39;</span>
+      <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;35d&#39;</span>] = <span class="ruby-identifier">f</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:account</span>]
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;36/refund_applied&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">34</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;35a&#39;</span>]
+  <span class="ruby-keyword">else</span>
+
+    <span class="ruby-comment"># Amount owed</span>
+    <span class="ruby-identifier">line</span>[<span class="ruby-string">&#39;37/tax_owed&#39;</span>] = <span class="ruby-identifier">line</span>[<span class="ruby-value">24</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">33</span>]
+    <span class="ruby-identifier">compute_penalty</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:occupation</span>] = <span class="ruby-ivar">@bio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:occupation</span>]
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@status</span>.<span class="ruby-identifier">is</span>(<span class="ruby-string">&#39;mfj&#39;</span>)
+    <span class="ruby-identifier">line</span>[<span class="ruby-value">:spouse_occupation</span>] = <span class="ruby-ivar">@sbio</span>.<span class="ruby-identifier">line</span>[<span class="ruby-value">:occupation</span>]
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">copy_line</span>(<span class="ruby-string">&#39;phone&#39;</span>, <span class="ruby-ivar">@bio</span>)
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_early_schedules" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_early_schedules</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Some schedules are used in so many different places that it makes sense to compute them early so that other forms can be sure that they exist if needed.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_early_schedules-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 53</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_early_schedules</span>
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule C&#39;</span>)
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule E&#39;</span>)
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-string">&#39;1040 Schedule SE&#39;</span>)
+  <span class="ruby-identifier">compute_form</span>(<span class="ruby-value">2441</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-compute_penalty" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">compute_penalty</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>These follow the instructions for the estimated tax penalty.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="compute_penalty-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 366</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">compute_penalty</span>
+
+  <span class="ruby-comment"># Under the definition of &quot;tax shown on your return,&quot; these forms are</span>
+  <span class="ruby-comment"># listed, but they are not implemented in this program.</span>
+  [ <span class="ruby-value">7202</span>, <span class="ruby-value">8828</span>, <span class="ruby-value">4137</span>, <span class="ruby-value">5329</span>, <span class="ruby-value">8885</span>, <span class="ruby-value">8919</span> ].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Penalty with form #{f} not implemented&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-identifier">f</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># Defined as &quot;tax shown on your return&quot; in the instructions</span>
+  <span class="ruby-identifier">tax_shown</span> = <span class="ruby-identifier">line</span>[<span class="ruby-value">:tot_tax</span>] <span class="ruby-operator">-</span> <span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(17 18 19 30)</span>)
+  <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule 3&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">tax_shown</span> <span class="ruby-operator">-=</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">8</span>, <span class="ruby-value">11</span>) <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># The first test is given in the first bullet under &quot;You may owe this</span>
+  <span class="ruby-comment"># penalty&quot;</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">37</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">1000</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">37</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-value">0.1</span> <span class="ruby-operator">*</span> <span class="ruby-identifier">tax_shown</span>
+
+    <span class="ruby-identifier">ly</span> = <span class="ruby-ivar">@manager</span>.<span class="ruby-identifier">submanager</span>(<span class="ruby-value">:last_year</span>)
+    <span class="ruby-comment"># Last year&#39;s tax shown, defined under &quot;tax shown on your 20xx return&quot;</span>
+    <span class="ruby-identifier">last_year_tax</span> = <span class="ruby-identifier">ly</span>.<span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line_16</span>
+    <span class="ruby-identifier">last_year_tax</span> <span class="ruby-operator">-=</span> <span class="ruby-identifier">ly</span>.<span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">sum_lines</span>(<span class="ruby-operator">*</span><span class="ruby-node">%w(18a, 18b, 18c)</span>)
+    <span class="ruby-identifier">last_year_tax</span> <span class="ruby-operator">-=</span> <span class="ruby-identifier">ly</span>.<span class="ruby-identifier">with_form</span>(
+      <span class="ruby-string">&#39;1040 Schedule 3&#39;</span>, <span class="ruby-value">otherwise_return:</span> <span class="ruby-value">0</span>
+    ) { <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span>.<span class="ruby-identifier">sum_lines</span>(<span class="ruby-value">9</span>, <span class="ruby-value">12</span>) }
+
+    <span class="ruby-comment"># First test under the exception.</span>
+    <span class="ruby-keyword">unless</span> <span class="ruby-identifier">last_year_tax</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+
+      <span class="ruby-comment"># Second test under the exception: calculate threshold</span>
+      <span class="ruby-identifier">penalty_threshold</span> = <span class="ruby-identifier">last_year_tax</span>
+      <span class="ruby-identifier">last_year_agi</span> = <span class="ruby-identifier">ly</span>.<span class="ruby-identifier">form</span>(<span class="ruby-value">1040</span>).<span class="ruby-identifier">line</span>[<span class="ruby-value">:agi</span>]
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">last_year_agi</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">status</span>.<span class="ruby-identifier">halve_mfs</span>(<span class="ruby-value">150000</span>)
+        <span class="ruby-identifier">penalty_threshold</span> = (<span class="ruby-value">1.1</span> <span class="ruby-operator">*</span> <span class="ruby-identifier">last_year_tax</span>)
+      <span class="ruby-keyword">end</span>
+
+      <span class="ruby-comment"># Second test: Calculate payments</span>
+      <span class="ruby-identifier">tax_paid</span> = <span class="ruby-identifier">sum_lines</span>(<span class="ruby-string">&#39;25d&#39;</span>, <span class="ruby-value">26</span>)
+      <span class="ruby-identifier">with_form</span>(<span class="ruby-string">&#39;1040 Schedule 3&#39;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">tax_paid</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">10</span>, <span class="ruby-value">:opt</span>]
+      <span class="ruby-keyword">end</span>
+
+      <span class="ruby-comment"># Second test: comparison</span>
+      <span class="ruby-keyword">unless</span> <span class="ruby-identifier">tax_paid</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-identifier">penalty_threshold</span>
+        <span class="ruby-identifier">warn</span> <span class="ruby-string">&quot;Penalty computation not implemented&quot;</span>
+      <span class="ruby-keyword">end</span>
+
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-full_name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">full_name</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="full_name-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 44</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">full_name</span>
+  <span class="ruby-identifier">line</span>[<span class="ruby-value">:first_name</span>] <span class="ruby-operator">+</span> <span class="ruby-string">&#39; &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">line</span>[<span class="ruby-value">:last_name</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-sd_charitable_contributions" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">sd_charitable_contributions</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Computes the charitable contributions income adjustment if the standard deduction is taken. This is a separate method because it is also used by the Pub. 590-A Worksheet 1-1 computation.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="sd_charitable_contributions-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 356</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">sd_charitable_contributions</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@itemize</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">has_form?</span>(<span class="ruby-string">&quot;Charity Gift&quot;</span>)
+    <span class="ruby-identifier">raise</span> <span class="ruby-string">&quot;Line 10b charitable contribution adjustment not implemented&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-constant">BlankZero</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-year" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">year</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="year-source">
+            <pre><span class="ruby-comment"># File form1040.rb, line 30</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier ruby-title">year</span>
+  <span class="ruby-value">2020</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="https://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="https://ruby.github.io/rdoc/">RDoc</a> 6.1.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

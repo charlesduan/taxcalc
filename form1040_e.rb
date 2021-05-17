@@ -46,8 +46,16 @@ class Form1040E < TaxForm
       line['27.yes'] = 'X'
     end
 
-    assert_question('Are any of your partnerships foreign?', false)
-    assert_question('Were you active in all your partnerships?', true)
+    k1s.each do |k1|
+      pship = match_form('Partnership', :ein)
+      unless pship.line[:nationality] == 'domestic'
+        raise "Cannot handle foreign partnership #{f.line[:name]}"
+      end
+      partner = match_form('Partner', :ein)
+      unless partner.line[:active?]
+        raise "Cannot handle passive partners"
+      end
+    end
 
     find_or_compute_form('Asset Manager') do |f|
       compute_form(4562) if f.line[:needs_4562?]

@@ -20,7 +20,7 @@ class Form1065K1 < TaxForm
   def compute
     f1065 = form(1065)
 
-    line['A'] = f1065.line['D']
+    line['A/ein'] = f1065.line[:ein]
     line['B'] = [
       f1065.line[:name],
       f1065.line[:address],
@@ -28,7 +28,7 @@ class Form1065K1 < TaxForm
     ].join("\n")
     line['C'] = f1065.line(:send_to!).sub(/\s+\d{5}(?:-\d{4})?$/, '')
     line['D'] = 'X' if f1065.line('B7.yes', :present)
-    line['E'] = @partner_form.line['ssn']
+    line['E/ssn'] = @partner_form.line['ssn']
     line['F'] = @partner_form.line['name']
     line['F.address'] = [
       @partner_form.line['address'],

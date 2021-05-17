@@ -12,7 +12,7 @@ class Form4562 < TaxForm
 
   def compute
 
-    assert_question('Do you have an enterprise zone business?', false)
+    confirm('You have no enterprise zone business')
 
     if has_form?(1065)
       for_partnership = true
