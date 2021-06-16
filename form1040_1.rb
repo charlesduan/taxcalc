@@ -65,6 +65,10 @@ class Form1040_1 < TaxForm
       line[14] = sched_se.line[:se_ded]
     end
 
+    # Line 15 is where the self-employment IRA contributions go
+    raise("Implement solo 401(k) here")
+    raise("Also implement Form 5500-EZ at this time")
+
     ira_analysis = form('IRA Analysis')
     compute_more(ira_analysis, :continuation)
     line[19] = ira_analysis.line[:deductible_contrib]
