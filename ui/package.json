@@ -3,10 +3,10 @@
     "version": "1.0.0",
     "description": "A program for marking fields in tax forms",
     "dependencies": {
-        "@nodegui/nodegui": "^0.30.2",
-        "canvas": "^2.7.0",
-        "pdfjs-dist": "^2.7.570",
-        "webpack": "^5.37.0",
+        "@nodegui/nodegui": "^0.30.3",
+        "canvas": "^2.8.0",
+        "pdfjs-dist": "^2.8.335",
+        "webpack": "^5.44.0",
         "worker-loader": "^3.0.8"
     },
     "engines": {
