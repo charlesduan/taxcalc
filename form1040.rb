@@ -81,8 +81,8 @@ class Form1040 < TaxForm
     line[:ssn] = @bio.line[:ssn]
 
     if @status.is('mfj')
-      copy_line(:first_name, @sbio)
-      copy_line(:last_name, @sbio)
+      line[:spouse_first_name] = @sbio.line[:first_name]
+      line[:spouse_last_name] = @sbio.line[:last_name]
     end
     if @status.is(%w(mfj mfs))
       line[:spouse_ssn] = @sbio.line[:ssn]
@@ -269,12 +269,12 @@ class Form1040 < TaxForm
     line[19] = ctcw.line[:fill!]
 
     sched_3 = find_or_compute_form('1040 Schedule 3')
-    line[20] = sched_3.line[:nref_credits] if sched_3
+    line['20/nref_credits'] = sched_3.line[:nref_credits] if sched_3
     line[21] = sum_lines(19, 20)
 
     line[22] = [ line[18] - line[21], 0 ].max
 
-    line[23] = sched_2.line[:other_tax] if sched_2
+    line['23/other_tax'] = sched_2.line[:other_tax] if sched_2
 
     line['24/tot_tax'] = sum_lines(22, 23)
 
@@ -293,9 +293,9 @@ class Form1040 < TaxForm
     with_form(8959) do |f|
       line['25c'] = f.line[:mc_wh]
     end
-    line['25d'] = sum_lines(*%w(25a 25b 25c 25d))
+    line['25d/withholding'] = sum_lines(*%w(25a 25b 25c 25d))
 
-    line[26] = forms('Estimated Tax').lines('amount', :sum) + \
+    line['26/est_tax'] = forms('Estimated Tax').lines('amount', :sum) + \
       @manager.submanager(:last_year).form(1040).line(:refund_applied, :opt)
 
     # 27: earned income credit. Inapplicable for mfs status.
