@@ -48,11 +48,38 @@ class Form8889 < TaxForm
     line[11] = sum_lines(9, 10)
     line[12] = line8 - line11
     line['13/hsa_ded'] = [ line2, line12 ].min
-    if line2 > line13
-      raise "Excess HSA contribution not implemented"
+
+    #
+    # Overcontributions
+    if line[2] > line[12] or line[11] > line[8]
+      compute_more(find_or_compute_form(5329), :hsa)
     end
 
-    assert_no_forms('1099-SA') # Part II
+    #
+    # This code for part II implements only HSA distributions for withdrawals of
+    # excess contributions.
+    #
+    assert_no_forms('1099-SA') # Part II, line 14a
+    if has_form?('HSA Excess Withdrawal')
+
+      # The Form 8889 instructions for this line call for distributions "you
+      # received in 2020," which would suggest that excess withdrawals performed
+      # in 2021 should not be reported here even if they related to 2020
+      # contributions. I think this is the correct interpretation because the
+      # purpose of this section is to calculate Other Income, which should be
+      # reported in the year it is realized.
+      line['14a'] = forms('HSA Excess Withdrawal') { |f|
+        f.line[:date].year == year
+      }.lines(:amount, :sum)
+      line['14b'] = line['14a']
+
+      line['14c'] = line['14a'] - line['14b']
+
+      line['16/hsa_tax_distrib'] = line['14c'] - line[15, :opt]
+      if line[16] > 0
+        raise "Not implemented"
+      end
+    end
 
     # Part III is not implemented because it is assumed that the last-month rule
     # was met.

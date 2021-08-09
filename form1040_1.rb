@@ -1,5 +1,4 @@
 require_relative 'tax_form'
-require_relative 'form8889'
 require_relative 'form1040_e'
 
 #
@@ -45,8 +44,52 @@ class Form1040_1 < TaxForm
       line['5/rrerpst'] = sched_e.line[:tot_inc]
     end
 
+    other_income
     line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 
+  end
+
+  #
+  # Computes other income from various sources. A better way to implement this
+  # would be to allow other forms to transmit callback procs to this form.
+  #
+  def other_income
+    @expls, @amt = [], BlankZero
+    with_form(8889) do |f|
+      add_other_income('HSA', f.line['hsa_tax_distrib', :opt])
+    end
+
+    #
+    # Form 8889, line 13 instructs that excess employer contributions are taxed
+    # as income at the time they are earned.
+    #
+    with_form(5329) do |f|
+      confirm("Employer excess HSA contribution not included in income already")
+      add_other_income(
+        'Employer excess HSA contrib.', f.line['hsa_employer_excess!', :opt]
+      )
+    end
+
+    #
+    # If the withdrawal covered excess employer contributions, then the next
+    # component of other income will double-count in view of the above. I don't
+    # know how to avoid this other than just having the HSA Excess Withdrawal
+    # forms indicate how much of the amount is attributable to employer
+    # contributions.
+    #
+    add_other_income(
+      'Withdrawal of excess HSA contrib.',
+      forms('HSA Excess Withdrawal').lines(:amount, :sum)
+    )
+
+    line['8.expl'] = @expls.join("; ")
+    line[8] = @amt
+  end
+
+  def add_other_income(expl, amt)
+    return if amt == 0
+    @amt += amt
+    @explis.push("#{expl}: #{amt}")
   end
 
   def compute_adjustments
@@ -58,8 +101,9 @@ class Form1040_1 < TaxForm
     # add_inc computed above.
     #
 
-    f8889 = find_or_compute_form(8889)
-    line[12] = f8889.line[:hsa_ded] if f8889
+    with_form(8889) do |f|
+      line[12] = f.line[:hsa_ded]
+    end
 
     with_form('1040 Schedule SE') do |sched_se|
       line[14] = sched_se.line[:se_ded]

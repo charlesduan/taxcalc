@@ -14,6 +14,7 @@ require_relative 'form1040_e'
 require_relative 'form1040_se'
 require_relative 'form2441'
 require_relative 'form6251'
+require_relative 'form8889'
 require_relative 'form8959'
 require_relative 'form8960'
 require_relative 'form8995'
@@ -55,6 +56,7 @@ class Form1040 < TaxForm
     compute_form('1040 Schedule E')
     compute_form('1040 Schedule SE')
     compute_form(2441)
+    compute_form(8889)
   end
 
   def compute

@@ -44,6 +44,11 @@ class Form1040_2 < TaxForm
       end
     end
 
+    with_form(5329) do |f|
+      compute_more(f, :total)
+      line[6] = f.line[:total!]
+    end
+
     # Additional Medicare tax
     l8 = BlankZero
     compute_form(8959) do |f8959|
