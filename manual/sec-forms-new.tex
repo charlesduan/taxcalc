@@ -138,6 +138,21 @@ Records of contributions to an HSA account.
 \item[ssn] The SSN of the beneficiary of the HSA account.
 \item[contributions] Contributions made to the HSA, but not including employer
 contributions or HSA/Archer MSA rollovers or HSA funding distributions.
+\item[from] Either ``employer'' or ``self'' depending on who made the
+contribution.
+\end{description}
+
+\subsection{HSA Excess Withdrawal}
+
+Withdrawal of an excess HSA contribution. This should be entered in the tax year
+for which the excess withdrawal applied, even if the withdrawal occurred in the
+following year (Form 8889 automatically reaches into the previous year's records
+to compute taxes on earnings and such).
+
+\begin{description}
+\item[date] The date that the excess withdrawal was actually performed.
+\item[basis\_amount] The HSA contribution amount that was withdrawn.
+\item[earnings\_amount] The amount of earnings on the withdrawn contribution.
 \end{description}
 
 \subsection{Home Office}

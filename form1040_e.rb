@@ -47,11 +47,13 @@ class Form1040E < TaxForm
     end
 
     k1s.each do |k1|
-      pship = match_form('Partnership', :ein)
+      pship = k1.match_form('Partnership', :A, :ein) # Remove :A next year
       unless pship.line[:nationality] == 'domestic'
         raise "Cannot handle foreign partnership #{f.line[:name]}"
       end
-      partner = match_form('Partner', :ein)
+      partner = form('Partner') { |f|
+        f.line[:ein] == k1.line[:A] && f.line[:ssn] == line[:ssn] # Remove :A
+      }
       unless partner.line[:active?]
         raise "Cannot handle passive partners"
       end

@@ -1,17 +1,18 @@
 require 'tax_form'
-require 'filing_status'
 
 class Form1040X < TaxForm
 
   NAME = '1040X'
 
+  # NOTE: year must be the tax year for the amended return, not the current year
+  # of the form.
   def year
     2020
   end
 
   def initialize(manager)
     super(manager)
-    @orig_1040 = submanager(:unamended).form(1040)
+    @orig_1040 = @manager.submanager(:unamended).form(1040)
     @new_1040 = form(1040)
   end
 
@@ -36,7 +37,11 @@ class Form1040X < TaxForm
   end
 
   def compute
-    year = interview("Tax year for this amended return:")
+
+    if interview("Is this amendment pursuant to section 301.9100-2?")
+      line['s301.9100-2'] = "FILED PURSUANT TO SECTION 301.9100-2"
+    end
+
     if (2016..2019).include?(year)
       line["for_#{year}"] = 'X'
     else
@@ -64,17 +69,9 @@ class Form1040X < TaxForm
     #
     # Filing status
     #
-    [
-      [ 1, 'single' ],
-      [ 2, 'mfj' ],
-      [ 3, 'mfs' ],
-      [ 4, 'hoh' ],
-      [ 5, 'qw' ]
-    ].each do |l, s|
-      line[s] = 'X' if @new_1040.line[l, :present]
-    end
+    line["status.#{@new_1040.status.name}"] = 'X'
 
-    if status.is?(:mfs, :hoh, :qw)
+    if @new_1040.status.is?([ :mfs, :hoh, :qw ])
       copy_line('status.name', @new_1040)
     end
 
@@ -99,7 +96,7 @@ class Form1040X < TaxForm
     fill_cols(6) { |x| x.line(:tax) }
     line['6.method'] = form('Tax Computation').line[:tax_method]
 
-    fill_cols(7) { |x| x.line[20] }
+    fill_cols(7) { |x| x.line[21, :opt] }
     calc_cols(8) { |x| [ 0, line["6#{x}"] - line["7#{x}"] ].max }
 
     if year <= 2018

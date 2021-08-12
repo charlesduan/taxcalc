@@ -172,7 +172,10 @@ class Form1040 < TaxForm
     }
     line['1/wages'] = wages
     if forms('W-2').any? { |f| f.line[:cp_split!, :present] }
-      line['1/wages*note'] = "Line 1 based on community property allocation " \
+
+      # XXX TODO The UI will not place this note properly due to the alias for
+      # line 1
+      line['1*note'] = "Line 1 based on community property allocation " \
         "from Form 8958"
     end
 
@@ -369,13 +372,14 @@ class Form1040 < TaxForm
 
     # Under the definition of "tax shown on your return," these forms are
     # listed, but they are not implemented in this program.
-    [ 7202, 8828, 4137, 5329, 8885, 8919 ].each do |f|
+    [ 7202, 8828, 4137, 8885, 8919 ].each do |f|
       raise "Penalty with form #{f} not implemented" if has_form?(f)
     end
 
     # Defined as "tax shown on your return" in the instructions
     tax_shown = line[:tot_tax] - sum_lines(*%w(17 18 19 30))
     with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(8, 11) end
+    with_form(5329) do |f| tax_shown -= f.tax_shown_adjustment end
 
     # The first test is given in the first bullet under "You may owe this
     # penalty"

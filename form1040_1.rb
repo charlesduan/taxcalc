@@ -55,41 +55,24 @@ class Form1040_1 < TaxForm
   #
   def other_income
     @expls, @amt = [], BlankZero
+
+    #
+    # Other income from Form 8889
+    #
     with_form(8889) do |f|
-      add_other_income('HSA', f.line['hsa_tax_distrib', :opt])
+      f.other_income do |desc, amt|
+        add_other_income(desc, amt)
+      end
     end
 
-    #
-    # Form 8889, line 13 instructs that excess employer contributions are taxed
-    # as income at the time they are earned.
-    #
-    with_form(5329) do |f|
-      confirm("Employer excess HSA contribution not included in income already")
-      add_other_income(
-        'Employer excess HSA contrib.', f.line['hsa_employer_excess!', :opt]
-      )
-    end
-
-    #
-    # If the withdrawal covered excess employer contributions, then the next
-    # component of other income will double-count in view of the above. I don't
-    # know how to avoid this other than just having the HSA Excess Withdrawal
-    # forms indicate how much of the amount is attributable to employer
-    # contributions.
-    #
-    add_other_income(
-      'Withdrawal of excess HSA contrib.',
-      forms('HSA Excess Withdrawal').lines(:amount, :sum)
-    )
-
-    line['8.expl'] = @expls.join("; ")
-    line[8] = @amt
+    line['8.expl/other_tax_expl'] = @expls.join("; ")
+    line['8/other_tax'] = @amt
   end
 
   def add_other_income(expl, amt)
     return if amt == 0
     @amt += amt
-    @explis.push("#{expl}: #{amt}")
+    @expls.push("#{expl}: #{amt}")
   end
 
   def compute_adjustments
@@ -110,8 +93,10 @@ class Form1040_1 < TaxForm
     end
 
     # Line 15 is where the self-employment IRA contributions go
-    raise("Implement solo 401(k) here")
-    raise("Also implement Form 5500-EZ at this time")
+    if year > 2020
+      raise("Implement solo 401(k) here")
+      raise("Also implement Form 5500-EZ at this time")
+    end
 
     ira_analysis = form('IRA Analysis')
     compute_more(ira_analysis, :continuation)

@@ -31,32 +31,32 @@ class Form5329 < TaxForm
       raise "Lines 43-46 not implemented"
     end
 
-    with_form(8889, required?: true) do |f|
-      line['hsa_self_excess!'] = f.line[2] - f.line[12]
-      line['hsa_employer_excess!'] = \
-        f.line[9] - [ 0, f.line[8] - f.line[10, :opt] ].max
-      line['hsa_excess_withdrawal!'] = forms('HSA Excess Withdrawal') { |f|
-        f.line[:tax_year] == year
-      }.lines(:amount, :sum)
-    end
-
-    # It is assumed that if the withdrawn amount exceeds the excess
-    # contributions, then the earnings have been withdrawn as well.
-    line[47] = [
-      0,
-      line['hsa_self_excess!'] + line['hsa_employer_excess!'] -
-      line['hsa_excess_withdrawal!']
-    ].max
+    f8889 = form(8889)
+    line[47] = f8889.sum_lines(:self_excess!, :employer_excess!) - \
+      f8889.line[:excess_wd_basis!, :opt]
 
     line['48/hsa_excess'] = sum_lines(46, 47)
     confirm("The value of your HSAs is greater than $#{line[48]}")
     line['49/hsa_excise_tax'] = (0.06 * line[48]).round
-    total += line[49]
+    @total += line[49]
   end
 
 
   def compute_total
     line[:total!] = @total
+
+    # This ensures that this form cannot be further filled; to do so would
+    # attempt to add to @total which is no longer an integer
+    @total = nil
+    line[:total!]
+  end
+
+  #
+  # This is based on the 1040 instructions for computing tax shown for purposes
+  # of the estimated tax penalty.
+  #
+  def tax_shown_adjustment
+    line[:total!] - sum_lines(4, 8)
   end
 
 end

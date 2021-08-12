@@ -40,7 +40,9 @@ class Form6251 < TaxForm
         # comment in that form as a reminder to update this computation if that
         # changes.
 
-        if f.line[8, :present]
+        # We do a very coarse check for whether other tax on Schedule 1 includes
+        # SALT refunds.
+        if f.line[:other_tax, :present] && f.line[:other_tax_expl] =~ /refund/i
           raise "AMT adjustment for Schedule 1, line 8 not implemented"
           # This is also relevant to line 2e below
         end

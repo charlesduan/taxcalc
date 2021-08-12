@@ -473,6 +473,14 @@ class TaxForm
     bio ||= form(1040).bio
     return year - (bio.line[:birthday] - 1).year
   end
+
+  def to_s
+    "<Form #{name}>"
+  end
+
+  def inspect
+    "<Form #{name}>"
+  end
 end
 
 
