@@ -173,9 +173,7 @@ class Form1040 < TaxForm
     line['1/wages'] = wages
     if forms('W-2').any? { |f| f.line[:cp_split!, :present] }
 
-      # XXX TODO The UI will not place this note properly due to the alias for
-      # line 1
-      line['1*note'] = "Line 1 based on community property allocation " \
+      line['wages*note'] = "Line 1 based on community property allocation " \
         "from Form 8958"
     end
 

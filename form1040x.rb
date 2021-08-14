@@ -138,7 +138,7 @@ class Form1040X < TaxForm
       line[22] = line[21]
     end
 
-    line['III'] = interview("Explanation of changes:")
+    line['III'] = break_lines(interview("Explanation of changes:"))
 
   end
 
