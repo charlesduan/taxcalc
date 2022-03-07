@@ -5,7 +5,7 @@ class Form1065B1 < TaxForm
   NAME = '1065 Schedule B-1'
 
   def year
-    2020
+    2021
   end
 
   def compute

@@ -68,7 +68,7 @@ class Form1040C < TaxForm
     if @expense_manager.line[:Commissions, :present] \
         or @expense_manager.line[:Contracts, :present]
       line['I.yes'] = 'X'
-      if interview("Did you file you sole proprietorship Forms 1099?")
+      if interview("Did you need to file sole proprietorship Forms 1099?")
         line['J.yes'] = 'X'
       else
         line['J.no'] = 'X'
@@ -92,34 +92,34 @@ class Form1040C < TaxForm
 
     line[7] = sum_lines(5, 6)
 
+    if @asset_manager.depreciation_total != 0
+      line[13] = @asset_manager.depreciation_total
+    end
     #
     # Business expenses. First collect all the expense types.
     #
-    initialize_expenses
-    expense(8, 'Advertising')
-    expense(9, 'Car')
-    expense(10, 'Commissions')
-    expense(11, 'Contracts')
-    expense(12, 'Depletion')
-    line[13] = @asset_manager.depreciation_total
-    expense(14, 'Employee_Benefits')
-    expense(15, 'Insurance')
-    expense('16a', 'Mortgage_Interest')
-    expense('16b', 'Other_Interest')
-    expense(17, 'Professional_Services')
-    expense(18, 'Supplies')
-    expense(19, 'Employee_Plans')
-    expense('20a', 'Rent_Equipment')
-    expense('20b', 'Rent_Property')
-    expense(21, 'Repairs')
-    # I'm not sure how line 22 differs from 18
-    expense(23, 'Licenses')
-    expense('24a', 'Travel')
-    expense('24b', 'Meals')
-    expense(25, 'Utilities')
-    expense(26, 'Wages')
-
-    line['27a'] = other_expenses_total
+    @expense_manager.fill_lines(self, {
+      8 => 'Advertising',
+      9 => 'Car',
+      10 => 'Commissions',
+      11 => 'Contracts',
+      12 => 'Depletion',
+      14 => 'Employee_Benefits',
+      15 => 'Insurance',
+      '16a' => 'Mortgage_Interest',
+      '16b' => 'Other_Interest',
+      17 => 'Professional_Services',
+      18 => 'Supplies',
+      19 => 'Employee_Plans',
+      '20a' => 'Rent_Equipment',
+      '20b' => 'Rent_Property',
+      21 => 'Repairs',
+      23 => 'Licenses',
+      '24a' => 'Travel',
+      '24b' => 'Meals',
+      25 => 'Utilities',
+      26 => 'Wages',
+    }, other: '27a', continuation: false)
 
     line[28] = sum_lines(*%w(8 9 10 11 12 13 14 15 16a 16b 17 18 19 20a 20b 21
                          22 23 24a 24b 25 26 27a 27b))
@@ -146,35 +146,11 @@ class Form1040C < TaxForm
       raise "Vehicle information not implemented"
     end
 
-    line[:Part_V_type, :all] = @expenses.map { |exp|
-      @expense_manager.present_name(exp)
-    }
-    line[:Part_V_amt, :all] = @expenses.map { |exp|
-      @expense_manager.line[exp]
-    }
+    line[:Part_V_type, :all], line[:Part_V_amt, :all] = \
+      @expense_manager.other_expenses
     line[48] = line[:Part_V_amt, :sum]
 
   end
 
-  def initialize_expenses
-    @expenses = @expense_manager.line.to_a.map(&:first).reject { |x|
-      x == 'fill!'
-    }
-  end
-
-  def expense(line_no, category)
-    if @expenses.include?(category)
-      line[line_no] = @expense_manager.line[category].round
-      @expenses.delete(category)
-    end
-  end
-
-  #
-  # Assuming that all other @expenses values have been deleted by the expense()
-  # method, this totals everything left.
-  #
-  def other_expenses_total
-    @expenses.map { |x| @expense_manager.line[x] }.sum.round
-  end
 
 end

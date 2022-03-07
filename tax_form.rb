@@ -152,8 +152,9 @@ class TaxForm
   #
   # Copies a line value from another form.
   #
-  def copy_line(l, form)
-    line[l] = form.line[l] if form.line[l, :present]
+  def copy_line(l, form, from: nil)
+    from ||= l
+    line[l] = form.line[from] if form.line[from, :present]
   end
 
   #
@@ -395,7 +396,7 @@ class TaxForm
 
 
   #
-  # Convenience method for FormManager#compute.
+  # Convenience method for FormManager#compute_form.
   #
   def compute_form(name, *args, &block)
     @manager.compute_form(name, *args, &block)

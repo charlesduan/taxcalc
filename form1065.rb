@@ -2,19 +2,18 @@ require 'tax_form'
 require 'form4562'
 require 'expense_manager'
 require 'asset_manager'
+require 'form1065_b1'
+require 'form1065_k1'
 
 class Form1065 < TaxForm
 
-  NAME = 1065
+  NAME = '1065'
 
   def year
-    2020
+    2021
   end
 
   def compute
-
-    # A reminder to add those lines
-    raise "New lines added to Partner and Partnership forms"
 
     bio = form('Partnership')
     line['name'] = bio.line(:name)
@@ -27,12 +26,22 @@ class Form1065 < TaxForm
     line['D/ein'] = bio.line('ein')
     line['E'] = bio.line(:start)
 
-    # Line F need not be filled in if the below condition is true.
+    # Line F need not be filled in if the below condition is true. Schedule B is
+    # part of Form 1065.; the conditions are:
+    #
+    # - Total receipts less than $250k
+    # - Total assets less than $1M
+    # - Schedules K-1 filed on time
+    # - Schedule M-3 not filed
+    #
     confirm(
       "Partnership #{line_name} meets the 4 conditions " \
       "in Form 1065 Schedule B, line 4.",
     )
 
+    #
+    # These relate to address changes and such.
+    #
     confirm(
       "For partnership #{line_name}, no box in Form 1065 line G " \
       "needs to be checked."
@@ -54,10 +63,11 @@ class Form1065 < TaxForm
     #
     # Line K only applies if the partnership claims losses.
 
-    line['1a'] = forms('1099-MISC').lines(7, :sum)
+    assert_no_forms('1099-MISC')
+    line['1a'] = forms('1099-NEC').lines(1, :sum)
     line['1c'] = line['1a'] - line['1b', :opt]
     line[3] = line['1c'] - line[2, :opt]
-    line[8] = sum_lines(3, 4, 5, 6, 7)
+    line['8/tot_inc'] = sum_lines(3, 4, 5, 6, 7)
 
     @asset_manager = compute_form('Asset Manager')
     if @asset_manager.has_current_assets?
@@ -66,12 +76,26 @@ class Form1065 < TaxForm
 
     @asset_manager.attach_safe_harbor_election(self)
 
-    line[20] = compute_form('Business Expense Manager').line[:fill!]
-    if line[20] > 0
-      form('Business Expense Manager').make_continuation(
-        self, 'Line 20 Statement of Business Expenses'
-      )
+    if @asset_manager.depreciation_total != 0
+      line['16a'] = @asset_manager.depreciation_total
+      line['16c'] = line['16a'] - line['16b', :opt]
     end
+
+    @expense_manager = compute_form('Business Expense Manager')
+
+    @expense_manager.fill_lines(self, {
+      9 => 'Wages',
+      11 => 'Repairs',
+      12 => 'Debts',
+      13 => [ 'Rent_Equipment', 'Rent_Property' ],
+      14 => 'Licenses',
+      15 => [ 'Mortgage_Interest', 'Other_Interest' ],
+      17 => 'Depletion',
+      18 => 'Employee_Plans',
+      19 => 'Employee_Benefits',
+    }, other: 20, continuation: 'Line 20 Statement of Business Expenses')
+
+
     line[21] = sum_lines(9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20)
     line[22] = line[8] - line[21]
 
@@ -79,6 +103,12 @@ class Form1065 < TaxForm
     # closely held. Line 25 applies to "administrative adjustment requests"
     # under the Bipartisan Budget Act of 2015, which appears to occur only when
     # the partnership seeks to adjust a previous filing.
+
+    ########################################################################
+    #
+    # SCHEDULE B
+    #
+    ########################################################################
 
     case bio.line(:type)
     when 'general' then line['B1a'] = 'X'
@@ -93,6 +123,12 @@ class Form1065 < TaxForm
       raise "Invalid partnership type #{bio.line['type']}"
     end
 
+    #
+    # Question 2 regards the partnership having 50+% owners, necessitating
+    # filing of Schedule B-1. (It is determined automatically.) Question 4
+    # relates to the partnership being small, see Line F above; it is answered
+    # "yes" if the partnership is small.
+    #
     confirm(
       "The answer to every question on Schedule B (other than 2 and 4) is `no'"
     )
@@ -106,10 +142,16 @@ class Form1065 < TaxForm
     }.compact.partition { |x| %w(Individual Estate).include?(x) }
     line[big_inst.empty? ? 'B2a.no' : 'B2a.yes'] = 'X'
     line[big_indiv.empty? ? 'B2b.no' : 'B2b.yes'] = 'X'
+    if line['B2a.yes', :present] || line['B2b.yes', :present]
+      compute_form('1065 Schedule B-1')
+    end
 
     line['B3a.no'] = 'X'
     line['B3b.no'] = 'X'
     line['B4.yes'] = 'X'
+
+    # If this were a publicly traded partnership, the line would be called
+    # "B5.yes/ptp"
     line['B5.no'] = 'X'
     line['B6.no'] = 'X'
     line['B7.no'] = 'X'
@@ -140,12 +182,19 @@ class Form1065 < TaxForm
     # Line 24, in 2019, was reversed so the answer is now no.
     line['B24.no'] = 'X'
 
+    line['B25.no'] = 'X'
+    line['B26'] = 0
+
+    # Line 27 deals with self-dealing between the partnership and partners.
+    line['B27.no'] = 'X'
+    line['B28.no'] = 'X'
+
     confirm(
       "You do not want to opt out of the centralized partnership audit regime"
     )
-    line['B25.no'] = 'X'
+    line['B29.no'] = 'X'
 
-    pr_name = interview("Enter the partnership representative's name:")
+    pr_name = bio.line[:rep]
     pr_form = forms('Partner').find { |x| x.line['name'] == pr_name }
     unless pr_form
       raise "No partner named #{pr_name} for the partnership representative"
@@ -156,15 +205,16 @@ class Form1065 < TaxForm
       line['PR.tin!'] = pr_form.line['ssn']
       line['PR.address'] = pr_form.line['address']
       line['PR.address2'] = pr_form.line['address2']
-      line['PR.phone'] = interview("Partnership representative phone:")
+      line['PR.phone'] = pr_form.line['phone']
     else
       raise "No support for non-individual partnership representative"
     end
 
-    line['B26.no'] = 'X'
-    line['B27'] = '0'
-    line['B28.no'] = 'X'
-    line['B29.no'] = 'X'
+    ########################################################################
+    #
+    # SCHEDULE K
+    #
+    ########################################################################
 
     line['K1'] = line[22]
     line['K5'] = forms('1099-INT').lines(1, :sum)
@@ -175,11 +225,18 @@ class Form1065 < TaxForm
 
     line['K14a'] = line['K1']
 
-    #
-    # Somewhere around here, check that all partners are active
-    #
+    forms('Partner').each do |p|
+      warn("No support for inactive partners") unless p.line[:active?]
+      unless p.line[:liability] == 'general'
+        warn("No support for limited partners")
+      end
+      unless p.line[:type] == 'Individual'
+        warn("Only individual partners supported")
+      end
+    end
+
     line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11))\
-      - sum_lines(*%w(12 13a 13b 13c2 13d 16p))
+      - sum_lines(*%w(K12 K13a K13b K13c2 K13d K21))
 
     line['Analysis.2a(ii)'] = line['Analysis.1']
 
@@ -193,6 +250,14 @@ class Form1065 < TaxForm
       line[:send_to!] = 'Kansas City MO 64999-0011'
     else
       line[:send_to!] = 'Ogden UT 84201-0011'
+    end
+
+
+    #
+    # Compute Schedule K-1s.
+    #
+    forms('Partner').each do |p|
+      compute_form(Form1065K1.new(manager, p))
     end
   end
 end

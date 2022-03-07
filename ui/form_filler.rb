@@ -43,7 +43,7 @@ class FormFiller
         if continuation_form
           @continuation_lines.push([
             { :title => continuation_form.name },
-            form.line.to_a
+            continuation_form.line.to_a
           ])
         else
           warn("Expected continuation Form #{v} not found")
