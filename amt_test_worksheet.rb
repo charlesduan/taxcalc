@@ -24,7 +24,7 @@ class AMTTestWorksheet < TaxForm
     end
 
     with_form('1040 Schedule 1') do |f|
-      line[4] = f.sum_lines(:taxrefund, 8) # Fix line 8 to be just taxes
+      line[4] = f.sum_lines(:taxrefund, :other_tax) # Fix line 8 to be just taxes
     end
 
     line[5] = line[3] - line[4]

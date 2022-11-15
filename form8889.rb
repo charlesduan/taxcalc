@@ -12,7 +12,7 @@ class Form8889 < TaxForm
   end
 
   def needed?
-    line[2] > 0
+    line[2] != 0 || line[9] != 0 || line['14a'] != 0 || line[20] != 0
   end
 
   def compute
@@ -24,7 +24,9 @@ class Form8889 < TaxForm
     end
     line["1_#{@coverage_type}"] = 'X'
 
-    line[2] = forms('HSA Contribution').lines(:contributions, :sum)
+    line[2] = forms('HSA Contribution') { |f|
+      f.line[:from] == 'self'
+    }.lines(:contributions, :sum)
 
     case @coverage_type
     when :family then line[3] = 7100
@@ -46,13 +48,34 @@ class Form8889 < TaxForm
     line[9] = employer_contributions
     confirm("You received no qualified distribution from an IRA to an HSA")
     line[11] = sum_lines(9, 10)
-    line[12] = line8 - line11
+    line[12] = [ 0, line8 - line11 ].max
     line['13/hsa_ded'] = [ line2, line12 ].min
-    if line2 > line13
-      raise "Excess HSA contribution not implemented"
+
+    #
+    # Overcontributions
+    compute_excess_contributions
+
+    # Compute Form 5329 to figure any excise tax
+    if line[:self_excess!, :present] || line[:employer_excess!, :present]
+      compute_more(find_or_compute_form(5329), :hsa)
     end
 
-    assert_no_forms('1099-SA') # Part II
+    #
+    # This code for part II implements only HSA distributions for withdrawals of
+    # excess contributions.
+    #
+    assert_no_forms('1099-SA') # Part II, line 14a
+
+    if line[:excess_wd_distrib, :present]
+      line['14a'] = line[:excess_wd_distrib]
+      line['14b'] = line[:excess_wd_distrib]
+      line['14c'] = line['14a'] - line['14b']
+
+      line['16/hsa_tax_distrib'] = line['14c'] - line[15, :opt]
+      if line[16] > 0
+        raise "Not implemented"
+      end
+    end
 
     # Part III is not implemented because it is assumed that the last-month rule
     # was met.
@@ -132,7 +155,103 @@ class Form8889 < TaxForm
       next unless l12w
       total += f.line[12, :all][l12w]
     end
+    total += forms('HSA Contribution') { |f|
+      f.line[:from] == 'employer'
+    }.lines(:contributions, :sum)
     return total
+  end
+
+  def compute_excess_contributions
+
+    #
+    # Compute the excess contributions from both self and employer.
+    #
+    if line[2] > line[13]
+      line[:self_excess!] = line[2] - line[13]
+    end
+
+    emp_limit = [ line[8] - line[10, :opt], 0 ].max
+    if line[9] > emp_limit
+      line[:employer_excess!] = line[9] - emp_limit
+    end
+
+    #
+    # Figure basis and earnings of withdrawal of excess contributions. We need
+    # to compute the following:
+    #
+    # 1. The basis withdrawn against this year's excess contributions (for
+    #    figuring what is left in assessing the excise tax)
+    # 2. The earnings realized this year from withdrawals against this and last
+    #    year's excess contributions (for assessing other income)
+    # 3. The total withdrawal amounts realized this year against this and last
+    #    year's excess contributions (for filling Form 8889, part II)
+    # 4. The carryover amounts that will be needed to compute 2 and 3 next year
+    #
+    # First, gather last year's numbers that carried to this year, for
+    # computations 2 and 3.
+    #
+    distrib, realized_earnings = @manager.submanager(:last_year).with_form(
+      8889, otherwise_return: [ BlankZero, BlankZero ]
+    ) { |f|
+      e = f.line[:excess_wd_earnings_carry!, :opt]
+      [ e + f.line[:excess_wd_basis_carry!, :opt], e ]
+    }
+
+    hew_forms = forms('HSA Excess Withdrawal')
+    if !hew_forms.empty?
+      # Compute basis withdrawn (1)
+      line[:excess_wd_basis!] = hew_forms.lines(:basis, :sum)
+    end
+
+    hew_by_year = hew_forms.group_by { |f| f.line[:date].year }
+    unless (hew_by_year.keys - [ year, year + 1 ]).empty?
+      raise "Invalid year in HSA Excess Withdrawal"
+    end
+    if hew_by_year[year]
+      # Compute realized earnings (2)
+      e = hew_by_year[year].map(&:line_earnings).sum
+      realized_earnings += e
+
+      # Compute realized distribution (3)
+      distrib += e + hew_by_year[year].map(&:line_basis).sum
+    end
+
+    if hew_by_year[year + 1]
+      # Save carryover values for next year (4)
+      line[:excess_wd_earnings_carry!] = \
+        hew_by_year[year + 1].map(&:line_earnings).sum
+      line[:excess_wd_basis_carry!] = \
+        hew_by_year[year + 1].map(&:line_basis).sum
+    end
+
+    # By analogy to 26 CFR 1.408-11(a)(1) and IRS Notice 2000-39, it appears
+    # that the realized earnings can be negative.
+    if realized_earnings != 0
+      line[:excess_wd_earnings!] = realized_earnings
+    end
+
+    if distrib != 0 || realized_earnings != 0
+      line[:excess_wd_distrib!] = distrib
+    end
+
+  end
+
+
+  #
+  # This is called by Form 1040 Schedule 1, line 8 (Other Income).
+  #
+  def other_income
+    if line[16, :present] && line[16] > 0
+      yield("HSA", line[16])
+    end
+
+    if line[:excess_wd_earnings!, :present]
+      yield("IRC 223(f)(3)(A)(ii)", line[:excess_wd_earnings])
+    end
+
+    if line[:employer_excess!, :present]
+      yield("Excess employer HSA contrib.", line[:employer_excess!])
+    end
   end
 
 end

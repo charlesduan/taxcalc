@@ -152,8 +152,9 @@ class TaxForm
   #
   # Copies a line value from another form.
   #
-  def copy_line(l, form)
-    line[l] = form.line[l] if form.line[l, :present]
+  def copy_line(l, form, from: nil)
+    from ||= l
+    line[l] = form.line[from] if form.line[from, :present]
   end
 
   #
@@ -395,7 +396,7 @@ class TaxForm
 
 
   #
-  # Convenience method for FormManager#compute.
+  # Convenience method for FormManager#compute_form.
   #
   def compute_form(name, *args, &block)
     @manager.compute_form(name, *args, &block)
@@ -452,6 +453,13 @@ class TaxForm
     end
   end
 
+
+  ########################################################################
+  #
+  # CONVENIENCE METHODS
+  #
+  ########################################################################
+
   #
   # Convenience method for FormManager#interview.
   #
@@ -472,6 +480,41 @@ class TaxForm
   def age(bio = nil)
     bio ||= form(1040).bio
     return year - (bio.line[:birthday] - 1).year
+  end
+
+  #
+  # Breaks lines in a long text at 80 characters (which coincidentally is the
+  # right length for a full-page-width box).
+  #
+  def break_lines(text, linelen = 80)
+    len = 0
+    res = ''
+    text.split(/(\s+)/).each do |part|
+      if len + part.length > linelen || part =~ /\n/
+        res = res.sub(/\s+\z/, '')
+        res += "\n" if len > 0
+        if part =~ /\s/
+          len = 0
+        else
+          while part.length > linelen
+            part, res = part[linelen..-1], res + part[0, linelen] + "\n"
+          end
+          len, res = part.length, res + part
+        end
+      else
+        len += part.length
+        res += part
+      end
+    end
+    return res
+  end
+
+  def to_s
+    "<Form #{name}>"
+  end
+
+  def inspect
+    "<Form #{name}>"
   end
 end
 

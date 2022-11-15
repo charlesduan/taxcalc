@@ -1,5 +1,4 @@
 require_relative 'tax_form'
-require_relative 'form8889'
 require_relative 'form1040_e'
 
 #
@@ -45,8 +44,35 @@ class Form1040_1 < TaxForm
       line['5/rrerpst'] = sched_e.line[:tot_inc]
     end
 
+    other_income
     line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 
+  end
+
+  #
+  # Computes other income from various sources. A better way to implement this
+  # would be to allow other forms to transmit callback procs to this form.
+  #
+  def other_income
+    @expls, @amt = [], BlankZero
+
+    #
+    # Other income from Form 8889
+    #
+    with_form(8889) do |f|
+      f.other_income do |desc, amt|
+        add_other_income(desc, amt)
+      end
+    end
+
+    line['8.expl/other_tax_expl'] = @expls.join("; ")
+    line['8/other_tax'] = @amt
+  end
+
+  def add_other_income(expl, amt)
+    return if amt == 0
+    @amt += amt
+    @expls.push("#{expl}: #{amt}")
   end
 
   def compute_adjustments
@@ -58,16 +84,19 @@ class Form1040_1 < TaxForm
     # add_inc computed above.
     #
 
-    f8889 = find_or_compute_form(8889)
-    line[12] = f8889.line[:hsa_ded] if f8889
+    with_form(8889) do |f|
+      line[12] = f.line[:hsa_ded]
+    end
 
     with_form('1040 Schedule SE') do |sched_se|
       line[14] = sched_se.line[:se_ded]
     end
 
     # Line 15 is where the self-employment IRA contributions go
-    raise("Implement solo 401(k) here")
-    raise("Also implement Form 5500-EZ at this time")
+    if year > 2020
+      raise("Implement solo 401(k) here")
+      raise("Also implement Form 5500-EZ at this time")
+    end
 
     ira_analysis = form('IRA Analysis')
     compute_more(ira_analysis, :continuation)

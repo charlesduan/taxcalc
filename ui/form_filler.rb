@@ -43,7 +43,7 @@ class FormFiller
         if continuation_form
           @continuation_lines.push([
             { :title => continuation_form.name },
-            form.line.to_a
+            continuation_form.line.to_a
           ])
         else
           warn("Expected continuation Form #{v} not found")
@@ -131,6 +131,10 @@ class FormFiller
   end
 
   def fill_line(marking_line, value)
+    if marking_line.nil?
+      warn("Line to be filled is unknown; run marking program")
+      return
+    end
     unless marking_line.positioned?
       warn("Line #{marking_line.name} has no position data")
       return
@@ -194,9 +198,9 @@ class FormFiller
     end
     if line =~ /\*note$/
       res = @note_syms[line] + res
-    elsif @note_syms[line]
-      res += @note_syms[line]
-      offset += @note_syms[line].length
+    elsif sym = @note_syms[line.split('/').last]
+      res += sym
+      offset += sym.length
     end
     return [res, offset]
   end

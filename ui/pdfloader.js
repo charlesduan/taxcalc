@@ -1,12 +1,14 @@
 const Canvas = require("canvas");
 const fsPromises = require("fs/promises");
-const pdfjs = require("pdfjs-dist/es5/build/pdf.js");
+const pdfjs = require("pdfjs-dist/legacy/build/pdf.js");
 
 let pdfDoc = undefined;
 let theCanvas = undefined;
 
 async function loadPdf(filename) {
+    console.log("Received command for file " + filename);
     const file = await fsPromises.readFile(filename);
+    console.log("Read file");
     const data = new Uint8Array(file);
     pdfDoc = await pdfjs.getDocument({
         data,

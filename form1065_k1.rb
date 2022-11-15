@@ -5,7 +5,7 @@ class Form1065K1 < TaxForm
   NAME = '1065 Schedule K-1'
 
   def year
-    2020
+    2021
   end
 
   def initialize(manager, partner_form)
@@ -27,7 +27,7 @@ class Form1065K1 < TaxForm
       f1065.line[:city_zip]
     ].join("\n")
     line['C'] = f1065.line(:send_to!).sub(/\s+\d{5}(?:-\d{4})?$/, '')
-    line['D'] = 'X' if f1065.line('B7.yes', :present)
+    line['D'] = 'X' if f1065.line('ptp', :present)
     line['E/ssn'] = @partner_form.line['ssn']
     line['F'] = @partner_form.line['name']
     line['F.address'] = [
@@ -35,7 +35,7 @@ class Form1065K1 < TaxForm
       @partner_form.line['address2']
     ].join("\n")
     line["G.#{@partner_form.line['liability']}"] = 'X'
-    line["H.#{@partner_form.line['nationality']}"] = 'X'
+    line["H1.#{@partner_form.line['nationality']}"] = 'X'
     line['I1'] = @partner_form.line['type']
 
     share = @partner_form.line['share']

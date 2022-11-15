@@ -20,7 +20,7 @@ require_relative 'form_filler'
 )
 
 OptionParser.new do |opts|
-  opts.banner = "Usage: #{File.basename($0)} [options] [form]"
+  opts.banner = "Usage: #{File.basename($0)} [options] [data-file] [forms...]"
   opts.separator("")
 
   opts.on("-b", "--biographical TEXT", "Set the biographical text") do |bio|
@@ -51,6 +51,10 @@ end.parse!
 posdata = YAML.load(open(@options.posdata, &:read))
 form_file, *form_names = ARGV
 
+unless File.file?(form_file)
+  raise("Must provide form data file as first argument")
+end
+
 Dir.mkdir(@options.fill_dir) unless File.directory?(@options.fill_dir)
 
 #
@@ -74,7 +78,7 @@ bio ||= manager.with_form(1040) { |f|
   "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:ssn]}"
 }
 bio ||= manager.with_form(1065) { |f|
-  "#{f.line[:name]}, EIN #{f.line[:D]}"
+  "#{f.line[:name]}, EIN #{f.line[:ein]}"
 }
 bio ||= manager.with_form('D-40') { |f|
   "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:tin]}"

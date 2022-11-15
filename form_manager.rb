@@ -73,8 +73,10 @@ class FormManager
     #
     # Checks the year of the form.
     #
-    if form.year != self.year
-      warn("Form #{name} is for #{form.year}, but manager is #{year}")
+    unless form.is_a?(NamedForm)
+      if form.year != self.year
+        warn("Form #{name} is for #{form.year}, but manager is #{year}")
+      end
     end
 
     if @forms[name]
@@ -171,9 +173,10 @@ class FormManager
 
     form.explain("Computing Form #{form.name} (#{method}) for #{name}")
     @compute_stack.push(form)
-    form.send(method, *args)
+    res = form.send(method, *args)
     @compute_stack.pop
     form.explain("Done computing Form #{form.name} (#{method})")
+    return res
   end
 
   # Returns the form that is currently being computed
@@ -247,11 +250,11 @@ class FormManager
 
   # Performs a block if the named form exists and returns the result; otherwise
   # performs an alternate block and/or returns an alternate value.
-  def with_form(name, otherwise: nil, otherwise_return: nil, required?: false)
+  def with_form(name, otherwise: nil, otherwise_return: nil, required: false)
     if has_form?(name)
       return yield(form(name))
     else
-      raise "Form #{name} required but not present" if required?
+      raise "Form #{name} required but not present" if required
       otherwise_return ||= otherwise.call if otherwise
       return otherwise_return
     end
@@ -367,7 +370,7 @@ class FormManager
   # Add a submanager.
   # 
   def add_submanager(name, manager)
-    unless [ :last_year, :spouse ].include?(name)
+    unless [ :last_year, :spouse, :unamended ].include?(name)
       warn("Unexpected submanager name #{name}")
     end
     @submanagers[name] = manager

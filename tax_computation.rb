@@ -1,5 +1,6 @@
 require_relative 'tax_table'
 require_relative 'tax_form'
+require_relative 'form5329'
 
 class TaxComputation < TaxForm
 
@@ -121,11 +122,11 @@ class QdcgtWorksheet < TaxForm
     line[20] = line[10] - line[19]        # qdcg income left to account for
     line[21] = (line[20] * 0.20).round    # taxed at 20% rate
 
-    with_form('Tax Computation', required?: true) do |ftc|
-      line[22] = compute_more(ftc, :tax_standard, line[5])
-      line[23] = sum_lines(18, 21, 22)
-      line[24] = compute_more(ftc, :tax_standard, line[1])
-    end
+    ftc = form('Tax Computation')
+    line[22] = compute_more(ftc, :tax_standard, line[5])
+    line[23] = sum_lines(18, 21, 22)
+    line[24] = compute_more(ftc, :tax_standard, line[1])
+
     line['25/tax'] = [ line[23], line[24] ].min
   end
 end

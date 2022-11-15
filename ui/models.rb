@@ -33,6 +33,7 @@ class Marking
     def file_url
       uname = case @name
               when /^\d{4}$/ then "f#@name"
+              when /^\d{4}X$/ then "f#{@name.downcase}"
               when /^(\d{4})-(\w+)$/ then "f#$1#$2".downcase
               when /^(\d{4})-(\w+) Schedule (\w+)$/ then "f#$1#$2#$3".downcase
               when /^(\d{4}) Schedule (\w+)$/ then "f#$1s#$2".downcase

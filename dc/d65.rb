@@ -7,7 +7,7 @@ class FormD65 < TaxForm
   NAME = 'D-65'
 
   def year
-    2019
+    2021
   end
 
   def check_box(line_no, condition)
@@ -21,70 +21,66 @@ class FormD65 < TaxForm
   def compute
     f1065 = form(1065)
 
-    line[:ein] = f1065.line[:D].sub("-", "")
-    box_line(:ein, 9)
+    line[:ein] = f1065.line[:ein].sub("-", "")
     line[:tax_period] = "1231#{year}"
-    box_line(:tax_period, 4)
 
     line[:business_name] = f1065.line[:name]
-    box_line(:business_name, 25)
     addr, addr2 = f1065.line[:address], nil
     if addr.length > 26
       addr.match(/^(.{0,26}) (.*)$/) { |m| addr, addr2 = m[1], m[2] }
     end
     line[:address] = addr
-    box_line(:address, 26)
     if addr2
       line[:address2] = addr2
-      box_line(:address2, 26)
     end
 
     csz = f1065.line[:city_zip]
     if csz =~ /,? ([A-Z][A-Z]) (\d{5}(?:-\d{4})?)$/
       line[:city] = $`
-      box_line(:city, 20)
       line[:state] = $1
-      box_line(:state, 2)
       line[:zip] = $2
-      box_line(:zip, 5)
     else
       raise "Could not parse city, state, zip"
     end
 
     line[:agent_name] = f1065.line['PR.name']
     line[:agent_tin] = f1065.line['PR.tin!'].gsub("-", "")
-    box_line(:agent_name, 21)
-    box_line(:agent_tin, 9)
 
-    1.upto(22) do |n| box_line(n, 9) end
-
-    line[1] = f1065.line['1c']
+    copy_line(1, f1065, from: '1c')
     copy_line(2, f1065)
     line[3] = line[1] - line[2, :opt]
 
     copy_line(4, f1065)
     copy_line(5, f1065)
     copy_line(6, f1065)
-    copy_line(7, f1065)
 
-    line[8] = sum_lines(3, 4, 5, 6, 7)
+    # Line 7 has something to do with QOFs; it is assumed that this partnership
+    # is not for one. If it were, then Form 1065 Schedule B, line 25 suggests
+    # that Form 8996 would be attached.
+    with_form(8996) do |f|
+      raise "Qualified Opportunity Fund not implemented"
+    end
+    copy_line(8, f1065, from: :tot_inc)
 
-    copy_line(9, f1065)
-    copy_line(10, f1065)
-    copy_line(11, f1065)
-    copy_line(12, f1065)
-    copy_line(13, f1065)
-    copy_line(14, f1065)
-    copy_line(15, f1065)
-    copy_line(16, f1065)
-    copy_line(17, f1065)
-    copy_line(18, f1065)
-    copy_line(19, f1065)
-    copy_line(20, f1065)
+    line[9] = sum_lines(3, 4, 5, 6, 7, 8)
 
-    line[21] = sum_lines(*9..20)
+    copy_line(10, f1065, from: 9)
+    copy_line(11, f1065, from: 10)
+    copy_line(12, f1065, from: 11)
+    copy_line(13, f1065, from: 12)
+    copy_line(14, f1065, from: 13)
+    copy_line(15, f1065, from: 14)
+    copy_line(16, f1065, from: 15)
+    copy_line(17, f1065, from: '16c')
+    copy_line(18, f1065, from: 17)
+    copy_line(19, f1065, from: 18)
+    copy_line(20, f1065, from: 19)
+    # Line 21 relates to QOFs
+    copy_line(22, f1065, from: 20)
 
-    line[22] = line[8] - line[21]
+    line[23] = sum_lines(*10..22)
+
+    line[24] = line[9] - line[23]
 
 
     #
@@ -99,7 +95,6 @@ class FormD65 < TaxForm
     line['F2'] = (line['F1.2'] * 1.0 / line['F1.1']).round(6)
 
     line[:A] = f1065.line[:E].strftime("%m%y")
-    box_line(:A, 4)
 
     if f1065.line['H.1', :present]
       line['B.cash'] = '*'
@@ -111,7 +106,6 @@ class FormD65 < TaxForm
     end
 
     line[:C] = f1065.line[:I]
-    box_line(:C, 4)
     check_box(:D, f1065.line['B1b', :present])
 
     check_box(:E, f1065.line['B1c', :present])
@@ -119,24 +113,27 @@ class FormD65 < TaxForm
     partner_types = forms('1065 Schedule K-1').lines('I1')
     check_box(:F, !(partner_types & %w(Corporate Partnership)).empty?)
 
-    check_box(
-      :G, interview("Is this partnership a partner in another partnership?")
-    )
+    confirm("This partnership is not a partner in another partnership")
+    check_box(:G, false)
 
     check_box(:H, f1065.line['12a.yes', :present])
-    check_box(:I, interview('Was a D-65 filed for the preceding year?'))
-    check_box(:J, interview('Was a D-30 filed for the preceding year?'))
-    check_box(:K, interview('Did you file a ballpark fee return?'))
-    check_box(:L, interview('Did you file forms 1096 or 1099?'))
+    confirm("A D-65 was filed for the preceding year.")
+    check_box(:I, true)
+    confirm("A D-30 was not filed for the preceding year.")
+    check_box(:J, false)
+    confirm("A ballpark fee return was not filed.")
+    check_box(:K, false)
+    check_box(:L, f1065.line['16b.yes', :present])
 
-    if line[9, :opt] == 0
+    if line[10, :opt] == 0
       line['M.no'] = '*'
       line['M.expl'] = 'No employees'
     else
       raise 'DC wage withholding question not implemented'
     end
 
-    check_box(:N, interview('Was your previous year 1065 amended or changed?'))
+    confirm("Your previous year 1065 was not amended or changed.")
+    check_box(:N, false)
 
     line[:filing_explanation!, :all] = [
       'Explanation for Filing Form D-65 Rather Than Form D-30',

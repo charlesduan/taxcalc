@@ -14,6 +14,7 @@ require_relative 'form1040_e'
 require_relative 'form1040_se'
 require_relative 'form2441'
 require_relative 'form6251'
+require_relative 'form8889'
 require_relative 'form8959'
 require_relative 'form8960'
 require_relative 'form8995'
@@ -55,6 +56,7 @@ class Form1040 < TaxForm
     compute_form('1040 Schedule E')
     compute_form('1040 Schedule SE')
     compute_form(2441)
+    compute_form(8889)
   end
 
   def compute
@@ -81,8 +83,8 @@ class Form1040 < TaxForm
     line[:ssn] = @bio.line[:ssn]
 
     if @status.is('mfj')
-      copy_line(:first_name, @sbio)
-      copy_line(:last_name, @sbio)
+      line[:spouse_first_name] = @sbio.line[:first_name]
+      line[:spouse_last_name] = @sbio.line[:last_name]
     end
     if @status.is(%w(mfj mfs))
       line[:spouse_ssn] = @sbio.line[:ssn]
@@ -170,7 +172,8 @@ class Form1040 < TaxForm
     }
     line['1/wages'] = wages
     if forms('W-2').any? { |f| f.line[:cp_split!, :present] }
-      line['1/wages*note'] = "Line 1 based on community property allocation " \
+
+      line['wages*note'] = "Line 1 based on community property allocation " \
         "from Form 8958"
     end
 
@@ -269,12 +272,12 @@ class Form1040 < TaxForm
     line[19] = ctcw.line[:fill!]
 
     sched_3 = find_or_compute_form('1040 Schedule 3')
-    line[20] = sched_3.line[:nref_credits] if sched_3
+    line['20/nref_credits'] = sched_3.line[:nref_credits] if sched_3
     line[21] = sum_lines(19, 20)
 
     line[22] = [ line[18] - line[21], 0 ].max
 
-    line[23] = sched_2.line[:other_tax] if sched_2
+    line['23/other_tax'] = sched_2.line[:other_tax] if sched_2
 
     line['24/tot_tax'] = sum_lines(22, 23)
 
@@ -293,9 +296,9 @@ class Form1040 < TaxForm
     with_form(8959) do |f|
       line['25c'] = f.line[:mc_wh]
     end
-    line['25d'] = sum_lines(*%w(25a 25b 25c 25d))
+    line['25d/withholding'] = sum_lines(*%w(25a 25b 25c 25d))
 
-    line[26] = forms('Estimated Tax').lines('amount', :sum) + \
+    line['26/est_tax'] = forms('Estimated Tax').lines('amount', :sum) + \
       @manager.submanager(:last_year).form(1040).line(:refund_applied, :opt)
 
     # 27: earned income credit. Inapplicable for mfs status.
@@ -367,13 +370,14 @@ class Form1040 < TaxForm
 
     # Under the definition of "tax shown on your return," these forms are
     # listed, but they are not implemented in this program.
-    [ 7202, 8828, 4137, 5329, 8885, 8919 ].each do |f|
+    [ 7202, 8828, 4137, 8885, 8919 ].each do |f|
       raise "Penalty with form #{f} not implemented" if has_form?(f)
     end
 
     # Defined as "tax shown on your return" in the instructions
     tax_shown = line[:tot_tax] - sum_lines(*%w(17 18 19 30))
     with_form('1040 Schedule 3') do |f| tax_shown -= f.sum_lines(8, 11) end
+    with_form(5329) do |f| tax_shown -= f.tax_shown_adjustment end
 
     # The first test is given in the first bullet under "You may owe this
     # penalty"
