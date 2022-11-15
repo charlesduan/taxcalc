@@ -4,9 +4,9 @@
     "description": "A program for marking fields in tax forms",
     "dependencies": {
         "@nodegui/nodegui": "^0.30.3",
-        "canvas": "^2.8.0",
-        "pdfjs-dist": "^2.8.335",
-        "webpack": "^5.44.0",
+        "canvas": "^2.10.2",
+        "pdfjs-dist": "^2.16.105",
+        "webpack": "^5.75.0",
         "worker-loader": "^3.0.8"
     },
     "engines": {
