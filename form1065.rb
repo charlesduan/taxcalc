@@ -10,7 +10,7 @@ class Form1065 < TaxForm
   NAME = '1065'
 
   def year
-    2021
+    2022
   end
 
   def compute
@@ -189,10 +189,12 @@ class Form1065 < TaxForm
     line['B27.no'] = 'X'
     line['B28.no'] = 'X'
 
+    # Line 29 is "reserved for future use"
+
     confirm(
       "You do not want to opt out of the centralized partnership audit regime"
     )
-    line['B29.no'] = 'X'
+    line['B30.no'] = 'X'
 
     pr_name = bio.line[:rep]
     pr_form = forms('Partner').find { |x| x.line['name'] == pr_name }
@@ -223,6 +225,10 @@ class Form1065 < TaxForm
       line['K12'] = form(4562).line[12]
     end
 
+    #
+    # This needs to follow the worksheet if there are forms of income other than
+    # business income.
+    #
     line['K14a'] = line['K1']
 
     forms('Partner').each do |p|
@@ -252,13 +258,25 @@ class Form1065 < TaxForm
       line[:send_to!] = 'Ogden UT 84201-0011'
     end
 
+    # Keep track of profit-sharing plan contributions.
+    psp_contrib = BlankZero
 
     #
     # Compute Schedule K-1s.
     #
     forms('Partner').each do |p|
-      compute_form(Form1065K1.new(manager, p))
+      k1 = compute_form('1065 Schedule K-1', p)
+      psp_contrib += k1.match_table_value(
+        '13.code', 13, find: 'R', default: BlankZero
+      )
     end
+
+    if psp_contrib > 0
+      line['K13d.code'] = 'R'
+      line['K13d'] = psp_contrib
+    end
+
+
   end
 end
 

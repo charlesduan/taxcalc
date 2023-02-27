@@ -34,12 +34,13 @@ class Form1040E < TaxForm
       )
     end
 
-    home_office_partnership do |ho_form, deduction|
+    form('Home Office Manager').each_match(:type => 'partnership') do |h|
       upes.push(
-        '28a' => "UPE (#{ho_form.line[:ein]})",
-        '28i' => deduction,
+        '28a' => "UPE (#{h[:ein]})",
+        '28i' => h[:amount]
       )
     end
+
     if upes.empty?
       line['27.no'] = 'X'
     else

@@ -1,4 +1,5 @@
 require 'tax_form'
+require 'pub560'
 
 class Form1065K1 < TaxForm
 
@@ -69,6 +70,23 @@ class Form1065K1 < TaxForm
     line[12] = (f1065.line['K12'] * share).round if f1065.line[:K12, :present]
     line[14] = (f1065.line['K14a'] * share).round
     line['14.code'] = 'A'
+
+    bio = form('Partnership') { |f| f.line[:ein] == line[:ein] }
+
+    #
+    # Compute the partnership's employer contribution to a 401(k).
+    #
+    if bio.line['401k_contrib', :present]
+      ws = compute_form(
+        'Pub. 560 Worksheet',
+        ssn: line[:ssn],
+        contrib_frac: bio.line['401k_contrib'],
+      )
+      ws.add_table_row(
+        '13.code' => 'R',
+        13 => ws.line[:max_contrib]
+      )
+    end
   end
 
 end
