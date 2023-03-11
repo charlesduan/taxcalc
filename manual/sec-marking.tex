@@ -29,6 +29,11 @@ parts: A Ruby wrapper that manages the data files, and a Node-based UI. The two
 communicate via Unix anonymous pipes, transmitting JSON objects between each
 other.
 
+The Nodegui dependencies are not included in the repository. To install them,
+run \texttt{npm install} in the \texttt{taxcalc/ui} directory. The version
+numbers in the \texttt{package.json} file should probably be updated first and
+the \texttt{package-lock.json} file removed so it can be rebuilt.
+
 If, in the future, Nodegui proves unworkable, it likely would not be difficult
 either to turn the UI component into an Electron app or to switch to a different
 framework entirely, retaining the Ruby wrapper as-is.

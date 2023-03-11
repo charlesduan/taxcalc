@@ -37,6 +37,7 @@ class Marking
               when /^(\d{4})-(\w+)$/ then "f#$1#$2".downcase
               when /^(\d{4})-(\w+) Schedule (\w+)$/ then "f#$1#$2#$3".downcase
               when /^(\d{4}) Schedule (\w+)$/ then "f#$1s#$2".downcase
+              when /^(\d{4}) Schedule (\w+)-(\w+)$/ then "f#$1s#$2#$3".downcase
               when /Pub\. ([\w-]+)/ then "p#$1".downcase.gsub('-', '')
               when /^1040 .*Worksheet/ then "i1040gi"
               when /^(\d{4}) .*Worksheet/ then "i#$1"

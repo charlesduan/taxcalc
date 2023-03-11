@@ -61,9 +61,11 @@ function setfd(read, write) {
 }
 
 function shutdown() {
-    readStream.close();
-    rawReadStream.close();
-    writeStream.close();
+    if (readStream) {
+        readStream.close();
+        rawReadStream.close();
+        writeStream.close();
+    }
 }
 
 module.exports = {

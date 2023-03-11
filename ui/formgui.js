@@ -24,7 +24,7 @@ let lineBoxes = {};
 
 
 const win = new gui.QMainWindow();
-//win.resize(612 * 2 + 20, 792 * 2);
+win.resize(612 * 2 + 20, 1000);
 
 win.addEventListener(gui.WidgetEventTypes.Close,
     (evt) => { bridge.shutdown(); });
@@ -90,7 +90,7 @@ rootView.setStyleSheet(`
 const toolBar = new gui.QWidget();
 const toolBarLayout = new gui.FlexLayout();
 toolBarLayout.setFlexNode(toolBar.getFlexNode());
-toolBar.setLayout(new gui.FlexLayout());
+toolBar.setLayout(toolBarLayout);
 toolBar.setObjectName("toolBar");
 rootLayout.addWidget(toolBar);
 
