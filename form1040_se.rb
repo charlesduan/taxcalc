@@ -21,7 +21,7 @@ class Form1040SE < TaxForm
     bios = forms('Biographical') { |f| f.line['ssn'] == @ssn }
     raise "Ambiguous SSN for Schedule SE" if bios.count != 1
     @bio = bios.first
-    line[:name] = @bio.line[:first_name] + ' ' + bio.line[:last_name]
+    line[:name] = @bio.line[:first_name] + ' ' + @bio.line[:last_name]
     line[:ssn] = @ssn
 
     #
@@ -47,10 +47,13 @@ class Form1040SE < TaxForm
       f.line[:ssn] == @ssn
     }.lines(:amount, :sum)
 
-    se_reduce += ho_mgr.each_match(
+    se_reduce += ho_mgr.total_matching(
       :type => 'partnership',
       :ssn => @ssn,
     )
+
+    line['2.inc!'] = se_inc
+    line['2.reduce!'] = se_reduce
 
     line[2] = se_inc - se_reduce
     if se_reduce >= 0
@@ -73,7 +76,7 @@ class Form1040SE < TaxForm
     # Assuming no church employee income
 
     line['6/se_inc'] = sum_lines('4c', '5b')
-    line['7!'] = 147_700 # Maximum social security wages, 2022
+    line['7!'] = 147_000 # Maximum social security wages, 2022
 
     relevant_w2 = forms('W-2') { |f|
       f.line[:a] == @ssn

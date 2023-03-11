@@ -144,7 +144,7 @@ class Pub587Worksheet < TaxForm
     line[2] = @ho_form.line['total_sqft']
     line[3] = (line[1] * 100.0 / line[2]).round(2)
 
-    line[4] = gross_income
+    line['4/gross_inc'] = gross_income
 
     # We make a simplifying assumption that (1) every Home Office Expense
     # applies to every Home Office form, and (2) all expenses are indirect.
@@ -164,7 +164,7 @@ class Pub587Worksheet < TaxForm
     line[11] = other_business_expenses
 
     line[12] = sum_lines(10, 11)
-    line[13] = line[4] - line[12]
+    line['13/ho_max_ded'] = line[4] - line[12]
 
     fill_for_categories(self, '16b', 'Insurance')
     fill_for_categories(self, '17b', 'Rent')
@@ -177,7 +177,7 @@ class Pub587Worksheet < TaxForm
     line[22] = (line['21b'] * line[3] / 100.0).round
 
     # Assume no carryover for line 23
-    line[24] = sum_lines('21a', 22, 23)
+    line['24/ho_ded'] = sum_lines('21a', 22, 23)
     line[25] = [ line[13], line[24] ].min
     line[26] = line[13] - line[25]
 

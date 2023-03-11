@@ -24,13 +24,15 @@ let lineBoxes = {};
 
 
 const win = new gui.QMainWindow();
-win.resize(612 * 2 + 20, 792 * 2);
+//win.resize(612 * 2 + 20, 792 * 2);
 
 win.addEventListener(gui.WidgetEventTypes.Close,
     (evt) => { bridge.shutdown(); });
 
 const rootView = new gui.QWidget();
-rootView.setLayout(new gui.FlexLayout());
+const rootLayout = new gui.FlexLayout();
+rootLayout.setFlexNode(rootView.getFlexNode());
+rootView.setLayout(rootLayout);
 rootView.setObjectName("rootView");
 win.setCentralWidget(rootView);
 
@@ -86,51 +88,53 @@ rootView.setStyleSheet(`
 /* Toolbar */
 
 const toolBar = new gui.QWidget();
-toolBar.setObjectName("toolBar");
-rootView.layout.addWidget(toolBar);
+const toolBarLayout = new gui.FlexLayout();
+toolBarLayout.setFlexNode(toolBar.getFlexNode());
 toolBar.setLayout(new gui.FlexLayout());
+toolBar.setObjectName("toolBar");
+rootLayout.addWidget(toolBar);
 
 const formNameLabel = new gui.QLabel();
 formNameLabel.setText("(No form loaded)");
-toolBar.layout.addWidget(formNameLabel);
+toolBarLayout.addWidget(formNameLabel);
 
 let w = new gui.QLabel();
 w.setText("Page");
-toolBar.layout.addWidget(w);
+toolBarLayout.addWidget(w);
 
 const prevPageButton = new gui.QPushButton();
 prevPageButton.setText("<");
-toolBar.layout.addWidget(prevPageButton);
+toolBarLayout.addWidget(prevPageButton);
 
 const pageSelector = new gui.QComboBox();
 pageSelector.setObjectName("pageSelector");
-toolBar.layout.addWidget(pageSelector);
+toolBarLayout.addWidget(pageSelector);
 
 const nextPageButton = new gui.QPushButton();
 nextPageButton.setText(">");
-toolBar.layout.addWidget(nextPageButton);
+toolBarLayout.addWidget(nextPageButton);
 
 w = new gui.QLabel();
 w.setText("Line");
-toolBar.layout.addWidget(w);
+toolBarLayout.addWidget(w);
 
 const lineSelector = new gui.QComboBox();
 lineSelector.setObjectName("lineSelector");
-toolBar.layout.addWidget(lineSelector);
+toolBarLayout.addWidget(lineSelector);
 
 w = new gui.QLabel();
 w.setText("Split line?");
-toolBar.layout.addWidget(w);
+toolBarLayout.addWidget(w);
 
 const splitLineCheck = new gui.QCheckBox();
-toolBar.layout.addWidget(splitLineCheck);
+toolBarLayout.addWidget(splitLineCheck);
 
 const splitSepLabel = new gui.QLabel();
 splitSepLabel.setText("Split Separator");
-toolBar.layout.addWidget(splitSepLabel);
+toolBarLayout.addWidget(splitSepLabel);
 
 const splitSepEditor = new gui.QLineEdit();
-toolBar.layout.addWidget(splitSepEditor);
+toolBarLayout.addWidget(splitSepEditor);
 
 function hideSplitEditor() {
     splitLineCheck.setChecked(false);
@@ -218,14 +222,17 @@ nextPageButton.addEventListener('clicked', (evt) => {
 const scrollArea = new gui.QScrollArea(win);
 scrollArea.setObjectName("scrollArea");
 
-rootView.layout.addWidget(scrollArea);
+rootLayout.addWidget(scrollArea);
 
 var pdfContainer;
+var pdfContainerLayout;
 
 function makeContainer() {
     let startPoint, endPoint, dragWidget;
     pdfContainer = new gui.QWidget();
-    pdfContainer.setLayout(new gui.FlexLayout(0));
+    pdfContainerLayout = new gui.FlexLayout(0);
+    pdfContainerLayout.setFlexNode(pdfContainer.getFlexNode());
+    pdfContainer.setLayout(pdfContainerLayout);
     pdfContainer.setObjectName("container");
 
     scrollArea.setWidget(pdfContainer);
@@ -267,7 +274,7 @@ function makeContainer() {
             if (dragWidget === undefined) {
                 dragWidget = new gui.QLabel();
                 dragWidget.setObjectName("dragWidget");
-                pdfContainer.layout.addWidget(dragWidget);
+                pdfContainerLayout.addWidget(dragWidget);
             }
             const rect = new Rectangle(startPoint, endPoint);
             rect.setWidgetPos(dragWidget);
@@ -281,7 +288,7 @@ function makeContainer() {
             const mouseEvt = new gui.QMouseEvent(evt);
             endPoint = new Point(mouseEvt.x(), mouseEvt.y());
             const rect = new Rectangle(startPoint, endPoint);
-            pdfContainer.layout.removeWidget(dragWidget);
+            pdfContainerLayout.removeWidget(dragWidget);
             dragWidget.hide();
             dragWidget = undefined;
             addLineBox(rect);
@@ -335,7 +342,7 @@ async function displayPage() {
         const pdfDisplay = new gui.QLabel();
         image.loadFromData(buffer, "PNG");
         pdfDisplay.setPixmap(image);
-        pdfContainer.layout.addWidget(pdfDisplay);
+        pdfContainerLayout.addWidget(pdfDisplay);
         pdfContainer.resize(image.width(), image.height());
 
         bridge.send("selectPage", { page });
@@ -364,7 +371,7 @@ function drawLineBox(id, page, pos) {
         gui.WidgetEventTypes.MouseButtonDblClick,
         (evt) => bridge.send("removeLine", { id })
     );
-    pdfContainer.layout.addWidget(label);
+    pdfContainerLayout.addWidget(label);
 
     // Should not happen in production; the box should already have been removed
     if (lineBoxes[id]) {
@@ -395,7 +402,7 @@ function findNextSplitBox(line, page, pos) {
 function removeLineBox(id) {
     const label = lineBoxes[id];
     if (label) {
-        pdfContainer.layout.removeWidget(label);
+        pdfContainerLayout.removeWidget(label);
         label.hide();
         delete lineBoxes[id];
     }

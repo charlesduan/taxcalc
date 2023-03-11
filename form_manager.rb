@@ -131,15 +131,15 @@ class FormManager
   # the form requires computing any subforms that expect the form under
   # computation to be present.
   #
-  def compute_form(f, *args)
+  def compute_form(f, *args, **params)
     case f
     when TaxForm
       form = f
     when Class
-      form = f.new(self, *args)
+      form = f.new(self, *args, **params)
       raise "Invalid type #{f}" unless form.is_a?(TaxForm)
     when String, Numeric
-      form = TaxForm.by_name(f.to_s).new(self, *args)
+      form = TaxForm.by_name(f.to_s).new(self, *args, **params)
     else
       raise "Unexpected type #{f.class} for compute_form"
     end

@@ -6,7 +6,7 @@ class Form1065K1 < TaxForm
   NAME = '1065 Schedule K-1'
 
   def year
-    2021
+    2022
   end
 
   def initialize(manager, partner_form)
@@ -82,7 +82,7 @@ class Form1065K1 < TaxForm
         ssn: line[:ssn],
         contrib_frac: bio.line['401k_contrib'],
       )
-      ws.add_table_row(
+      add_table_row(
         '13.code' => 'R',
         13 => ws.line[:max_contrib]
       )

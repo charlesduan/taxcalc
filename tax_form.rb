@@ -398,15 +398,15 @@ class TaxForm
   #
   # Convenience method for FormManager#compute_form.
   #
-  def compute_form(name, *args, &block)
-    @manager.compute_form(name, *args, &block)
+  def compute_form(name, *args, **params, &block)
+    @manager.compute_form(name, *args, **params, &block)
   end
 
   #
   # Convenience method for FormManager#compute_more.
   #
-  def compute_more(*args)
-    @manager.compute_more(*args)
+  def compute_more(*args, **params)
+    @manager.compute_more(*args, **params)
   end
 
   #
