@@ -17,6 +17,7 @@ require_relative 'form_filler'
   posdata: "posdata.yaml",
   prefix: nil,
   bio: nil,
+  even: true,
 )
 
 OptionParser.new do |opts|
@@ -38,6 +39,10 @@ OptionParser.new do |opts|
 
   opts.on("-p", "--prefix PREFIX", "Set a filename prefix") do |prefix|
     @options.prefix = "#{prefix}-"
+  end
+
+  opts.on("-n", "--noblank", "Suppress blank pages") do
+    @options.even = false
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
@@ -96,6 +101,7 @@ forms.each do |tax_form|
   puts "Filling Form #{tax_form.name}"
 
   filler = FormFiller.new(tax_form, pos_form)
+  filler.even_pages = @options.even
   filler.continuation_bio = bio
 
   # Deal with multiple forms of the same name

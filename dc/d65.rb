@@ -1,13 +1,14 @@
 require 'tax_form'
 require 'date'
 require 'dc/d65_distrib'
+require 'dc/fr165'
 
 class FormD65 < TaxForm
 
   NAME = 'D-65'
 
   def year
-    2021
+    2022
   end
 
   def check_box(line_no, condition)
@@ -60,7 +61,7 @@ class FormD65 < TaxForm
     with_form(8996) do |f|
       raise "Qualified Opportunity Fund not implemented"
     end
-    copy_line(8, f1065, from: :tot_inc)
+    copy_line(8, f1065, from: 7)
 
     line[9] = sum_lines(3, 4, 5, 6, 7, 8)
 
@@ -146,6 +147,10 @@ class FormD65 < TaxForm
 
     compute_form('Schedule of Pass-Through Distribution of Income')
     line[:continuation!] = 'Schedule of Pass-Through Distribution of Income'
+
+    line[:telephone] = f1065.line['PR.phone'].gsub(/\D/, '')
+
+    compute_form('FR-165')
 
   end
 end

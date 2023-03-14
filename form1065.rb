@@ -4,6 +4,7 @@ require 'expense_manager'
 require 'asset_manager'
 require 'form1065_b1'
 require 'form1065_k1'
+require 'form7004'
 
 class Form1065 < TaxForm
 
@@ -276,6 +277,7 @@ class Form1065 < TaxForm
       line['K13d'] = psp_contrib
     end
 
+    compute_form(7004)
 
   end
 end
