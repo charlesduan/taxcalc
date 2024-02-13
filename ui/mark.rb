@@ -123,7 +123,7 @@ pid = fork do
   @rubyWr.close
   Dir.chdir(File.dirname(__FILE__))
   exec(
-    './qode', 'main.js',
+    'qode', 'main.js',
     @nodeRd.fileno.to_s, @nodeWr.fileno.to_s,
     @nodeRd => @nodeRd, @nodeWr => @nodeWr
   )

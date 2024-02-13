@@ -16,7 +16,7 @@ class FormFR165 < TaxForm
     line[:tax_period] = "1231#{year}"
     copy_line(:name, bio)
     copy_line(:address, bio)
-    csz = f1065.line[:city_zip]
+    csz = bio.line[:city_zip]
     if csz =~ /,? ([A-Z][A-Z]) (\d{5}(?:-\d{4})?)$/
       line[:city] = $`
       line[:state] = $1
