@@ -5,24 +5,25 @@ class FormFR165 < TaxForm
   NAME = 'FR-165'
 
   def year
-    2022
+    2023
   end
 
   def compute
 
-    d65 = form('D-65')
+    bio = form('Partnership')
 
-    copy_line(:ein, d65)
-    copy_line(:tax_period, d65)
-    copy_line(:business_name, d65)
-    if d65.line(:address2, :present)
-      line[:address] = d65.line[:address] + ' ' + d65.line[:address2]
+    copy_line(:ein, bio)
+    line[:tax_period] = "1231#{year}"
+    copy_line(:name, bio)
+    copy_line(:address, bio)
+    csz = f1065.line[:city_zip]
+    if csz =~ /,? ([A-Z][A-Z]) (\d{5}(?:-\d{4})?)$/
+      line[:city] = $`
+      line[:state] = $1
+      line[:zip] = $2
     else
-      copy_line(:address, d65)
+      raise "Could not parse city, state, zip"
     end
-    copy_line(:city, d65)
-    copy_line(:state, d65)
-    copy_line(:zip, d65)
 
     line[:extension_month] = 'Oct.'
 

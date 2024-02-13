@@ -4,15 +4,15 @@ class Form7004 < TaxForm
 
   NAME = '7004'
   def year
-    2022
+    2023
   end
 
   def compute
-    f1065 = form(1065)
-    copy_line(:name, f1065)
-    copy_line(:ein, f1065)
-    copy_line(:address, f1065)
-    copy_line(:city_zip, f1065)
+    bio = form('Partnership')
+    copy_line(:name, bio)
+    copy_line(:ein, bio)
+    copy_line(:address, bio)
+    copy_line(:city_zip, bio)
 
     line[1] = '09'
     line['5a'] = year.to_s[2..3]
