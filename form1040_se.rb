@@ -6,7 +6,7 @@ class Form1040SE < TaxForm
   NAME = '1040 Schedule SE'
 
   def year
-    2022
+    2023
   end
 
   def initialize(manager, ssn)
@@ -18,9 +18,7 @@ class Form1040SE < TaxForm
 
     ho_mgr = find_or_compute_form('Home Office Manager')
 
-    bios = forms('Biographical') { |f| f.line['ssn'] == @ssn }
-    raise "Ambiguous SSN for Schedule SE" if bios.count != 1
-    @bio = bios.first
+    @bio = form('Biographical') { |f| f.line['ssn'] == @ssn }
     line[:name] = @bio.line[:first_name] + ' ' + @bio.line[:last_name]
     line[:ssn] = @ssn
 
@@ -76,12 +74,15 @@ class Form1040SE < TaxForm
     # Assuming no church employee income
 
     line['6/se_inc'] = sum_lines('4c', '5b')
-    line['7!'] = 147_000 # Maximum social security wages, 2022
+    line['7!'] = 160_200 # Maximum social security wages, 2022
 
     relevant_w2 = forms('W-2') { |f|
       f.line[:a] == @ssn
     }
     line['8a'] = relevant_w2.lines(3, :sum) + relevant_w2.lines(7, :sum)
+
+    # The current instructions state to skip to line 11 if line 8a is over the
+    # limit (line 7). But the computations below will reach the same result.
 
     # Lines 8b and 8c relate to unreported tips and employee wages
     # miscategorized as independent contractor payments. These two assertions

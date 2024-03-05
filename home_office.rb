@@ -47,6 +47,8 @@ class HomeOfficeManager < TaxForm
   # for purposes of filling in forms.
 
   def each_match(hash)
+    return unless line[:type, :present]
+
     line[:type, :all].count.times do |i|
       next unless hash.all? { |k, v| line[k, :all][i] == v }
       yield(

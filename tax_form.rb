@@ -649,6 +649,10 @@ class TaxForm
 
     end
 
+    #
+    # For any line numbers given, rearrange them such that they appear in the
+    # given order.
+    #
     def place_lines(*nums)
       nums.each do |num|
         num = resolve_alias(num)

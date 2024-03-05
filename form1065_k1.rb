@@ -6,7 +6,7 @@ class Form1065K1 < TaxForm
   NAME = '1065 Schedule K-1'
 
   def year
-    2022
+    2023
   end
 
   def initialize(manager, partner_form)
@@ -68,13 +68,22 @@ class Form1065K1 < TaxForm
     line[1] = (f1065.line['K1'] * share).round
     line[5] = (f1065.line['K5'] * share).round if f1065.line[:K5, :present]
     line[12] = (f1065.line['K12'] * share).round if f1065.line[:K12, :present]
-    line[14] = (f1065.line['K14a'] * share).round
-    line['14.code'] = 'A'
-
     bio = form('Partnership') { |f| f.line[:ein] == line[:ein] }
 
     #
-    # Compute the partnership's employer contribution to a 401(k).
+    # Line 14 must be computed before line 13 because line 13, the retirement
+    # contributions, depends on the self-employment income computed in line 14.
+    #
+    line[14] = (f1065.line['K14a'] * share).round
+    line['14.code'] = 'A'
+
+    #
+    # Compute the partnership's employer contribution to a 401(k). This is
+    # programmatically a little unsatisfying, as the Schedule K-1 should be
+    # purely computed off of the 1065, but here the schedule performs the
+    # computation that the 1065 uses. A better approach would be to have a 401k
+    # contribution manager that determines each partner's profit-sharing
+    # allocation.
     #
     if bio.line['401k_contrib', :present]
       ws = compute_form(
@@ -87,6 +96,9 @@ class Form1065K1 < TaxForm
         13 => ws.line[:max_contrib]
       )
     end
+
+    place_lines('13.code', 13, '14.code', 14)
+
   end
 
 end

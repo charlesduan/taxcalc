@@ -76,6 +76,8 @@ they detect conditions that are not implemented. In some cases, detecting the
 condition will not be possible on the data alone, in which an interview question
 is asked to determine that the special condition is not present.
 
+
+
 \emph{Form checking.} For input forms, it is assumed that the user may fail to
 enter certain ones. As a result, when a computation uses an input form that is
 not present, a warning is given unless the user has explicitly indicated that
@@ -89,4 +91,6 @@ be present unless the ``:opt'' option is given as described above, and it must
 not be an array unless an array was expected.
 
 
+\emph{Online Explanations.} The FormManager.explain(\emph{form}) method will
+display each line's value to the console as it is computed. 
 

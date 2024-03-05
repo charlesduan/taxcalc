@@ -1,4 +1,5 @@
 const Canvas = require("canvas");
+const fs = require("fs");
 const fsPromises = require("fs/promises");
 const pdfjs = require("pdfjs-dist/legacy/build/pdf.js");
 

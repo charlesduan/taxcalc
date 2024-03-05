@@ -11,7 +11,7 @@ class Form1065 < TaxForm
   NAME = '1065'
 
   def year
-    2022
+    2023
   end
 
   def compute
@@ -56,7 +56,12 @@ class Form1065 < TaxForm
       line['H.other'] = bio.line('accounting')
     end
 
-    line['I'] = forms('Partner').count
+    partners = forms('Partner')
+    unless partners.all? { |f| f.line[:ein] == bio.line(:ein) }
+      raise "Partners' EIN records don't match the partnership's"
+    end
+
+    line['I'] = partners.count
 
     # Line J need not be filled for partnerships with less than $35M in total
     # receipts or $10M in assets, and which has no reportable entity partner (a
@@ -94,14 +99,19 @@ class Form1065 < TaxForm
       17 => 'Depletion',
       18 => 'Employee_Plans',
       19 => 'Employee_Benefits',
-    }, other: 20, continuation: 'Line 20 Statement of Business Expenses')
+      # 2023: line 20 energy efficient buildings deduction not implemented
+    }, other: 21, continuation: 'Line 21 Statement of Business Expenses')
 
+    # Rearrange the lines
+    place_lines(9, 10, 11, 12, 13, 14, 15, '16a', '16b', 17, 18, 19, 20, 21)
 
-    line[21] = sum_lines(9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20)
-    line[22] = line[8] - line[21]
+    line['22/tot_ded'] = sum_lines(
+      9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20
+    )
+    line['23/ord_inc'] = line[:tot_inc] - line[:tot_ded]
 
-    # The taxes on lines 23-24 appear to apply only to partnerships that aren't
-    # closely held. Line 25 applies to "administrative adjustment requests"
+    # The taxes on lines 24-25 appear to apply only to partnerships that aren't
+    # closely held. Line 26 applies to "administrative adjustment requests"
     # under the Bipartisan Budget Act of 2015, which appears to occur only when
     # the partnership seeks to adjust a previous filing.
 
@@ -134,7 +144,7 @@ class Form1065 < TaxForm
       "The answer to every question on Schedule B (other than 2 and 4) is `no'"
     )
 
-    big_indiv, big_inst = forms('Partner').map { |f|
+    big_indiv, big_inst = partners.map { |f|
       if f.line[:share] >= 0.5 || f.line[:capital] >= 0.5
         f.line[:type]
       else
@@ -161,11 +171,12 @@ class Form1065 < TaxForm
     line['B10a.no'] = 'X'
     line['B10b.no'] = 'X'
     line['B10c.no'] = 'X'
+    line['B10d.no'] = 'X'
     line['B12.no'] = 'X'
 
     # Line 13 is unfilled
 
-    if forms('Partner').lines('nationality', :all).any? { |x| x != 'domestic' }
+    if partners.lines('nationality', :all).any? { |x| x != 'domestic' }
       raise "Foreign partners not currently handled"
     end
 
@@ -190,15 +201,18 @@ class Form1065 < TaxForm
     line['B27.no'] = 'X'
     line['B28.no'] = 'X'
 
-    # Line 29 is "reserved for future use"
+    # Line 29 applies to partnerships with some relationship to a foreign
+    # entity. Line 30 deals with cryptocurrency.
+    line['B29.no'] = 'X'
+    line['B30.no'] = 'X'
 
     confirm(
       "You do not want to opt out of the centralized partnership audit regime"
     )
-    line['B30.no'] = 'X'
+    line['B31.no'] = 'X'
 
     pr_name = bio.line[:rep]
-    pr_form = forms('Partner').find { |x| x.line['name'] == pr_name }
+    pr_form = partners.find { |x| x.line['name'] == pr_name }
     unless pr_form
       raise "No partner named #{pr_name} for the partnership representative"
     end
@@ -219,7 +233,7 @@ class Form1065 < TaxForm
     #
     ########################################################################
 
-    line['K1'] = line[22]
+    line['K1'] = line[:ord_inc]
     line['K5'] = forms('1099-INT').lines(1, :sum)
     assert_no_forms('1099-DIV')
     if has_form?(4562)
@@ -232,7 +246,7 @@ class Form1065 < TaxForm
     #
     line['K14a'] = line['K1']
 
-    forms('Partner').each do |p|
+    partners.each do |p|
       warn("No support for inactive partners") unless p.line[:active?]
       unless p.line[:liability] == 'general'
         warn("No support for limited partners")
@@ -265,7 +279,7 @@ class Form1065 < TaxForm
     #
     # Compute Schedule K-1s.
     #
-    forms('Partner').each do |p|
+    partners.each do |p|
       k1 = compute_form('1065 Schedule K-1', p)
       psp_contrib += k1.match_table_value(
         '13.code', 13, find: 'R', default: BlankZero
@@ -277,7 +291,10 @@ class Form1065 < TaxForm
       line['K13d'] = psp_contrib
     end
 
-    compute_form(7004)
+    #
+    # This should be completed separately.
+    #
+    # compute_form(7004)
 
   end
 end

@@ -12,7 +12,7 @@ class FormFR165 < TaxForm
 
     bio = form('Partnership')
 
-    copy_line(:ein, bio)
+    line[:ein] = bio.line[:ein].gsub(/\D/, '')
     line[:tax_period] = "1231#{year}"
     copy_line(:name, bio)
     copy_line(:address, bio)

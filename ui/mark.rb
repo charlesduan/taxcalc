@@ -4,6 +4,8 @@ require 'yaml'
 require 'json'
 require 'optparse'
 require 'ostruct'
+require 'fcntl'
+
 
 require_relative 'controller'
 require_relative '../form_manager'
@@ -37,8 +39,12 @@ OptionParser.new do |opts|
     @options.posdata = file
   end
 
-  opts.on("-d", "--download", "Download the form online") do
+  opts.on("-d", "--download", "Download based on an expected IRS URL") do
     @options.download = true
+  end
+
+  opts.on("-u", "--url URL", "Download from the given URL") do |url|
+    @options.download = url
   end
 
   opts.on("-f", "--file FILE", "Select the form's PDF file") do |file|
@@ -64,6 +70,17 @@ end.parse!
 
 @rubyRd, @nodeWr = IO.pipe
 @nodeRd, @rubyWr = IO.pipe
+
+#
+# Node.js expects blocking file descriptors
+#
+@nodeRd.fcntl(
+  Fcntl::F_SETFL, @nodeRd.fcntl(Fcntl::F_GETFL) & ~Fcntl::O_NONBLOCK
+);
+@nodeWr.fcntl(
+  Fcntl::F_SETFL, @nodeWr.fcntl(Fcntl::F_GETFL) & ~Fcntl::O_NONBLOCK
+);
+
 @controller = Marking::Controller.new(@rubyWr)
 
 # Load the posdata and import tax forms
@@ -123,7 +140,7 @@ pid = fork do
   @rubyWr.close
   Dir.chdir(File.dirname(__FILE__))
   exec(
-    'qode', 'main.js',
+    './qode', 'main.js',
     @nodeRd.fileno.to_s, @nodeWr.fileno.to_s,
     @nodeRd => @nodeRd, @nodeWr => @nodeWr
   )

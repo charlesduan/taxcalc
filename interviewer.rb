@@ -95,6 +95,7 @@ class Interviewer
     end
 
     case data
+    when nil then raise "Nil data for #{question}"
     when '-' then BlankZero
     when /^-?\d+$/ then data.to_i
     when /^-?\d*\.\d*$/ then data.to_f
