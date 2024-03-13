@@ -53,7 +53,7 @@ class Form1040_3 < TaxForm
     compute_form('1040 Schedule R') && raise("Can't handle Schedule R")
     # None of the other credits seem relevant.
 
-    line['7/nref_credits'] = sum_lines(*1..6)
+    line['8/nref_credits'] = sum_lines(*1..6)
 
     #
     # Part II

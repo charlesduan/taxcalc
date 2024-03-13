@@ -45,7 +45,7 @@ class Form1040_1 < TaxForm
     end
 
     other_income
-    line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
+    line['10/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
 
   end
 
@@ -65,8 +65,8 @@ class Form1040_1 < TaxForm
       end
     end
 
-    line['8.expl/other_tax_expl'] = @expls.join("; ")
-    line['8/other_tax'] = @amt
+    line['8.expl/other_inc_expl'] = @expls.join("; ")
+    line['8/other_inc'] = @amt
   end
 
   def add_other_income(expl, amt)
@@ -85,11 +85,11 @@ class Form1040_1 < TaxForm
     #
 
     with_form(8889) do |f|
-      line[12] = f.line[:hsa_ded]
+      line['13/hsa_adj'] = f.line[:hsa_ded]
     end
 
     with_form('1040 Schedule SE') do |sched_se|
-      line[14] = sched_se.line[:se_ded]
+      line['15/se_tax_ded'] = sched_se.line[:se_ded]
     end
 
     # Line 15 is where the self-employment IRA contributions go
@@ -100,14 +100,14 @@ class Form1040_1 < TaxForm
 
     ira_analysis = form('IRA Analysis')
     compute_more(ira_analysis, :continuation)
-    line[19] = ira_analysis.line[:deductible_contrib]
+    line['20/ira_ded'] = ira_analysis.line[:deductible_contrib]
 
     # Line 20
     if !form(1040).status.is(:mfs)
       raise "Student loan interest deduction not implemented"
     end
 
-    line['22/adj_inc'] = sum_lines(
+    line['26/adj_inc'] = sum_lines(
       10, 11, 12, 13, 14, 15, 16, 17, '18a', 19, 20, 21
     )
   end

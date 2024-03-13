@@ -59,6 +59,8 @@ class Pub590AWorksheet1_2 < TaxForm
     # definition of compensation is complex, and needs to be updated if unusual
     # forms of compensation are to be included.
     compensation = form(1040).line[:wages]
+    compensation += form(1040).line[:combat_pay, :opt]
+    # Commissions should be included here
     with_form('1040 Schedule 1') do |f|
       compensation += f.line[:alimony]
     end

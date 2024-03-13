@@ -63,7 +63,7 @@ class Form1040_2 < TaxForm
     end
     line[8] = l8
 
-    line['10/other_tax'] = sum_lines(4, 5, 6, '7a', '7b', 8)
+    line['21/other_tax'] = sum_lines(4, 5, 6, '7a', '7b', 8)
   end
 
   def needed?
