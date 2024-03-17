@@ -1,5 +1,9 @@
 require 'tax_form'
 
+#
+# Partnership return extension of time.
+#
+
 class Form7004 < TaxForm
 
   NAME = '7004'

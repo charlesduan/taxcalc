@@ -345,15 +345,15 @@ class TaxForm
   #
   # Convenience for FormManager#form.
   #
-  def form(num, &block)
-    @manager.form(num, &block)
+  def form(num, ssn: nil, &block)
+    @manager.form(num, ssn: ssn, &block)
   end
 
   #
   # Convenience for FormManager#form.
   #
-  def forms(num, &block)
-    @manager.forms(num, &block)
+  def forms(num, ssn: nil, &block)
+    @manager.forms(num, ssn: ssn, &block)
   end
 
   #

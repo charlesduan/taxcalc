@@ -210,18 +210,24 @@ class FormManager
   # Retrieves a single form with the given name. Produces an error if no form
   # with that name is present or if multiple forms with that name are present. A
   # block may be given, in which case that block will be used to select among
-  # multiple matching forms; still, only one form should ultimately match.
+  # multiple matching forms; still, only one form should ultimately match. An
+  # SSN may be given, in which case only forms with the line :ssn matching the
+  # given value will be returned.
   #
-  def form(name)
+  def form(name, ssn: nil)
     name = name.to_s
     raise "No form #{name}" unless @forms[name]
     if @forms[name].is_a?(Enumerable)
       forms = @forms[name]
+      forms = forms.select { |f| f.line[:ssn] == ssn } if ssn
       forms = forms.select { |f| yield(f) } if block_given?
-      raise "Multiple forms #{name}" if forms.count != 1
+      raise "No matching form #{name}" if forms.count == 0
+      raise "Multiple forms #{name}" if forms.count > 1
       f = forms.first
     else
       f = @forms[name]
+      raise "No matching form #{name}" if ssn && f.line[:ssn] != ssn
+      raise "No matching form #{name}" if block_given && !yield(f)
     end
     f.used = true
     return f
@@ -232,12 +238,19 @@ class FormManager
   # warning if there are no forms with that name and there is no "No Forms" flag
   # for this form name.
   #
-  def forms(name)
+  # If a block is given, then only forms which yield a true value will be
+  # returned. If an SSN is given, then only forms which match the SSN will be
+  # returned.
+  #
+  def forms(name, ssn: nil)
     name = name.to_s
     unless @forms.include?(name)
       ensure_no_forms(name)
     end
     mf = MultiForm.new(@forms[name] || [])
+    if ssn
+      mf = mf.select { |f| f.line[:ssn] == ssn }
+    end
     if block_given?
       mf = mf.select { |f| yield(f) }
     end

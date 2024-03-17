@@ -203,7 +203,8 @@ class Form1065 < TaxForm
 
     # Line 29 applies to partnerships with some relationship to a foreign
     # entity. Line 30 deals with cryptocurrency.
-    line['B29.no'] = 'X'
+    line['B29a.no'] = 'X'
+    line['B29b.no'] = 'X'
     line['B30.no'] = 'X'
 
     confirm(
@@ -286,6 +287,11 @@ class Form1065 < TaxForm
       )
     end
 
+    #
+    # This has to be done here because it must follow the computations of the
+    # Schedule K-1s. This is not ideal because line 13 is obviously above,
+    # suggesting the need for a separate retirement contribution manager as
+    # described in the Schedule K-1 program.
     if psp_contrib > 0
       line['K13d.code'] = 'R'
       line['K13d'] = psp_contrib

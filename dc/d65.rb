@@ -8,7 +8,7 @@ class FormD65 < TaxForm
   NAME = 'D-65'
 
   def year
-    2022
+    2023
   end
 
   def check_box(line_no, condition)
@@ -21,6 +21,8 @@ class FormD65 < TaxForm
 
   def compute
     f1065 = form(1065)
+    bio = form('Partnership')
+    partners = forms('Partner')
 
     line[:ein] = f1065.line[:ein].sub("-", "")
     line[:tax_period] = "1231#{year}"
@@ -97,19 +99,18 @@ class FormD65 < TaxForm
 
     line[:A] = f1065.line[:E].strftime("%m%y")
 
-    if f1065.line['H.1', :present]
-      line['B.cash'] = '*'
-    elsif f1065.line['H.2', :present]
-      line['B.accrual'] = '*'
-    elsif f1065.line['H.3', :present]
+    case bio.line('accounting')
+    when 'Cash'     then line['B.cash']    = '*'
+    when 'Accrual'  then line['B.accrual'] = '*'
+    else
       line['B.other'] = '*'
       line['B.other.expl'] = f1065.line['H.other']
     end
 
-    line[:C] = f1065.line[:I]
-    check_box(:D, f1065.line['B1b', :present])
+    line[:C] = partners.count
+    check_box(:D, bio.line[:type] == 'limited')
 
-    check_box(:E, f1065.line['B1c', :present])
+    check_box(:E, bio.line[:type] == 'llc')
 
     partner_types = forms('1065 Schedule K-1').lines('I1')
     check_box(:F, !(partner_types & %w(Corporate Partnership)).empty?)
@@ -118,12 +119,9 @@ class FormD65 < TaxForm
     check_box(:G, false)
 
     check_box(:H, f1065.line['12a.yes', :present])
-    confirm("A D-65 was filed for the preceding year.")
-    check_box(:I, true)
-    confirm("A D-30 was not filed for the preceding year.")
-    check_box(:J, false)
-    confirm("A ballpark fee return was not filed.")
-    check_box(:K, false)
+    check_box(:I, @manager.submanager(:last_year).has_form?('D-65'))
+    check_box(:J, @manager.submanager(:last_year).has_form?('D-30'))
+    check_box(:K, @manager.submanager(:last_year).has_form?('Ballpark Fee'))
     check_box(:L, f1065.line['16b.yes', :present])
 
     if line[10, :opt] == 0

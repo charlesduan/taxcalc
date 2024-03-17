@@ -30,8 +30,8 @@ class Form1065K1 < TaxForm
     line['C'] = f1065.line(:send_to!).sub(/\s+\d{5}(?:-\d{4})?$/, '')
     line['D'] = 'X' if f1065.line('ptp', :present)
     line['E/ssn'] = @partner_form.line['ssn']
-    line['F'] = @partner_form.line['name']
-    line['F.address'] = [
+    line['F'] = [
+      @partner_form.line['name'],
       @partner_form.line['address'],
       @partner_form.line['address2']
     ].join("\n")
