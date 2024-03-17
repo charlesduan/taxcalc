@@ -219,14 +219,14 @@ class FormManager
     raise "No form #{name}" unless @forms[name]
     if @forms[name].is_a?(Enumerable)
       forms = @forms[name]
-      forms = forms.select { |f| f.line[:ssn] == ssn } if ssn
+      forms = forms.select { |f| f.ssn == ssn } if ssn
       forms = forms.select { |f| yield(f) } if block_given?
       raise "No matching form #{name}" if forms.count == 0
       raise "Multiple forms #{name}" if forms.count > 1
       f = forms.first
     else
       f = @forms[name]
-      raise "No matching form #{name}" if ssn && f.line[:ssn] != ssn
+      raise "No matching form #{name}" if ssn && f.ssn != ssn
       raise "No matching form #{name}" if block_given && !yield(f)
     end
     f.used = true
@@ -249,7 +249,7 @@ class FormManager
     end
     mf = MultiForm.new(@forms[name] || [])
     if ssn
-      mf = mf.select { |f| f.line[:ssn] == ssn }
+      mf = mf.select { |f| f.ssn == ssn }
     end
     if block_given?
       mf = mf.select { |f| yield(f) }
@@ -266,13 +266,13 @@ class FormManager
 
   # Performs a block if the named form exists and returns the result; otherwise
   # performs an alternate block and/or returns an alternate value.
-  def with_form(name, otherwise: nil, otherwise_return: nil, required: false)
+  def with_form(name, otherwise: nil, required: false)
     if has_form?(name)
       return yield(form(name))
     else
       raise "Form #{name} required but not present" if required
-      otherwise_return ||= otherwise.call if otherwise
-      return otherwise_return
+      otherwise = otherwise.call if otherwise.is_a?(Proc)
+      return otherwise
     end
   end
 

@@ -33,8 +33,7 @@ class Form8995A < TaxForm
     line[32] = sum_lines(27, 31)
     line[33] = @qbi_manager.line[:taxable_income]
     line[34] = form(1040).line[:qualdiv] + with_form(
-      '1040 Schedule D',
-      otherwise_return: form(1040).line[:cap_gain]
+      '1040 Schedule D', otherwise: form(1040).line[:cap_gain]
     ) { |f|
       [ [ f.line[15, :opt], f.line[16, :opt] ].min, 0 ].max
     }
@@ -61,7 +60,7 @@ class Form8995A < TaxForm
     setlineno('1d', qbi.tin)
 
     setlineno(
-      2, with_form('8995-A Schedule A', otherwise_return: qbi.amount) { |f|
+      2, with_form('8995-A Schedule A', otherwise: qbi.amount) { |f|
         f.match_line(11, tin: line[lineno('1d')])
       }
     )
@@ -72,13 +71,13 @@ class Form8995A < TaxForm
     else
       # Assuming there are zero W-2 wages and UBIA
 
-      setlineno(4, with_form('8995-A Schedule A', otherwise_return: 0) { |f|
+      setlineno(4, with_form('8995-A Schedule A', otherwise: 0) { |f|
         f.match_line(12, tin: line[lineno('1d')])
       })
       setlineno(5, (0.5 * line[lineno(4)]).round)
       setlineno(6, (0.25 * line[lineno(4)]).round)
 
-      setlineno(7, with_form('8995-A Schedule A', otherwise_return: 0) { |f|
+      setlineno(7, with_form('8995-A Schedule A', otherwise: 0) { |f|
         f.match_line(13, tin: line[lineno('1d')])
       })
       setlineno(8, (0.025 * line[lineno(7)]).round)
@@ -90,7 +89,7 @@ class Form8995A < TaxForm
       setlineno(13, [ line[lineno(11)], line[lineno(12)] ].max)
     end
 
-    setlineno(14, with_form('8995-A Schedule D', otherwise_return: 0) { |f|
+    setlineno(14, with_form('8995-A Schedule D', otherwise: 0) { |f|
       f.match_line(6, tin: line[lineno('1d')])
     })
     setlineno(15, line[lineno(13)] - line[lineno(14)])

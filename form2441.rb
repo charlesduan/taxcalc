@@ -29,6 +29,7 @@ class Form2441 < TaxForm
     end
 
     compute_providers
+    compute_qualifying_persons
     compute_benefits
     compute_credit
 
@@ -58,9 +59,59 @@ class Form2441 < TaxForm
     end
   end
 
+  # Part II
+  def compute_qualifying_persons
+    qual_persons = forms('Dependent') { |f| age(f) <= 12 }
+    # Disabled spouses and other dependents are not considered here.
+    qual_persons.each do |p|
+      fname, lname = p.line[:name].reverse.split(/\s+/, 2).map(
+        &:reverse
+      ).reverse
+      add_table_row({
+        '2a.first' => fname,
+        '2a.last' => lname,
+        '2b' => p.line[:ssn],
+        '2d' => forms('Dependent Care Provider') { |f|
+          f.line[:dep_ssn] == p.line[:ssn]
+        }.lines(:amount, :sum)
+      })
+    end
+
+    line[:tot_expenses!] = line('2d', :sum)
+    if line[:tot_expenses!] != line('3d', :sum)
+      raise "Inconsistency in dependent care expenses"
+    end
+
+  end
+
+
   def compute_credit
+    #
+    # Right now this depends on aspects of Form 1040, which can't work because
+    # this form is computed before the 1040.
+    #
+    raise "FIX THIS"
     return if line[:credit_not_permitted!]
-    raise "Not implemented"
+
+    if line[3, :present]
+      line[4] = line[18]
+      line[5] = line[19]
+    else
+      line[3] = line['2b', :all].count >= 2 ? 6000 : 3000
+      compute_earned_income(4, 5)
+    end
+
+    line[6] = [ line[3], line[4], line[5] ].min
+    line[7] = form(1040).line[:agi]
+    if line[7] < 43_000
+      raise "Dependent Care Credit fraction not implemented"
+    end
+    line[8] = 20
+    line['9a'] = (line[6] * line[8] / 100.0).round
+    line['9b'] = BlankZero
+
+    # This implements the Line 10 Credit Limit Worksheet.
+    line10 = form(1040).line(:pre_ctc_tax)
   end
 
   # Part III
@@ -75,28 +126,11 @@ class Form2441 < TaxForm
     line[14] = @use_form.line[:this_year_unused]
     line[15] = sum_lines(12, 13) - line[14, :opt]
 
-    line[16] = line['1e', :sum]
+    line[16] = line[:tot_expenses!, :sum]
     line[17] = [ line[15], line[16] ].min
 
-    line[18] = compute_earned_income(@manager, my_ssn)
+    compute_earned_income(18, 19)
 
-    if form(1040).status.is?(:mfs)
-      if !line[:mfs_except, :present]
-        line[19] = compute_earned_income(
-          @manager.submanager(:spouse), spouse_ssn
-        )
-      end
-    elsif form(1040).status.is?(:mfj)
-      line[19] = compute_earned_income(@manager, spouse_ssn)
-      if [ line[18], line[19] ].min < 5000
-        if interview("Were you or your spouse a student or disabled?")
-          raise "Student/disabled income not implemented"
-          # See Form 2441, line 5 instructions
-        end
-      end
-    else
-      line[19] = line[18]
-    end
     line[20] = [ line[17], line[18], line[19] ].min
     line[21] = [
       form(1040).status.halve_mfs(5000), @use_form.line[:max_contrib]
@@ -117,24 +151,57 @@ class Form2441 < TaxForm
     line['26/tax_benefit'] = [ line[23] - line[25], 0 ].max
 
     return if line[:credit_not_permitted!]
-    raise "Lines 27-31 not implemented"
 
+    line[27] = line['2b', :all].count >= 2 ? 6000 : 3000
+    line[28] = sum_lines(24, 25)
+    line[29] = line[27] - line[28]
+    return if line[29] <= 0
+
+    line[30] = line[:tot_expenses!] - line[28]
+    line[31] = [ line[29], line[30] ].min
+
+    line[3] = line[31]
   end
 
-  def compute_earned_income(manager, ssn)
-    res = 0
-    # The instructions here call for using form lines for both spouses, but that
-    # would require computing each spouse's forms before getting to this one. To
-    # avoid that, the computations are done here based on the raw input forms
-    # instead.
-    res += manager.forms('W-2') { |f| f.line[:a] == ssn }.lines(1, :sum)
+  #
+  # Computes earned income for each individual spouse, and fills in lines
+  # accordingly.
+  #
+  def compute_earned_income(my_line, spouse_line)
 
-    manager.forms('1040 Schedule SE') do |f|
-      next unless f.line[:ssn] == ssn
+    line[my_line] = earned_income_for(@manager, my_ssn)
+
+    status = form(1040).status
+    if status.is?(:mfj)
+      line[spouse_line] = earned_income_for(@manager, spouse_ssn)
+      if [ line[my_line], line[spouse_line] ].min < 5000
+        if interview("Were you or your spouse a student or disabled?")
+          raise "Student/disabled income not implemented"
+          # See Form 2441, line 5 instructions
+        end
+      end
+    elsif status.is?(:mfs)
+      if !line[:mfs_except, :present]
+        line[spouse_line] = earned_income_for(
+          @manager.submanager(:spouse), spouse_ssn
+        )
+      end
+    else
+      line[spouse_line] = line[my_line]
+    end
+  end
+
+      #
+  # Returns the earned income from a given FormManager for a given SSN.
+  def earned_income_for(manager, ssn)
+    res = BlankZero
+    res += manager.forms('W-2', ssn: ssn).lines(1, :sum)
+    manager.with_form('1040 Schedule SE', ssn: ssn) do |f|
       res += f.line[:tot_inc] - f.line[:se_ded]
     end
     return res
   end
+
 
 
 

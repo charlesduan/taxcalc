@@ -25,7 +25,7 @@ class Form5329 < TaxForm
 
   def compute_hsa
     line[42] = @manager.submanager(:last_year).with_form(
-      5329, otherwise_return: BlankZero
+      5329, otherwise: BlankZero
     ) { |f| f.line[:hsa_excess] }
     unless line[42] == 0
       raise "Lines 43-46 not implemented"

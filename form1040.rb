@@ -228,7 +228,7 @@ class Form1040 < TaxForm
     # Capital gains/losses
     compute_form('1040 Schedule D')
     line['7/cap_gain'] = with_form(
-      '1040 Schedule D', otherwise_return: BlankZero
+      '1040 Schedule D', otherwise: BlankZero
     ) do |sched_d|
       sched_d.line[:tot_gain]
     end
@@ -399,7 +399,7 @@ class Form1040 < TaxForm
       last_year_tax = ly.form(1040).line_16
       last_year_tax -= ly.form(1040).sum_lines(*%w(18a, 18b, 18c))
       last_year_tax -= ly.with_form(
-        '1040 Schedule 3', otherwise_return: 0
+        '1040 Schedule 3', otherwise: 0
       ) { |f| f.sum_lines(9, 12) }
 
       # First test under the exception.

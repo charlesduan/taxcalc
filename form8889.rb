@@ -214,7 +214,7 @@ class Form8889 < TaxForm
     # computations 2 and 3.
     #
     distrib, realized_earnings = @manager.submanager(:last_year).with_form(
-      8889, otherwise_return: [ BlankZero, BlankZero ]
+      8889, otherwise: [ BlankZero, BlankZero ]
     ) { |f|
       e = f.line[:excess_wd_earnings_carry!, :opt]
       [ e + f.line[:excess_wd_basis_carry!, :opt], e ]

@@ -238,11 +238,11 @@ class Form6251 < TaxForm
     check_line_13_conds
     line[13] = compute_from_worksheets(4, 13) { BlankZero }
 
-    line[14] = with_form('1040 Schedule D', otherwise_return: BlankZero) do |sd|
+    line[14] = with_form('1040 Schedule D', otherwise: BlankZero) do |sd|
       sd.line[19, :opt]
     end
     line[15] = with_form(
-      '1040 Schedule D Tax Worksheet', otherwise_return: line[13]
+      '1040 Schedule D Tax Worksheet', otherwise: line[13]
     ) do |sdtw|
       [ sum_lines(13, 14), sdtw.line[10] ].min
     end

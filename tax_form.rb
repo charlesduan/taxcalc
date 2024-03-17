@@ -164,6 +164,16 @@ class TaxForm
     line.place_lines(*nums)
   end
 
+  # Returns the SSN associated with this form. Generally this is the contents of
+  # line :ssn, but some special cases are implemented.
+  def ssn
+    case name
+    when 'W-2' then line[:a]
+    when '1065 Schedule K-1' then line[:A]
+    else line[:ssn]
+    end
+  end
+
   #
   # Returns the SSN of the person filing this return.
   #
