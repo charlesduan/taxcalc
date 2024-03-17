@@ -111,6 +111,11 @@ class Form1040_1 < TaxForm
       raise "Schedule C qualified plans deduction not implemented"
     }
 
+    # As a convenience to the IRA calculation, sum up all the adjustments so
+    # far. The important feature is that the student loan interest deduction is
+    # not included. See Pub. 590A, Worksheet 1-1.
+    line['pre_ira_adjust!'] = sum_lines('19a', *11..18)
+
     ira_analysis = form('IRA Analysis')
     compute_more(ira_analysis, :continuation)
     line['20/ira_ded'] = ira_analysis.line[:deductible_contrib]

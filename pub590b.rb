@@ -5,18 +5,23 @@ class Pub590BWorksheet1_1 < TaxForm
   NAME = "Pub. 590-B Worksheet 1-1"
 
   def year
-    2020
+    2023
+  end
+
+  def initialize(ssn)
+    @ssn = ssn
   end
 
   def compute
-    analysis = form('IRA Analysis')
+    line[:ssn] = @ssn
 
-    # Last year's basis. In 2021, change 14 to :tot_basis
-    line[1] = @manager.submanager(:last_year).form(8606).line[14]
+    analysis = form('IRA Analysis', ssn: @ssn)
+
+    line[1] = analysis.line[:last_year_basis]
     line[2] = analysis.line[:this_year_contrib]
     line[3] = sum_lines(1, 2)
 
-    line[4] = form('End-of-year Traditional IRA Value').line[:amount]
+    line[4] = form('End-of-year Traditional IRA Value', ssn: @ssn).line[:amount]
 
     # Line 5 is the sum of line 1 of those 1099-R forms that are traditional
     # IRA distributions

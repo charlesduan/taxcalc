@@ -10,7 +10,7 @@ class Form8606 < TaxForm
   NAME = '8606'
 
   def year
-    2020
+    2023
   end
 
   def copy_analysis_line(to_line)
@@ -26,13 +26,20 @@ class Form8606 < TaxForm
     end
   end
 
+  def initialize(ssn)
+    @ssn = ssn
+  end
+
   #
   # This only computes distributions. Contributions are computed later.
   def compute
 
     @ira_analysis = form('IRA Analysis')
 
-    set_name_ssn
+    line[:name] = with_form('Biographical', ssn: @ssn) { |f|
+      f.line[:first_name] + ' ' + f.line[:last_name]
+    }
+    line[:ssn] = @ssn
 
     # Lines 1-5 will be computed by the IRA Analysis.
     line[1] = @ira_analysis.line[:nondeductible_contrib]
@@ -42,7 +49,9 @@ class Form8606 < TaxForm
     copy_analysis_line(5)
 
     if @ira_analysis.line[:compute_8606_rest?]
-      line[6] = form('End-of-year Traditional IRA Value').line[:amount]
+      line[6] = form(
+        'End-of-year Traditional IRA Value', ssn: @ssn
+      ).line[:amount]
       line[7] = @ira_analysis.line[:distrib_cash]
       line[8] = @ira_analysis.line[:distrib_roth]
       line[9] = sum_lines(6, 7, 8)

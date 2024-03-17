@@ -26,32 +26,49 @@ class IraAnalysis < TaxForm
   NAME = 'IRA Analysis'
 
   def year
-    2020
+    2023
   end
 
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
 
+  def initialize(ssn, spouse_ssn)
+    @ssn = ssn
+    @spouse_ssn = spouse_ssn
+  end
+
   def compute
 
+    line[:ssn] = @ssn
+    line[:spouse_ssn] = @spouse_ssn
 
     #
     # I. Gathering information
     #
 
-    confirm('You have no qualified disaster distribution (Form 8915)')
+    # This is for 2016 and 2017.
+    # confirm('You have no qualified disaster distribution (Form 8915)')
 
     # Collect contributions.
     line[:this_year_contrib] = forms(
-      'Traditional IRA Contribution'
+      'Traditional IRA Contribution', ssn: @ssn
     ).lines(:amount, :sum)
 
     # Collect distributions, which are reported on 1099-R.
-    all_1099rs = forms('1099-R')
+    all_1099rs = forms('1099-R', ssn: @ssn)
     all_1099rs.each do |x|
       next if x.line['ira-sep-simple?']
       next if [ 1, 2, 3, 4, 5, 7 ].include?(f.line[7])
       raise "Non-IRA 1099-R forms not implemented"
     end
+
+    # Collect the traditional IRA basis from last year.
+    ly = @manager.submanager(:last_year)
+    if ly && ly.has_form?(8606)
+      line[:last_year_basis] = ly.forms(8606, ssn: @ssn).lines(:tot_basis, :sum)
+    else
+      line[:last_year_basis] = BlankZero
+    end
+
 
     #
     # The destination could also be a traditional-to-traditional rollover, a
@@ -91,6 +108,7 @@ class IraAnalysis < TaxForm
     #
     if line[:this_year_contrib] == 0
 
+      # Distributions but not contributions.
       compute_distributions_only
 
     else
@@ -111,7 +129,7 @@ class IraAnalysis < TaxForm
     @contrib_continuation.call
 
     # Compute Form 8606
-    compute_form(8606)
+    compute_form(8606, ssn: @ssn)
 
     # Check that the required lines were all computed
     [
@@ -147,7 +165,9 @@ class IraAnalysis < TaxForm
     raise "Inconsistent state" unless line[:total_distrib] == 0
     line[:taxable_distrib] = line[:total_distrib]
     @contrib_continuation = proc {
-      @pub590a_w1_2 = compute_form("Pub. 590-A Worksheet 1-2")
+      @pub590a_w1_2 = compute_form(
+        "Pub. 590-A Worksheet 1-2", @ssn, @spouse_ssn
+      )
       line[:deductible_contrib] = @pub590a_w1_2.line[7]
       line[:nondeductible_contrib] = @pub590a_w1_2.line[8]
     }
@@ -163,7 +183,7 @@ class IraAnalysis < TaxForm
     # This follows the instructions in Pub. 590-B, "Contribution and
     # distribution in the same year".
     #
-    @pub590b_w1_1 = compute_form("Pub. 590-B Worksheet 1-1")
+    @pub590b_w1_1 = compute_form("Pub. 590-B Worksheet 1-1", @ssn, @spouse_ssn)
 
     # Step 8 of the instructions: copies 590-B W1-1 line 9 or 11, coded as
     # :taxable_distrib, to Form 8606 line 15a. (Also computes 15b and 15c
@@ -184,7 +204,7 @@ class IraAnalysis < TaxForm
 
   def compute_contributions_and_distributions_continuation
 
-    @pub590a_w1_2 = compute_form("Pub. 590-A Worksheet 1-2")
+    @pub590a_w1_2 = compute_form("Pub. 590-A Worksheet 1-2", @ssn, @spouse_ssn)
 
     # Step 2 is done here by setting line nondeductible_contrib
     line[:deductible_contrib] = @pub590a_w1_2.line[:deductible_contrib]
@@ -225,15 +245,13 @@ class IraAnalysis < TaxForm
 
   end
 
+  #
   # Computes the values of lines 2-5 of Form 8606 (which are stored as lines in
   # this IraAnalysis form, to be copied later by Form 8606 itself).
+  #
   def compute_8606_lines_2_to_5
-    if @manager.submanager(:last_year).has_form?(8606)
-      # For 2021, change line 14 to :tot_basis
-      line['8606_2'] = @manager.submanager(:last_year).form(8606).line[14]
-    else
-      line['8606_2'] = BlankZero
-    end
+    ly = @manager.submanager(:last_year)
+    line['8606_2'] = line[:last_year_basis]
     line['8606_3'] = sum_lines(:nondeductible_contrib, '8606_2')
     line['8606_4'] = [
       forms('Traditional IRA Contribution') { |f|
@@ -252,7 +270,9 @@ class IraAnalysis < TaxForm
 
     raise "No Pub. 590-B Worksheet 1-1" unless @pub590b_w1_1
 
-    # Part II
+    #
+    # Part II: Traditional-to-Roth conversions
+    #
     if line[:distrib_roth] > 0
       line['8606_16'] = line[:distrib_roth]
       line['8606_17'] = @pub590b_w1_1.line[:nontax_distrib]
@@ -260,8 +280,12 @@ class IraAnalysis < TaxForm
       line['8606_18*note'] = 'Lines 17 and 18 from Pub. 590-B Worksheet 1-1'
     end
 
-    # Part III
-    roth_forms = forms('1099-R') { |f| %w(B J T).include?(f.line[7]) }
+    #
+    # Part III: distributions from ROTH IRAs
+    #
+    roth_forms = forms('1099-R', ssn: @ssn) { |f|
+      %w(B J T).include?(f.line[7])
+    }
     unless roth_forms.empty?
       raise "Form 8606 part III is not implemented"
     end

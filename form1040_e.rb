@@ -10,13 +10,22 @@ class Form1040E < TaxForm
   NAME = '1040 Schedule E'
 
   def year
-    2020
+    2023
   end
 
   include HomeOfficeManager
 
   def compute
     set_name_ssn
+
+    #
+    # Part 1, rental real estate and royalties, not implemented.
+    #
+
+
+    #
+    # Part 2, partnerships and S corporations.
+    #
 
     k1s = forms('1065 Schedule K-1')
     #
@@ -48,12 +57,12 @@ class Form1040E < TaxForm
     end
 
     k1s.each do |k1|
-      pship = k1.match_form('Partnership', :A, :ein) # Remove :A next year
+      pship = k1.match_form('Partnership', :ein)
       unless pship.line[:nationality] == 'domestic'
         raise "Cannot handle foreign partnership #{f.line[:name]}"
       end
       partner = form('Partner') { |f|
-        f.line[:ein] == k1.line[:A] && f.line[:ssn] == line[:ssn] # Remove :A
+        f.line[:ein] == k1.line[:ein] && f.line[:ssn] == line[:ssn]
       }
       unless partner.line[:active?]
         raise "Cannot handle passive partners"
@@ -96,6 +105,10 @@ class Form1040E < TaxForm
     line[30] = sum_lines('29a.h', '29a.k')
     line[31] = sum_lines('29b.g', '29b.i', '29b.j')
     line[32] = line[30] - line[31]
+
+    #
+    # Parts III and IV are not implemented.
+    #
 
     line['41/tot_inc'] = sum_lines(26, 32, 37, 39, 40)
   end
