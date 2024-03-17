@@ -106,6 +106,7 @@ A dependent.
 \item[qualifying] Whether the dependent qualifies for a tax credit. Options are
 ``child'' for the child tax credit, ``other'' for the credit for other
 dependents, and ``none'' where the dependent is not qualifying.
+\item[birthday] The dependent's birthday.
 \end{description}
 
 
@@ -117,8 +118,24 @@ Information on the use of dependent care FSA benefits.
 \item[last\_year\_grace\_period\_use] The amount carried over from last year's
 plan that was used this year.
 \item[this\_year\_unused] The amount forfeited or carried over to next year.
-\item[qualified\_expenses] The amount spent on qualified dependent care
-expenses.
+\item[max\_contrib] The maximum contribution allowed for the FSA.
+\end{description}
+
+Any expenses that used this dependent care FSA should be given using a Dependent
+Care Provider form, below.
+
+\subsection{Dependent Care Provider}
+
+Information on dependent care providers.
+
+\begin{description}
+\item[name] The name of the care provider.
+\item[address] The address of the care provider.
+\item[tin] The tax ID number (EIN or SSN) of the provider. May be "Tax-Exempt"
+if appropriate.
+\item[employee?] Whether the provider was a household employee.
+\item[amount] The amount paid to this provider.
+\item[dep\_ssn] The SSN of the child or dependent for whom this amount was paid.
 \end{description}
 
 

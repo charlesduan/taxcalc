@@ -165,13 +165,29 @@ class TaxForm
   end
 
   #
+  # Returns the SSN of the person filing this return.
+  #
+  def my_ssn
+    return forms('Biographical').find { |x|
+      x.line[:whose] == 'mine'
+    }.line[:ssn]
+  end
+
+  #
+  # Returns the SSN of the spouse.
+  #
+  def spouse_ssn
+    return forms('Biographical').find { |x|
+      x.line[:whose] == 'spouse'
+    }.line[:ssn]
+  end
+
+  #
   # Sets the :name and :ssn lines based on an appropriate Biographical form.
   #
   def set_name_ssn(lname = :ssn)
     set_name
-    line[lname] = forms('Biographical').find { |x|
-      x.line[:whose] == 'mine'
-    }.line[:ssn]
+    line[lname] = my_ssn
   end
 
   #

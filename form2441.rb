@@ -38,11 +38,24 @@ class Form2441 < TaxForm
 
   # Part I
   def compute_providers
-    if line[:credit_not_permitted!]
-      line['1a'] = 'None'
-      return
+    forms('Dependent Care Provider').each do |f|
+      if f.line[:address].length < 30
+        address1, address2 = f.line[:address], nil
+      elsif f.line[:address] = /\A.{0,30}\s+/
+        address1, address2 = $&, $'
+      else
+        address1, address2 = f.line[:address][0, 30], f.line[:address][30..-1]
+      end
+      add_table_row({
+        '1a' => f.line[:name],
+        '1b.top' => address1,
+        '1b.bot' => address2,
+        '1c' => f.line[:tin],
+        '1d.yes' => f.line[:employee?] ? 'X' : nil,
+        '1d.no' => f.line[:employee?] ? nil : 'X',
+        '1e' => f.line[:amount]
+      }.compact)
     end
-    raise "Not implemented"
   end
 
   def compute_credit
@@ -56,43 +69,51 @@ class Form2441 < TaxForm
     # TODO: Add sole proprietorship/partnership benefits as necessary. See lines
     # 22 and 24 if this is done.
     line[12] = forms('W-2').lines[10, :sum]
-    return if line[12] == 0
 
     @use_form = form("Dependent Care Benefit Use")
     line[13] = @use_form.line[:last_year_grace_period_use]
     line[14] = @use_form.line[:this_year_unused]
-    line[15] = sum_lines(12, 13, 14)
+    line[15] = sum_lines(12, 13) - line[14, :opt]
 
-    line[16] = @use_form.line[:qualified_expenses]
+    line[16] = line['1e', :sum]
     line[17] = [ line[15], line[16] ].min
 
-    if form(1040).status.is?(:mfj)
-      raise "Need to implement separation of spouses' earned income"
-    end
+    line[18] = compute_earned_income(@manager, my_ssn)
 
-    line[18] = compute_earned_income(@manager)
-    if form(1040).status.is?(:mfs) && !line[:mfs_except, :present]
-      line[19] = compute_earned_income(@manager.submanager(:spouse))
-      line[20] = [ line[17], line[18], line[19] ].min
-      line[21] = 2500
+    if form(1040).status.is?(:mfs)
+      if !line[:mfs_except, :present]
+        line[19] = compute_earned_income(
+          @manager.submanager(:spouse), spouse_ssn
+        )
+      end
+    elsif form(1040).status.is?(:mfj)
+      line[19] = compute_earned_income(@manager, spouse_ssn)
+      if [ line[18], line[19] ].min < 5000
+        if interview("Were you or your spouse a student or disabled?")
+          raise "Student/disabled income not implemented"
+          # See Form 2441, line 5 instructions
+        end
+      end
     else
       line[19] = line[18]
-      line[20] = [ line[17], line[18], line[19] ].min
-      line[21] = 5000
     end
+    line[20] = [ line[17], line[18], line[19] ].min
+    line[21] = [
+      form(1040).status.halve_mfs(5000), @use_form.line[:max_contrib]
+    ].min
 
     line['22.no'] = 'X'
     line[22] = BlankZero
     line[23] = line[15] - line[22]
 
     line['24/ded_benefit'] = [ line[20], line[21], line[22] ].min
-    l25 = [ line[20], line[21] ].min
-    l25 -= line[24] unless line['22.no', :present]
     if line[24] > 0
       raise "Deduction for this benefit must be added to Schedule C, E, or F"
     end
 
-    line['25/excl_benefit'] = l25
+    line['25/excl_benefit'] = [ line[20], line[21] ].min - (
+      line['22.no', :present] ? 0 : line[24]
+    )
     line['26/tax_benefit'] = [ line[23] - line[25], 0 ].max
 
     return if line[:credit_not_permitted!]
@@ -100,30 +121,19 @@ class Form2441 < TaxForm
 
   end
 
-  def compute_earned_income(manager)
+  def compute_earned_income(manager, ssn)
     res = 0
     # The instructions here call for using form lines for both spouses, but that
     # would require computing each spouse's forms before getting to this one. To
     # avoid that, the computations are done here based on the raw input forms
     # instead.
-    res += manager.forms('W-2').lines(1, :sum)
-    res += manager.forms('1065 Schedule K-1').lines(14, :sum)
+    res += manager.forms('W-2') { |f| f.line[:a] == ssn }.lines(1, :sum)
 
-    if manager.has_form?('1040 Schedule C')
-      res += manager.form('1040 Schedule C').line[:net_profit]
-    else
-      # Fake a computation of Schedule C
-      fake_schedule_c = manager.compute_form('1040 Schedule C')
-      if fake_schedule_c
-        res += fake_schedule_c.line[:tot_inc]
-        manager.remove_form(fake_schedule_c)
-      end
+    manager.forms('1040 Schedule SE') do |f|
+      next unless f.line[:ssn] == ssn
+      res += f.line[:tot_inc] - f.line[:se_ded]
     end
-
-    # TODO Should compute a fake Schedule SE if it's not present
-    if manager.has_form?('1040 Schedule SE')
-      res -= manager.form('1040 Schedule SE').line[:se_ded]
-    end
+    return res
   end
 
 
@@ -131,6 +141,8 @@ class Form2441 < TaxForm
   def needed?
     return true if line[11, :present]
     return true if line[12] != 0
+    return true if line[13] != 0
+    return true if line[14] != 0
     return false
   end
 
