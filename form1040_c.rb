@@ -10,24 +10,30 @@ class Form1040C < TaxForm
   include HomeOfficeManager
 
   def year
-    2020
+    2023
   end
 
-  def needed?
-    return has_form?('Sole Proprietorship')
+  def initialize(manager, sole_proprietorship)
+    super(manager)
+    @sp = sole_proprietorship
+    unless @sp.is_a?(TaxForm) and @sp.name == 'Sole Proprietorship'
+      raise "Invalid Sole Proprietorship form given"
+    end
   end
 
   def compute
 
-    unless has_form?('Sole Proprietorship')
-      if has_form?('1099-MISC') or has_form?('1099-NEC')
-        raise "No sole proprietorship form for 1099-MISC or -NEC"
-      end
-      return
-    end
-
     @f1040 = form('1040')
-    @sp = form('Sole Proprietorship')
+
+    #
+    # This hasn't been updated since 2020, and the underlying premise has
+    # changed a bit, since theoretically a single tax return can contain several
+    # sole proprietorships each requiring a Schedule C. This form needs to be
+    # updated accordingly; it will also be necessary to figure out how to
+    # allocate the 1099 forms and business expenses to individual sole
+    # proprietorships.
+    #
+    raise "Not updated since 2020"
 
     set_name_ssn
     line[:A] = @sp.line[:business]

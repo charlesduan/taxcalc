@@ -8,14 +8,14 @@ class AMTTestWorksheet < TaxForm
   NAME = "1040 Worksheet to See If You Should Fill In Form 6251"
 
   def year
-    2020
+    2023
   end
 
   def compute
     f1040 = form(1040)
     with_form('1040 Schedule A', otherwise: proc {
       line['1no'] = 'X'
-      line[3] = f1040.line_agi - f1040.line_qbid
+      line[3] = f1040.line[:agi] - f1040.line[:qbid]
     }) do |sched_a|
       line['1yes'] = 'X'
       line[1] = f1040.line_taxinc
@@ -24,7 +24,8 @@ class AMTTestWorksheet < TaxForm
     end
 
     with_form('1040 Schedule 1') do |f|
-      line[4] = f.sum_lines(:taxrefund, :other_tax) # Fix line 8 to be just taxes
+      # Fix line 8 to be just taxes
+      line[4] = f.sum_lines(:taxrefund, :other_tax)
     end
 
     line[5] = line[3] - line[4]
@@ -51,7 +52,7 @@ class AMTTestWorksheet < TaxForm
       line[11] = line[7]
     end
 
-    if line[11] > f1040.status.halve_mfs(197_900)
+    if line[11] > f1040.status.halve_mfs(220_700)
       line['12yes'] = 'X'
       line[:fill_yes] = 'X'
       return
@@ -62,7 +63,7 @@ class AMTTestWorksheet < TaxForm
     # Schedule J: assumed we are not a farmer or fisherman.
     # I'm assuming no Premium Tax Credit at issue and thus no Schedule 2, line
     # 46.
-    line[13] = f1040.line_tax + \
+    line[13] = f1040.line[:tax] + \
       (with_form('1040 Schedule 2') { |f| f.line[2] } || 0)
     if line[12] > line[13]
       line[:fill_yes] = 'X'

@@ -78,7 +78,6 @@ class Form1040D < TaxForm
     line['16/tot_gain'] = line[7] + line[15]
 
     if line[16] > 0
-      line[:fill!] = line[16]
       if line[15] > 0
         line['17yes'] = 'X'
         raise "Need to check for special Schedule D forms"
@@ -93,10 +92,6 @@ class Form1040D < TaxForm
         
     elsif line[16] < 0
       raise 'Not implemented'
-
-    else # line[16] == 0
-      line[:fill!] = 0
-
     end
 
     if forms('1099-DIV').lines('1b', :sum) > 0

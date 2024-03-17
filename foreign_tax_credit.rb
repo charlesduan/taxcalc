@@ -8,11 +8,12 @@ class ForeignTaxCredit < TaxForm
   NAME = "Foreign Tax Credit"
 
   def year
-    2020
+    2023
   end
 
   def compute
     ftc = BlankZero
+    # Foreign tax paid lines
     ftc += forms('1099-INT').lines(6, :sum)
     ftc += forms('1099-DIV').lines(7, :sum)
     if ftc == 0

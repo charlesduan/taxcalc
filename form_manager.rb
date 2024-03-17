@@ -131,6 +131,9 @@ class FormManager
   # the form requires computing any subforms that expect the form under
   # computation to be present.
   #
+  # If a block is given, then that block will be called with the computed form
+  # as the argument if the form is needed.
+  #
   def compute_form(f, *args, **params)
     case f
     when TaxForm

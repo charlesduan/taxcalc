@@ -8,14 +8,36 @@ class Form8889 < TaxForm
   NAME = '8889'
 
   def year
-    2020
+    2023
   end
 
   def needed?
+    return false unless required?
     line[2] != 0 || line[9] != 0 || line['14a'] != 0 || line[20] != 0
   end
 
+  #
+  # Determines if the form is required. It is required in three situations:
+  #
+  # 1. HSA contributions were made this year
+  # 2. HSA distributions were received this year
+  # 3. A form 8889 was filed last year, prompting the possibility that this
+  #    year's testing period fails
+  #
+  def required?
+    return true if has_form?('HSA Contribution')
+    return true if forms('W-2').any? { |f|
+      f.line('12.code', :all).include?('W')
+    }
+    return true if @manager.submanager(:last_year).has_form?(8889)
+    return false
+  end
+
   def compute
+    return unless required?
+
+    raise "Not updated since 2020"
+
     set_name_ssn
 
     compute_coverage
@@ -77,8 +99,9 @@ class Form8889 < TaxForm
       end
     end
 
-    # Part III is not implemented because it is assumed that the last-month rule
-    # was met.
+    # Part III is not implemented. If there ever is a need to implement a
+    # testing period failure, alias the computed tax line (21 in 2023) to
+    # :hsa_testing_tax.
 
   end
 

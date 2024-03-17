@@ -1,5 +1,6 @@
 require_relative 'tax_form'
 require_relative 'form1040_e'
+require_relative 'pub560'
 
 #
 # Form 1040 Schedule 1: Additional Income and Adjustments
@@ -9,7 +10,7 @@ class Form1040_1 < TaxForm
   NAME = '1040 Schedule 1'
 
   def year
-    2020
+    2023
   end
 
   def compute
@@ -36,7 +37,7 @@ class Form1040_1 < TaxForm
       line['3/bus_inc'] = sch_c.line(:net_profit)
     end
 
-    # Line 4 is assumed to be zero; otherwise implement line 4797
+    # Line 4 is assumed to be zero; otherwise implement Form 4797
     confirm("No business property was sold or lost")
     line['4/other_gains'] = BlankZero
 
@@ -45,7 +46,11 @@ class Form1040_1 < TaxForm
     end
 
     other_income
-    line['9/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 8)
+
+    # If line 8z ever includes tax refunds, give them line alias :other_tax,
+    # because the AMT test worksheet uses it.
+
+    line['10/add_inc'] = sum_lines(1, '2a', 3, 4, 5, 6, 7, 9)
 
   end
 
@@ -57,7 +62,7 @@ class Form1040_1 < TaxForm
     @expls, @amt = [], BlankZero
 
     #
-    # Other income from Form 8889
+    # Other income from Form 8889, HSA excess contributions
     #
     with_form(8889) do |f|
       f.other_income do |desc, amt|
@@ -65,8 +70,9 @@ class Form1040_1 < TaxForm
       end
     end
 
-    line['8.expl/other_tax_expl'] = @expls.join("; ")
-    line['8/other_tax'] = @amt
+    line['8z.expl/other_inc_expl'] = @expls.join("; ")
+    line['8z/other_inc'] = @amt
+    line[9] = sum_lines(*"8a".."8z")
   end
 
   def add_other_income(expl, amt)
@@ -85,31 +91,36 @@ class Form1040_1 < TaxForm
     #
 
     with_form(8889) do |f|
-      line[12] = f.line[:hsa_ded]
+      line['13/hsa_adj'] = f.line[:hsa_ded]
     end
 
-    with_form('1040 Schedule SE') do |sched_se|
-      line[14] = sched_se.line[:se_ded]
+    if has_form?('1040 Schedule SE')
+      line['15/se_tax_ded'] = forms('1040 Schedule SE').lines(:se_ded, :sum)
     end
 
-    # Line 15 is where the self-employment IRA contributions go
-    if year > 2020
-      raise("Implement solo 401(k) here")
-      raise("Also implement Form 5500-EZ at this time")
-    end
+    #
+    # For the qualified plans deduction, we assume that any partnership
+    # contributions were computed correctly (since they used the Pub. 560
+    # Worksheet computation), and that there are no Schedule C businesses that
+    # could make further contributions.
+    #
+    line[16] = forms('1065 Schedule K-1').sum { |f|
+      f.match_table_value('13.code', 13, find: 'R', default: 0)
+    }
+    with_form('1040 Schedule C') { |f|
+      raise "Schedule C qualified plans deduction not implemented"
+    }
 
     ira_analysis = form('IRA Analysis')
     compute_more(ira_analysis, :continuation)
-    line[19] = ira_analysis.line[:deductible_contrib]
+    line['20/ira_ded'] = ira_analysis.line[:deductible_contrib]
 
-    # Line 20
-    if !form(1040).status.is(:mfs)
+    student_loan_magi = form(1040).line[:tot_inc] - sum_lines(*11..20)
+    if !form(1040).status.is(:mfs) && student_loan_magi < 185_000
       raise "Student loan interest deduction not implemented"
     end
 
-    line['22/adj_inc'] = sum_lines(
-      10, 11, 12, 13, 14, 15, 16, 17, '18a', 19, 20, 21
-    )
+    line['26/adj_inc'] = sum_lines('19a', *11..25)
   end
 
   #

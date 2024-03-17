@@ -11,8 +11,21 @@ class Form1040B < TaxForm
   def compute
     set_name_ssn
 
-    line['1l', :all] = forms('1099-INT').lines('name')
-    line['1r', :all] = forms('1099-INT').lines(1)
+    forms('1099-INT').each do |f|
+      if f.line[1, :present]
+        add_table_row('1l' => f.line['name'], '1r' => f.line(1))
+      end
+    end
+
+    forms('1099-OID').each do |f|
+      # According to the Form 1099-OID instructions, this may not be correct
+      # "depending on the type of debt instrument, the issue or acquisition date
+      # and other factors."
+      if f.line[1, :present]
+        add_table_row('1l' => f.line['name'], '1r' => f.line(1))
+      end
+    end
+
     with_forms('1065 Schedule K-1') do |f|
       if f.line[5, :present]
         add_table_row('1l' => f.line[:B].split("\n")[0], '1r' => f.line[5])
@@ -24,7 +37,7 @@ class Form1040B < TaxForm
     # Line 3
     confirm("You have no series EE or I savings bonds")
 
-    line[4] = line[2] - line[3, :opt]
+    line['4/ord_int'] = line[2] - line[3, :opt]
 
     line['5l', :all] = forms('1099-DIV').lines('name')
     line['5r', :all] = forms('1099-DIV').lines('1a')
@@ -34,7 +47,7 @@ class Form1040B < TaxForm
       end
     end
 
-    line[6] = line['5r', :sum]
+    line['6/ord_div'] = line['5r', :sum]
 
     if line[4] > 1500 or line[6] > 1500
       raise 'Schedule B Part III not implemented'
