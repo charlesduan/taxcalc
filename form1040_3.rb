@@ -23,13 +23,20 @@ class Form1040_3 < TaxForm
 
     # Foreign tax credit
     ftc_form = find_or_compute_form('Foreign Tax Credit')
-    line[1] = ftc_form.line[:fill!] if ftc_form
+    line['1/foreign_tax_credit'] = ftc_form.line[:fill!] if ftc_form
+
+    #
+    # If a partnership files Form 8986, then Form 8978 must be prepared and the
+    # result reported on line 6l/pship_tax_adjust. However, this affects the
+    # computation of Form 2441, so to the extent that Form 8978 is to be
+    # computed, then it must be done here.
+    #
+    assert_no_forms(8986)
 
     # Child care expenses
     with_form(2441) do |f|
-      unless f.line[:credit_not_permitted!]
-        line[2] = f.line[:credit]
-      end
+      compute_more(f, :credit)
+      line[2] = f.line[:credit]
     end
 
     # Education credits

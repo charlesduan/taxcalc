@@ -12,6 +12,8 @@ class Form2441 < TaxForm
   end
 
   def compute
+    @computed_credit = false
+
     set_name_ssn
 
     if form(1040).status.is('mfs')
@@ -28,18 +30,17 @@ class Form2441 < TaxForm
       line[:credit_not_permitted!] = false
     end
 
-    compute_providers
-    compute_qualifying_persons
-    compute_benefits
-    compute_credit
+    # Disabled spouses and other dependents are not considered here.
+    qual_persons = forms('Dependent') { |f| age(f) <= 12 }
 
-    # TODO: Rearrange Part III lines
-
-  end
-
-  # Part I
-  def compute_providers
+    #
+    # Part I. Add providers.
+    #
     forms('Dependent Care Provider').each do |f|
+      unless qual_persons.map { |p| p.line[:ssn] }.include?(f.line[:ssn])
+        raise "Dependent care provider #{name} not for qualifying person"
+      end
+
       if f.line[:address].length < 30
         address1, address2 = f.line[:address], nil
       elsif f.line[:address] = /\A.{0,30}\s+/
@@ -57,12 +58,14 @@ class Form2441 < TaxForm
         '1e' => f.line[:amount]
       }.compact)
     end
-  end
 
-  # Part II
-  def compute_qualifying_persons
-    qual_persons = forms('Dependent') { |f| age(f) <= 12 }
-    # Disabled spouses and other dependents are not considered here.
+    #
+    # Part II, first part.
+    #
+    # Add qualified persons. It is unclear whether the amounts in line 2d should
+    # reflect the entire amount expended for each qualified person, or the
+    # amounts less employer benefits as the line 30 instructions specify.
+    #
     qual_persons.each do |p|
       fname, lname = p.line[:name].reverse.split(/\s+/, 2).map(
         &:reverse
@@ -82,44 +85,11 @@ class Form2441 < TaxForm
       raise "Inconsistency in dependent care expenses"
     end
 
-  end
+    # Part III. Compute employer benefits.
 
-
-  def compute_credit
-    #
-    # Right now this depends on aspects of Form 1040, which can't work because
-    # this form is computed before the 1040.
-    #
-    raise "FIX THIS"
-    return if line[:credit_not_permitted!]
-
-    if line[3, :present]
-      line[4] = line[18]
-      line[5] = line[19]
-    else
-      line[3] = line['2b', :all].count >= 2 ? 6000 : 3000
-      compute_earned_income(4, 5)
-    end
-
-    line[6] = [ line[3], line[4], line[5] ].min
-    line[7] = form(1040).line[:agi]
-    if line[7] < 43_000
-      raise "Dependent Care Credit fraction not implemented"
-    end
-    line[8] = 20
-    line['9a'] = (line[6] * line[8] / 100.0).round
-    line['9b'] = BlankZero
-
-    # This implements the Line 10 Credit Limit Worksheet.
-    line10 = form(1040).line(:pre_ctc_tax)
-  end
-
-  # Part III
-  def compute_benefits
-
-    # TODO: Add sole proprietorship/partnership benefits as necessary. See lines
-    # 22 and 24 if this is done.
     line[12] = forms('W-2').lines[10, :sum]
+
+    confirm("No self-employer offered dependent care benefits")
 
     @use_form = form("Dependent Care Benefit Use")
     line[13] = @use_form.line[:last_year_grace_period_use]
@@ -150,18 +120,72 @@ class Form2441 < TaxForm
     )
     line['26/tax_benefit'] = [ line[23] - line[25], 0 ].max
 
-    return if line[:credit_not_permitted!]
+    unless line[:credit_not_permitted!]
 
-    line[27] = line['2b', :all].count >= 2 ? 6000 : 3000
-    line[28] = sum_lines(24, 25)
-    line[29] = line[27] - line[28]
-    return if line[29] <= 0
+      line[27] = line['2b', :all].count >= 2 ? 6000 : 3000
+      line[28] = sum_lines(24, 25)
+      line[29] = line[27] - line[28]
+      if line[29] > 0
 
-    line[30] = line[:tot_expenses!] - line[28]
-    line[31] = [ line[29], line[30] ].min
+        line[30] = line[:tot_expenses!] - line[28]
+        line[31] = [ line[29], line[30] ].min
 
-    line[3] = line[31]
+        line[3] = line[31]
+      else
+        #
+        # No credit is allowed. To implement this, line 3 (qualifying expenses)
+        # is set to zero.
+        #
+        confirm("You didn't pay 2022 child care expenses in 2023")
+        line[3] = BlankZero
+      end
+    end
+
   end
+
+  #
+  # Computes the dependent care credit, part II.
+  #
+  def compute_credit
+    @computed_credit = true
+
+    if line[:credit_not_permitted!]
+      line['11/credit'] = BlankZero
+    end
+
+    # If employer benefits were computed, then these lines differ
+    if line[3, :present]
+      line[4] = line[18]
+      line[5] = line[19]
+    else
+      line[3] = line['2b', :all].count >= 2 ? 6000 : 3000
+      compute_earned_income(4, 5)
+    end
+
+    line[6] = [ line[3], line[4], line[5] ].min
+    line[7] = form(1040).line[:agi]
+
+    # If AGI is under $43,000, then a scaling fraction of line 8 may be higher.
+    # This calculation has not been implemented.
+    if line[7] < 43_000
+      raise "Dependent Care Credit fraction not implemented"
+    end
+    line[8] = 20
+
+    line['9a'] = (line[6] * line[8] / 100.0).round
+    line['9b'] = BlankZero
+    line['9c'] = sum_lines(*%w(9a 9b))
+
+    # This implements the Line 10 Credit Limit Worksheet.
+    line10 = form(1040).line(:pre_ctc_tax) # In 2023, line 18.
+    line10 -= form('1040 Schedule 3').line[:foreign_tax_credit]
+    line10 -= form('1040 Schedule 3').line[:pship_tax_adjust]
+    line[10] = [ line10, 0 ].max
+
+    line['11/credit'] = [ line['9c'], line[10] ].min
+
+  end
+
 
   #
   # Computes earned income for each individual spouse, and fills in lines
@@ -191,8 +215,9 @@ class Form2441 < TaxForm
     end
   end
 
-      #
+  #
   # Returns the earned income from a given FormManager for a given SSN.
+  #
   def earned_income_for(manager, ssn)
     res = BlankZero
     res += manager.forms('W-2', ssn: ssn).lines(1, :sum)
@@ -203,10 +228,11 @@ class Form2441 < TaxForm
   end
 
 
-
-
   def needed?
-    return true if line[11, :present]
+    # Form will be retained while the credit has not been computed.
+    return true unless @computed_credit
+
+    return true if line[11, :present] && line[11] != 0
     return true if line[12] != 0
     return true if line[13] != 0
     return true if line[14] != 0
