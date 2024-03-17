@@ -52,9 +52,21 @@ class Form1040 < TaxForm
   # needed.
   #
   def compute_early_schedules
-    compute_form('1040 Schedule C')
+    if has_form?('Sole Proprietorship')
+      forms('Sole Proprietorship').each do |sp|
+        compute_form('1040 Schedule C', sp)
+      end
+    else
+      assert_no_forms('1099-NEC', '1099-MISC')
+    end
+
     compute_form('1040 Schedule E')
-    compute_form('1040 Schedule SE')
+
+    compute_form('1040 Schedule SE', for: @bio.line[:ssn])
+    if @status.is?('mfj')
+      compute_form('1040 Schedule SE', for: @sbio.line[:ssn])
+    end
+
     compute_form(2441)
     compute_form(8889)
   end

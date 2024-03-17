@@ -11,7 +11,7 @@ class Form1040_3 < TaxForm
   NAME = '1040 Schedule 3'
 
   def year
-    2020
+    2023
   end
 
   # Social security tax withholding threshold. This is from Line 10, and must be
@@ -34,7 +34,7 @@ class Form1040_3 < TaxForm
 
     # Education credits
     compute_form(8863) do |f|
-      line[3] = f.line[19]
+      line[3] = f.line[:credit]
     end
 
     # Retirement savings credit

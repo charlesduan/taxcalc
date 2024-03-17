@@ -289,6 +289,10 @@ class Form1065 < TaxForm
     if psp_contrib > 0
       line['K13d.code'] = 'R'
       line['K13d'] = psp_contrib
+
+      unless form('5500-EZ').line(:acknowledgment, :present)
+        raise "You must file Form 5500-EZ"
+      end
     end
 
     #

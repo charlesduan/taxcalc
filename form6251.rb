@@ -355,11 +355,15 @@ class Line5ExemptionWorksheet < TaxForm
 end
 
 # Parameter order reminder: set_param(single, mfj, mfs, hoh, qw)
+
+# Used on AMT test worksheet, line 8
 FilingStatus.set_param('amt_exempt_max',
-                       single: 518_400, mfj: 1_036_800, mfs: :half_mfj,
+                       single: 578_150, mfj: 1_156_300, mfs: :half_mfj,
                        hoh: :single, qw: :mfj)
+
+# Used on the AMT test worksheet, line 6
 FilingStatus.set_param('amt_exemption',
-                       single: 72_900, mfj: 113_400, mfs: :half_mfj, hoh:
+                       single: 81_300, mfj: 126_500, mfs: :half_mfj, hoh:
                        :single, qw: :mfj)
 FilingStatus.set_param('amt_exempt_zero',
                        single: 810_000, mfj: 1_490_400, mfs: :half_mfj,
