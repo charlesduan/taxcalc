@@ -12,7 +12,7 @@ class AssetManager < TaxForm
   NAME = 'Asset Manager'
 
   def year
-    2022
+    2023
   end
 
   def compute

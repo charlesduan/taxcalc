@@ -13,7 +13,7 @@ class ExpenseManager < TaxForm
   NAME = 'Business Expense Manager'
 
   def year
-    2022
+    2023
   end
 
   def compute
@@ -76,6 +76,7 @@ class ExpenseManager < TaxForm
   CAT_NAMES = {
     'Meals' => 'Business Meals',
     'Licenses' => 'Taxes and Licenses',
+    'Commissions' => 'Commissions and Fees',
     'Safe_Harbor' => '1.263(a)-1(f) Safe Harbor',
     'Rent_Equipment' => 'Rented Vehicles, Machinery, and Equipment',
     'Rent_Property' => 'Rented Business Property',
