@@ -16,7 +16,7 @@ class Form1040_3 < TaxForm
 
   # Social security tax withholding threshold. This is from Line 10, and must be
   # updated every year.
-  SS_THRESHOLD = 8537
+  SS_THRESHOLD = 9932
 
   def compute
     set_name_ssn
@@ -36,55 +36,78 @@ class Form1040_3 < TaxForm
     # Child care expenses
     with_form(2441) do |f|
       compute_more(f, :credit)
-      line[2] = f.line[:credit]
+      line['2/childcare_credit'] = f.line[:credit]
     end
 
     # Education credits
     compute_form(8863) do |f|
-      line[3] = f.line[:credit]
+      line['3/educ_credit'] = f.line[:credit]
     end
 
     # Retirement savings credit
-    if form(1040).line_agi <= form(1040).status.qrsc_limit
-      raise 'Line 51 retirement savings credit not implemented'
+    if form(1040).line[:agi] <= form(1040).status.qrsc_limit
+      raise 'Line 4 retirement savings credit not implemented'
+      # Line 4/savers_credit
     end
 
-    # Line 5, energy saving
+    # Line 5a/energy_credit
+    # Line 5b/energy_imp_credit, energy saving credits
     confirm("You installed no any energy saving devices")
 
     # Line 6: Other credits.
     # - Form 3800: None of the general business credits seem applicable.
     # - Form 8801: AMT credit only applies to depreciation or other deferrals.
     # - Mortgage interest credit: requires certificate.
-    # - Schedule R is for people over 65.
+    # - Schedule R is for people over 65. It will set line 6d
     compute_form('1040 Schedule R') && raise("Can't handle Schedule R")
     # None of the other credits seem relevant.
+    line[7] = sum_lines(*"6a".."6z")
 
-    line['8/nref_credits'] = sum_lines(*1..6)
+    # As a convenience for Form 8812, the items for Credit Limit Worksheet A are
+    # summed here. (This is done here so that, to the extent the line numbers
+    # change, it is easier to identify the need for adjustment.)
+    line[:form_8812_exclusions!] = sum_lines(
+      1, 2, 3, 4, '5b', '6d', '6f', '6l', '6m'
+    )
+
+    line[:form_8812_worksheet_b_needed!] = (
+      line['6g', :present] || # Mortgage interest credit
+      line['6c', :present] || # Adoption credit
+      line['5a', :present] || # Residential clean energy credit
+      line['6h', :present]    # DC homebuyer credit
+    )
+
+    line['8/nref_credits'] = sum_lines(*1..7)
 
     #
     # Part II
     #
-    # 8: net premium tax credit. For health care purchased on marketplace (Form
+    # 9: net premium tax credit. For health care purchased on marketplace (Form
     # 1095-A).
     #
-    # 9: Amount paid with extension to file.
+    # 10: Amount paid with extension to file.
 
-    # 10: Social security excess
-    ss_tax_paid = forms('W-2').lines[4].map { |x|
+    #
+    # 11: Social security excess. For each person on this filing, compute all
+    # the social security withholdings, add them up, and determine the excess
+    # over the maximum withholding. The sum of those excesses is line 11.
+    #
+    ss_tax_paid = Hash.new(BlankZero)
+    forms('W-2').each do |w2|
+      ss_wh = w2.line[4]
       warn "Employer withheld too much social security tax" if x > SS_THRESHOLD
-      [ x, SS_THRESHOLD ].min
-    }.inject(:+)
-    # The next line isn't exactly correct for mfj filers
-    tot_sst = form(1040).status.is(:mfj) ? SS_THRESHOLD * 2 : SS_THRESHOLD
-    if ss_tax_paid > tot_sst
-      line[11] = ss_tax_paid - tot_sst
+      ss_wh = [ x, SS_THRESHOLD ].min
+      ss_tax_paid[w2.line[:ssn]] += ss_wh
     end
+    line[11] = ss_tax_paid.values.map { |ss_tax|
+      [ BlankZero, ss_tax - SS_THRESHOLD ].max
+    }.sum
 
-    # 11: fuel tax credit.
-    # 12: Other credits.
+    # 12: fuel tax credit.
+    # 13: Other credits.
+    line[14] = sum_lines(*"13a".."13z")
 
-    line['13/ref_credits'] = sum_lines(*8..13)
+    line['15/ref_credits'] = sum_lines(*8..14)
   end
 
   def needed?
@@ -94,5 +117,5 @@ class Form1040_3 < TaxForm
 end
 
 FilingStatus.set_param('qrsc_limit',
-                       single: 32_500, mfj: 65_000, mfs: :single,
-                       hoh: 48_750, qw: :single)
+                       single: 36_500, mfj: 73_000, mfs: :single,
+                       hoh: 54_750, qw: :single)

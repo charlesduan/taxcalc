@@ -166,7 +166,9 @@ class Form1040 < TaxForm
         :dep_3 => dep.line[:relationship],
       }
       case dep.line[:qualifying]
-      when 'child' then row[:dep_4_ctc] = 'X'
+      when 'child'
+        raise "Dependent marked as child but is too old" if age(dep) >= 17
+        row[:dep_4_ctc] = 'X'
       when 'other' then row[:dep_4_other] = 'X'
       when 'none'
       else raise "Unknown dependent qualifying type #{dep.line[:qualifying]}"
@@ -285,11 +287,13 @@ class Form1040 < TaxForm
     line[17] = sched_2.line[:add_tax] if sched_2
     line['18/pre_ctc_tax'] = sum_lines(16, 17)
 
+    # Form 8812 depends on Schedule 3.
+    sched_3 = find_or_compute_form('1040 Schedule 3')
+
     # Child tax credit and other credits
     form8812 = compute_form(8812)
     line[19] = ctcw.line[:ctc] if form8812
 
-    sched_3 = find_or_compute_form('1040 Schedule 3')
     line['20/nref_credits'] = sched_3.line[:nref_credits] if sched_3
     line[21] = sum_lines(19, 20)
 
@@ -327,7 +331,10 @@ class Form1040 < TaxForm
     end
 
     # 28: refundable child tax credit.
-    line[28] = form8812.line[:actc]
+    if form8812
+      calculate_more(form8812, :actc)
+      line[28] = form8812.line[:actc]
+    end
 
     # 29: American Opportunity (education) credit. Inapplicable for mfs status.
     unless status.is?('mfs')
