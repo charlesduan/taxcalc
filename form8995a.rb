@@ -6,7 +6,7 @@ class Form8995A < TaxForm
   NAME = '8995-A'
 
   def year
-    2020
+    2023
   end
 
   def compute
@@ -16,7 +16,9 @@ class Form8995A < TaxForm
     if @qbi_manager.qbi.count > 3
       raise "Too many businesses"
     end
-    compute_form('8995-A Schedule A')
+    if @qbi_manager.qbi.any? { |qbi| qbi.sstb }
+      compute_form('8995-A Schedule A')
+    end
 
     @prefix = "A"
     @qbi_manager.qbi.each do |qbi|
@@ -61,7 +63,7 @@ class Form8995A < TaxForm
 
     setlineno(
       2, with_form('8995-A Schedule A', otherwise: qbi.amount) { |f|
-        f.match_line(11, tin: line[lineno('1d')])
+        f.match_line(11, prefix: @prefix)
       }
     )
     setlineno(3, (line[lineno(2)] * 0.2).round)
@@ -71,26 +73,28 @@ class Form8995A < TaxForm
     else
       # Assuming there are zero W-2 wages and UBIA
 
-      setlineno(4, with_form('8995-A Schedule A', otherwise: 0) { |f|
-        f.match_line(12, tin: line[lineno('1d')])
+      setlineno(4, with_form('8995-A Schedule A', otherwise: BlankZero) { |f|
+        f.match_line(12, prefix: @prefix)
       })
       setlineno(5, (0.5 * line[lineno(4)]).round)
       setlineno(6, (0.25 * line[lineno(4)]).round)
 
-      setlineno(7, with_form('8995-A Schedule A', otherwise: 0) { |f|
-        f.match_line(13, tin: line[lineno('1d')])
+      setlineno(7, with_form('8995-A Schedule A', otherwise: BlankZero) { |f|
+        f.match_line(13, prefix: @prefix)
       })
       setlineno(8, (0.025 * line[lineno(7)]).round)
 
       setlineno(9, line[lineno(6)] + line[lineno(8)])
       setlineno(10, [ line[lineno(5)], line[lineno(9)] ].max)
       setlineno(11, [ line[lineno(3)], line[lineno(10)] ].min)
+
       setlineno(12, compute_phased_in_reduction(qbi))
+
       setlineno(13, [ line[lineno(11)], line[lineno(12)] ].max)
     end
 
-    setlineno(14, with_form('8995-A Schedule D', otherwise: 0) { |f|
-      f.match_line(6, tin: line[lineno('1d')])
+    setlineno(14, with_form('8995-A Schedule D', otherwise: BlankZero) { |f|
+      f.match_line(6, prefix: @prefix)
     })
     setlineno(15, line[lineno(13)] - line[lineno(14)])
   end
@@ -103,17 +107,23 @@ class Form8995A < TaxForm
     threshold = form(1040).status.qbi_threshold
     qbi_max = form(1040).status.qbi_max
 
-    # This computation should have been skipped
+    # This computation should have been skipped at the line 3 condition.
     raise "Should not be computing this" if tax_inc <= threshold
 
+    #
+    # If the taxable income is greater than the QBI maximum, then the phased-in
+    # reduction is complete.
+    #
     if tax_inc > qbi_max
       explain("Taxable income (#{tax_inc}) exceeds QBI max (#{qbi_max})")
       return BlankZero
     end
-    if line[lineno(10)] >= line[lineno(3)]
-      explain("Line 10 (#{line[lineno(10)]}) >= Line 3 (#{line[lineno(3)]})")
-      return BlankZero
-    end
+
+    # I can't figure out why this condition is present
+    # if line[lineno(10)] >= line[lineno(3)]
+    #   explain("Line 10 (#{line[lineno(10)]}) >= Line 3 (#{line[lineno(3)]})")
+    #   return BlankZero
+    # end
 
     setlineno(17, line[lineno(3)])
     setlineno(18, line[lineno(10)])

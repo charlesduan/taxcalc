@@ -7,7 +7,7 @@ class TaxComputation < TaxForm
   NAME = "Tax Computation"
 
   def year
-    2020
+    2023
   end
 
 
@@ -146,13 +146,14 @@ FilingStatus.set_param('qdcgt_cap',
 FilingStatus.set_param(
   'tax_brackets',
   single: nil,
-  mfj: nil,
-  mfs: [
-    [ 163300, 0.24, 5920.50 ],
-    [ 207350, 0.32, 18984.50 ],
-    [ 311025, 0.35, 25205.00 ],
-    [ nil, 0.37, 31425.50 ],
+  mfj: [
+    [ 190750, 0.22, 9385.00 ],
+    [ 364200, 0.24, 13200.00 ],
+    [ 462500, 0.32, 42336.00 ],
+    [ 693750, 0.35, 56211.00 ],
+    [ nil, 0.37, 70086.00 ],
   ],
+  mfs: nil,
   hoh: nil,
   qw: nil
 )

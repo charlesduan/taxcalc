@@ -16,14 +16,15 @@ class Form8995A_A < TaxForm
     set_name_ssn
 
     @qbi_manager = form('QBI Manager')
-    @prefix = "A"
     if @qbi_manager.qbi.count > 3
       raise "Too many businesses"
     end
 
+    @prefix = "A"
     @qbi_manager.qbi.each do |qbi|
-      next unless qbi.sstb
-      compute_business(qbi)
+      # Some prefixes will be left blank, such that the prefixes in this form
+      # match those of Form 8995-A.
+      compute_business(qbi) if qbi.sstb
       @prefix = @prefix.next
     end
   end
@@ -36,15 +37,8 @@ class Form8995A_A < TaxForm
     line[lineno(num)] = val
   end
 
-  def match_line(num, tin:)
-    %w(A B C).each do |prefix|
-      tin_lineno = lineno('1b', prefix: prefix)
-      next unless line[tin_lineno, :present]
-      if line[tin_lineno] == tin
-        return line[lineno(num, prefix: prefix)]
-      end
-    end
-    raise "No matching line X.#{num} for TIN #{tin}"
+  def match_line(num, prefix:)
+    return line[lineno(num, prefix: prefix)]
   end
 
   def compute_business(qbi)

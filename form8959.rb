@@ -1,11 +1,13 @@
 require 'tax_form'
 
+#
 # Additional Medicare Tax
+#
 class Form8959 < TaxForm
   NAME = '8959'
 
   def year
-    2020
+    2023
   end
 
   def compute
@@ -13,7 +15,11 @@ class Form8959 < TaxForm
 
     # Wages
     line[1] = forms('W-2').lines(5, :sum)
+
+    # SS/Medicare tax on unreported tip income
     with_form(4317) do |f| line[2] = f.line[6] end
+
+    # Uncollected SS and Medicare tax on wages
     with_form(8919) do |f| line[3] = f.line[6] end
     line[4] = sum_lines(*1..3)
 
@@ -21,15 +27,17 @@ class Form8959 < TaxForm
     line[6] = [ 0, line[4] - line[5] ].max
     line[7] = (line[6] * 0.009).round
 
-    with_form('1040 Schedule SE') do |sched_se|
-      # Forms 1040-PR or 1040-SS may be required if the self-employed person
-      # lives in a US territory.
-      line[8] = [ 0, sched_se.line[:se_inc] ].max
+    # Forms 1040-PR or 1040-SS may be required if the self-employed person
+    # lives in a US territory.
+    line[8] = [ 0, forms('1040 Schedule SE').lines(:se_inc, :sum) ].max
+    if line[8] > 0
       line[9] = form(1040).status.form_8959_limit
       line[10] = line[4]
       line[11] = [ 0, line[9] - line[10] ].max
       line[12] = [ 0, line[8] - line[11] ].max
       line[13] = (line[12] * 0.009).round
+    else
+      line[13] = BlankZero
     end
 
     confirm("You did not receive any RRTA compensation")

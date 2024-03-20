@@ -12,7 +12,7 @@ class QBIManager < TaxForm
   NAME = 'QBI Manager'
 
   def year
-    2020
+    2023
   end
 
   #
@@ -29,10 +29,7 @@ class QBIManager < TaxForm
     end
 
     def is_sstb?
-      @qbi_manager.interview(
-        "Is your business #{name}, " +
-        "EIN #{tin}, an SSTB (e.g., consulting)?"
-      )
+      @qbi_manager.interview("Is your business #{name}, EIN #{tin}, an SSTB?")
     end
   end
 
@@ -55,12 +52,6 @@ class QBIManager < TaxForm
       form.line[:ein!, :present] ? form.line[:ein!] : form.line[:ssn]
     end
 
-    def is_sstb?
-      case form.line[:A]
-      when 'Consulting' then true
-      else super
-      end
-    end
   end
 
   attr_reader :qbi
@@ -81,19 +72,23 @@ class QBIManager < TaxForm
 
     confirm('You have no REIT dividends or publicly traded partnership income')
 
-    # Exclude SSTB (consulting income) if the income threshold is exceeded
+    #
+    # The definition of taxable income is in the Form 8995-A instructions,
+    # immediately under Specific Instructions.
+    #
     line[:taxable_income] = f1040.line[:agi] - f1040.line[:deduction]
+
+    #
+    # Exclude SSTB (consulting income) if the income threshold is exceeded.
+    #
     if line[:taxable_income] > f1040.status.qbi_max
       line[:sstb_excluded?] = true
       @qbi.reject!(&:sstb)
     end
 
-    if @qbi.map(&:amount).inject(0, :+) <= 0
+    if @qbi.map(&:amount).sum <= 0
       line[:deduction] = BlankZero
-      return
-    end
-
-    if line[:taxable_income] <= form(1040).status.qbi_threshold
+    elsif line[:taxable_income] <= form(1040).status.qbi_threshold
       line[:deduction] = compute_form(8995).line[:deduction]
     else
       line[:deduction] = compute_form('8995-A').line[:deduction]
@@ -104,10 +99,10 @@ class QBIManager < TaxForm
 end
 
 FilingStatus.set_param('qbi_threshold',
-                       single: 163_300, mfj: 326_600, mfs: :single,
+                       single: 182_100, mfj: 364_200, mfs: :single,
                        hoh: :single, qw: :single)
 
 FilingStatus.set_param('qbi_max',
-                       single: 213_300, mfj: 426_600, mfs: :single,
+                       single: 232_100, mfj: 464_200, mfs: :single,
                        hoh: :single, qw: :single)
 

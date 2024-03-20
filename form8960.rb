@@ -1,16 +1,18 @@
 require 'tax_form'
 
+#
 # Net Investment Income Tax
+#
 class Form8960 < TaxForm
 
   NAME = '8960'
 
   def year
-    2020
+    2023
   end
 
   def needed?
-    return form(1040).line_agi > form(1040).status.niit_threshold
+    return form(1040).line[:agi] > form(1040).status.niit_threshold
   end
 
   def compute
@@ -18,8 +20,8 @@ class Form8960 < TaxForm
 
     set_name_ssn
 
-    line[1] = form(1040).line_taxable_int
-    line[2] = form(1040).line_taxable_div
+    line[1] = form(1040).line[:taxable_int]
+    line[2] = form(1040).line[:taxable_div]
 
     annuities = forms('1099-R') { |x| x.line[7] == 'D' }
     if annuities.any? { |x| x.line['2b.not_determined?'] }
@@ -29,16 +31,24 @@ class Form8960 < TaxForm
     end
 
     # Rental real estate, partnerships, trusts
-    line['4a'] = form('1040 Schedule 1').line_rrerpst
+    line['4a'] = form('1040 Schedule 1').sum_lines(:bus_inc, :rrerpst)
+
+    # Adjustments for non-passive income
+    line4b = 0
     with_form('1040 Schedule E') do |f|
       # We assume that any partnerships listed on 1040 Schedule E, part II that
       # involve nonpassive income/losses are section 162 businesses (i.e.,
       # businesses for which business expense deductions may be taken), and are
       # also not in the business of trading financial instruments or
       # commodities.
-      line['4b'] = -(f.line[:pship_nonpassive_inc, :opt] \
+      line4b = -(f.line[:pship_nonpassive_inc, :opt] \
                      - f.sum_lines(*%w(pship_nonpassive_loss pship_179_ded)))
     end
+    with_form('1040 Schedule C') do |f|
+      raise "Need to deduct Schedule C non-passive income"
+    end
+    line['4b'] = line4b
+
     line['4c'] = line['4a'] + line['4b']
 
     # This needs to be limited to other income
@@ -75,7 +85,7 @@ class Form8960 < TaxForm
     # Part III
 
     line[12] = [ 0, line[8] - line[11] ].max
-    line[13] = form(1040).line_agi
+    line[13] = form(1040).line[:agi]
 
     line[14] = form(1040).status.niit_threshold
 

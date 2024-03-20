@@ -252,7 +252,7 @@ class Form1040 < TaxForm
     # are to be itemized.
     if @itemize
       sched_a = compute_form('1040 Schedule A')
-      line['12/deduction'] = sched_a.line_total
+      line['12/deduction'] = sched_a.line[:total]
     else
       %w(
         ysd.dependent ysd.65yo ysd.blind? ssd.dependent ssd.65yo ssd.blind?
