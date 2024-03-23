@@ -106,7 +106,7 @@ class Form1065 < TaxForm
     place_lines(9, 10, 11, 12, 13, 14, 15, '16a', '16b', 17, 18, 19, 20, 21)
 
     line['22/tot_ded'] = sum_lines(
-      9, 10, 11, 12, 13, 14, 15, '16c', 17, 18, 19, 20
+      '16c', *9..21
     )
     line['23/ord_inc'] = line[:tot_inc] - line[:tot_ded]
 

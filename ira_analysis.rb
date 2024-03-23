@@ -56,7 +56,7 @@ class IraAnalysis < TaxForm
     # Collect distributions, which are reported on 1099-R.
     all_1099rs = forms('1099-R', ssn: @ssn)
     all_1099rs.each do |x|
-      next if x.line['ira-sep-simple?']
+      next if x.line[:ira_sep_simple?]
       next if [ 1, 2, 3, 4, 5, 7 ].include?(f.line[7])
       raise "Non-IRA 1099-R forms not implemented"
     end

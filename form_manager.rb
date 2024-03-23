@@ -227,7 +227,7 @@ class FormManager
     else
       f = @forms[name]
       raise "No matching form #{name}" if ssn && f.ssn != ssn
-      raise "No matching form #{name}" if block_given && !yield(f)
+      raise "No matching form #{name}" if block_given? && !yield(f)
     end
     f.used = true
     return f

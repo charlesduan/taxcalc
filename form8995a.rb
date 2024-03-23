@@ -29,8 +29,19 @@ class Form8995A < TaxForm
     line[16] = sum_lines('A.15', 'B.15', 'C.15')
     line[27] = line[16]
 
-    # Lines 28-31
-    confirm('You have no REIT dividends or publicly traded partnership income')
+    #
+    # REIT/PTP dividends.
+    #
+    line[28] = forms('1099-DIV').line(5, :sum)
+    ly = @manager.submanager(:last_year)
+    ly.with_form('8995-A') do |f|
+      line[29] = f.line[:reit_ptp_carryforward, :opt]
+    end
+    ly.with_form('8995') do |f|
+      line[29] = f.line[:reit_ptp_carryforward, :opt]
+    end
+    line[30] = [ 0, sum_lines(28, 29) ].max
+    line[31] = (line[30] * 0.2).round
 
     line[32] = sum_lines(27, 31)
     line[33] = @qbi_manager.line[:taxable_income]
