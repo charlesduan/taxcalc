@@ -9,7 +9,8 @@ class Pub590AWorksheet1_2 < TaxForm
     2023
   end
 
-  def initialize(ssn, spouse_ssn)
+  def initialize(manager, ssn, spouse_ssn)
+    super(manager)
     @ssn = ssn
     @spouse_ssn = spouse_ssn
   end
@@ -60,7 +61,9 @@ class Pub590AWorksheet1_2 < TaxForm
       # Determine whether the MAGI is between the limits. If it is below the
       # lower bound limit, then compute as if there were no limit.
       line[1] = limit[1]
-      line['2/magi'] = compute_form('Pub. 590-A Worksheet 1-1').line[:magi]
+      line['2/magi'] = compute_form(
+        'Pub. 590-A Worksheet 1-1', @ssn, @spouse_ssn
+      ).line[:magi]
       line[3] = line[1] - line[2]
 
       # The form asks whether line 3 is $10,000 or more ($20,000 for MFJ etc).

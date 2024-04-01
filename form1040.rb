@@ -21,6 +21,7 @@ require_relative 'form8995'
 require_relative 'form8995a'
 require_relative 'ira_analysis'
 require_relative 'qbi_manager'
+require_relative 'home_office'
 require_relative 'amt_test_worksheet'
 require_relative 'tax_computation'
 
@@ -52,6 +53,8 @@ class Form1040 < TaxForm
   # needed.
   #
   def compute_early_schedules
+    compute_form('Home Office Manager')
+
     if has_form?('Sole Proprietorship')
       forms('Sole Proprietorship').each do |sp|
         compute_form('1040 Schedule C', sp)
@@ -62,9 +65,9 @@ class Form1040 < TaxForm
 
     compute_form('1040 Schedule E')
 
-    compute_form('1040 Schedule SE', for: @bio.line[:ssn])
+    compute_form('1040 Schedule SE', @bio.line[:ssn])
     if @status.is?('mfj')
-      compute_form('1040 Schedule SE', for: @sbio.line[:ssn])
+      compute_form('1040 Schedule SE', @sbio.line[:ssn])
     end
 
     compute_form(2441)
@@ -146,14 +149,16 @@ class Form1040 < TaxForm
       )
     end
 
-    if @bio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
+    if age(@bio) >= 65
       line['ysd.65yo'] = 'X'
     end
     line['ysd.blind?'] = 'X' if @bio.line[:blind?]
-    if @sbio.line[:birthday] < Date.new(@manager.year - 64, 1, 2)
-      line['ssd.65yo'] = 'X'
+    if @sbio
+      if age(@sbio) >= 65
+        line['ssd.65yo'] = 'X'
+      end
+      line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
     end
-    line['ssd.blind?'] = 'X' if @sbio.line[:blind?]
 
     #
     # Dependents
@@ -189,7 +194,7 @@ class Form1040 < TaxForm
     end
 
     with_form(2441) { |f|
-      line['1e'] += f.line[:tax_benefit]
+      line['1e'] = f.line[:tax_benefit]
     }
 
     line['1z'] = sum_lines(*("1a".."1i"))
@@ -218,9 +223,12 @@ class Form1040 < TaxForm
     line['3b/taxable_div'] = sched_b.line[:ord_div]
 
     # IRAs, pensions, and annuities
-    ira_analysis = compute_form('IRA Analysis')
-    line['4a'] = ira_analysis.line_total_distrib
-    line['4b/taxable_ira'] = ira_analysis.line_taxable_distrib
+    compute_form('IRA Analysis', @bio.line[:ssn], @sbio && @sbio.line[:ssn])
+    if status.is?('mfj')
+      compute_form('IRA Analysis', @sbio.line[:ssn], @bio.line[:ssn])
+    end
+    line['4a'] = forms('IRA Analysis').lines[:total_distrib, :sum]
+    line['4b/taxable_ira'] = forms('IRA Analysis').lines[:taxable_distrib, :sum]
 
     # Pensions and annuities
     assert_no_forms('SSA-1099', 'RRB-1099')

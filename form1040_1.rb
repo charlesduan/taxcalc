@@ -116,9 +116,10 @@ class Form1040_1 < TaxForm
     # not included. See Pub. 590A, Worksheet 1-1.
     line['pre_ira_adjust!'] = sum_lines('19a', *11..18)
 
-    ira_analysis = form('IRA Analysis')
-    compute_more(ira_analysis, :continuation)
-    line['20/ira_ded'] = ira_analysis.line[:deductible_contrib]
+    forms('IRA Analysis').each do |f|
+      compute_more(f, :continuation)
+    end
+    line['20/ira_ded'] = forms('IRA Analysis').lines[:deductible_contrib, :sum]
 
     student_loan_magi = form(1040).line[:tot_inc] - sum_lines(*11..20)
     if !form(1040).status.is(:mfs) && student_loan_magi < 185_000

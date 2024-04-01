@@ -505,7 +505,7 @@ class TaxForm
   # subtract one day from the birthday.
   def age(bio = nil)
     bio ||= form(1040).bio
-    return year - (bio.line[:birthday] - 1).year
+    return year - (bio.line[:dob] - 1).year
   end
 
   #

@@ -13,8 +13,6 @@ class Form1040E < TaxForm
     2023
   end
 
-  include HomeOfficeManager
-
   def compute
     set_name_ssn
 
@@ -79,7 +77,7 @@ class Form1040E < TaxForm
       res = {
         '28a' => pship_name,
         '28b' => 'P',
-        '28d' => k1.line[:A],
+        '28d' => k1.line[:ein],
       }
       if k1.line[1] < 0
         res['28i'] = -k1.line[1];

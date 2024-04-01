@@ -266,13 +266,16 @@ class FormManager
 
   # Performs a block if the named form exists and returns the result; otherwise
   # performs an alternate block and/or returns an alternate value.
-  def with_form(name, otherwise: nil, required: false)
-    if has_form?(name)
-      return yield(form(name))
-    else
+  def with_form(name, ssn: nil, otherwise: nil, required: false)
+    fs = forms(name, ssn: ssn)
+    case fs.count
+    when 1 then yield(fs[0])
+    when 0
       raise "Form #{name} required but not present" if required
       otherwise = otherwise.call if otherwise.is_a?(Proc)
       return otherwise
+    else
+      raise "Multiple forms #{name} found but 1 expected"
     end
   end
 

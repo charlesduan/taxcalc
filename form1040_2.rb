@@ -29,8 +29,8 @@ class Form1040_2 < TaxForm
     #
     # Part II
     #
-    with_form('1040 Schedule SE') do |sched_se|
-      line[4] = sched_se.line[:se_tax]
+    if has_form?('1040 Schedule SE')
+      line[4] = forms('1040 Schedule SE').lines[:se_tax, :sum]
     end
 
     # Lines 5-7: unreported social security/medicare tax

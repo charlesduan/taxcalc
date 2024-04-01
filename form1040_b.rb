@@ -50,7 +50,10 @@ class Form1040B < TaxForm
     line['6/ord_div'] = line['5r', :sum]
 
     if line[4] > 1500 or line[6] > 1500
-      raise 'Schedule B Part III not implemented'
+      confirm("You had no financial accounts in a foreign country")
+      line['7a.no'] = 'X'
+      confirm("You had no relationship with a foreign trust")
+      line['8.no'] = 'X'
     end
 
     return self

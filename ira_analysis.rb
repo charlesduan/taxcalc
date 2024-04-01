@@ -31,7 +31,8 @@ class IraAnalysis < TaxForm
 
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
 
-  def initialize(ssn, spouse_ssn)
+  def initialize(manager, ssn, spouse_ssn)
+    super(manager)
     @ssn = ssn
     @spouse_ssn = spouse_ssn
   end
@@ -129,7 +130,7 @@ class IraAnalysis < TaxForm
     @contrib_continuation.call
 
     # Compute Form 8606
-    compute_form(8606, ssn: @ssn)
+    compute_form(8606, @ssn)
 
     # Check that the required lines were all computed
     [

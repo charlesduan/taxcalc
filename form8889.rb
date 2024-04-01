@@ -27,7 +27,7 @@ class Form8889 < TaxForm
   def required?
     return true if has_form?('HSA Contribution')
     return true if forms('W-2').any? { |f|
-      f.line('12.code', :all).include?('W')
+      f.line('12.code', :present) && f.line('12.code', :all).include?('W')
     }
     return true if @manager.submanager(:last_year).has_form?(8889)
     return false

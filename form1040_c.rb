@@ -7,8 +7,6 @@ class Form1040C < TaxForm
 
   NAME = '1040 Schedule C'
 
-  include HomeOfficeManager
-
   def year
     2023
   end

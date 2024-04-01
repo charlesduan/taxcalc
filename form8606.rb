@@ -26,7 +26,8 @@ class Form8606 < TaxForm
     end
   end
 
-  def initialize(ssn)
+  def initialize(manager, ssn)
+    super(manager)
     @ssn = ssn
   end
 
@@ -34,12 +35,12 @@ class Form8606 < TaxForm
   # This only computes distributions. Contributions are computed later.
   def compute
 
-    @ira_analysis = form('IRA Analysis')
-
     line[:name] = with_form('Biographical', ssn: @ssn) { |f|
       f.line[:first_name] + ' ' + f.line[:last_name]
     }
     line[:ssn] = @ssn
+
+    @ira_analysis = form('IRA Analysis', ssn: @ssn)
 
     # Lines 1-5 will be computed by the IRA Analysis.
     line[1] = @ira_analysis.line[:nondeductible_contrib]

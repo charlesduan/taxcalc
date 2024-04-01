@@ -32,7 +32,7 @@ class Form8995A < TaxForm
     #
     # REIT/PTP dividends.
     #
-    line[28] = forms('1099-DIV').line(5, :sum)
+    line[28] = forms('1099-DIV').lines(5, :sum)
     ly = @manager.submanager(:last_year)
     ly.with_form('8995-A') do |f|
       line[29] = f.line[:reit_ptp_carryforward, :opt]

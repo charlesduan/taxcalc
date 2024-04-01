@@ -18,7 +18,7 @@ class Form1040SE < TaxForm
 
     ho_mgr = find_or_compute_form('Home Office Manager')
 
-    @bio = form('Biographical') { |f| f.line['ssn'] == @ssn }
+    @bio = form('Biographical', ssn: @ssn)
     line[:name] = @bio.line[:first_name] + ' ' + @bio.line[:last_name]
     line[:ssn] = @ssn
 

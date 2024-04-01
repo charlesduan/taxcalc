@@ -8,8 +8,10 @@ class Pub590BWorksheet1_1 < TaxForm
     2023
   end
 
-  def initialize(ssn)
+  def initialize(manager, ssn, spouse_ssn)
+    super(manager)
     @ssn = ssn
+    @spouse_ssn = spouse_ssn
   end
 
   def compute
