@@ -14,7 +14,7 @@ class Form1040_2 < TaxForm
     # Bizarrely, Form 6251 (AMT) requires Schedule 2, Line 2. So it is computed
     # first.
     assert_no_forms('1095-A') # Line 2; advance premium tax credit repayment
-    line[2] = BlankZero
+    line['2/aptc'] = BlankZero
 
     amt_test = compute_form(
       "1040 Worksheet to See If You Should Fill In Form 6251"

@@ -10,7 +10,7 @@ class Form6251 < TaxForm
   NAME = '6251'
 
   def year
-    2020
+    2023
   end
 
   def compute
@@ -23,13 +23,13 @@ class Form6251 < TaxForm
       end
     end
 
-    line[1] = form(1040).line_taxinc
+    line[1] = form(1040).line[:taxinc]
 
     # Schedule A tax deduction, or 1040 standard deduction.
     line['2a'] = with_form('1040 Schedule A', otherwise: proc {
       form(1040).line[:deduction]
     }) do |f|
-      f.line_salt
+      f.line[:salt]
     end
 
     with_form('1040 Schedule 1') do |f|
@@ -46,7 +46,7 @@ class Form6251 < TaxForm
           raise "AMT adjustment for Schedule 1, line 8 not implemented"
           # This is also relevant to line 2e below
         end
-        line['2b'] = -f.line_taxrefund
+        line['2b'] = -f.line[:taxrefund] - f.line[:other_tax, :opt]
       end
     end
 
@@ -140,10 +140,8 @@ class Form6251 < TaxForm
     # might be affected but this is unlikely.
     confirm("You have no other adjustments for AMT (line 3)")
 
-    line[4] = sum_lines(*%w(
-      1 2a 2b 2c 2d 2e 2f 2g 2h 2i 2j 2k 2l 2m 2n 2o 2p 2q 2r 2s 2t 3
-    ))
-    if form(1040).status.is('mfs') && line[4] > 745_200
+    line[4] = sum_lines(1, 3, *'2a'..'2z')
+    if form(1040).status.is('mfs') && line[4] > 831_150
       raise "Form 6251 Line 4 adjustment not implemented"
     end
     with_form('1040 Schedule E') do |f|
@@ -169,14 +167,14 @@ class Form6251 < TaxForm
     if line[6] == 0
       line[9] = line[7] = 0
       compute_line_10
-      line[11] = 0
+      line['11/amt_tax'] = 0
       return
     end
 
     # Line 7
     confirm("You have no foreign income")
     l7test = false
-    l7test = true if form(1040).line_qualdiv > 0
+    l7test = true if form(1040).line[:qualdiv] > 0
     l7test = true if form(1040).line[:cap_gain] > 0
     with_form('1040 Schedule D') do |f|
       l7test = true if f.line[:lt_gain] > 0 and f.line[:tot_gain] > 0
@@ -220,11 +218,14 @@ class Form6251 < TaxForm
       end
     end
     with_form('1040 Schedule 2') do |f|
-      l10 += f.line[2]
+      l10 += f.line[:aptc]
     end
-    with_form('1040 Schedule 3') do |f|
-      l10 -= f.line[1]
-    end
+    #
+    # The line 10 instructions specify to subtract Schedule 3, line 1. But
+    # Schedule 3 likely has not been calculated yet, since AMT is computed
+    # during Schedule 2. Since Schedule 3, line 1 is simply the foreign tax
+    # credit, that number is accounted for directly here.
+    #
     l10 -= @ftc_form.line[:fill!] if @ftc_form
 
     confirm("You are not a farmer or fisherman")
@@ -292,7 +293,7 @@ class Form6251 < TaxForm
 
   def check_line_13_conds
     cond1 = (line['2l', :opt] != 0 || line['2i', :opt] != 0)
-    cond2 = (form(1040).line_taxinc == 0)
+    cond2 = (form(1040).line[:taxinc] == 0)
     cond3 = false
     with_form('1041 Schedule K-1') do |f|
       cond3 = true if !(line['12.code', :all] & %w(B C D E F)).empty?
@@ -303,10 +304,10 @@ class Form6251 < TaxForm
   end
 
   def amt_tax(amount)
-    if amount <= form(1040).status.halve_mfs(197_900)
+    if amount <= form(1040).status.halve_mfs(220_700)
       return (amount * 0.26).round
     else
-      return (amount * 0.28).round - form(1040).status.halve_mfs(3958)
+      return (amount * 0.28).round - form(1040).status.halve_mfs(4414)
     end
   end
 
@@ -369,9 +370,9 @@ FilingStatus.set_param('amt_exempt_zero',
                        single: 810_000, mfj: 1_490_400, mfs: :half_mfj,
                        hoh: :single, qw: :mfj)
 FilingStatus.set_param('amt_cg_exempt',
-                       single: 40_000, mfj: 80_000, mfs: :single,
-                       hoh: 53_600, qw: :mfj)
+                       single: 44_625, mfj: 89_250, mfs: :single,
+                       hoh: 59_750, qw: :mfj)
 FilingStatus.set_param('amt_cg_upper',
-                       single: 441_450, mfj: 496_600, mfs: :half_mfj,
-                       hoh: 469_050, qw: :mfj)
+                       single: 492_300, mfj: 553_580, mfs: :half_mfj,
+                       hoh: 523_050, qw: :mfj)
 

@@ -37,7 +37,7 @@ class Form2441 < TaxForm
     # Part I. Add providers.
     #
     forms('Dependent Care Provider').each do |f|
-      unless qual_persons.map { |p| p.line[:ssn] }.include?(f.line[:ssn])
+      unless qual_persons.map { |p| p.line[:ssn] }.include?(f.line[:dep_ssn])
         raise "Dependent care provider #{name} not for qualifying person"
       end
 
@@ -81,7 +81,7 @@ class Form2441 < TaxForm
     end
 
     line[:tot_expenses!] = line('2d', :sum)
-    if line[:tot_expenses!] != line('3d', :sum)
+    if line[:tot_expenses!] != line('1e', :sum)
       raise "Inconsistency in dependent care expenses"
     end
 
@@ -179,7 +179,7 @@ class Form2441 < TaxForm
     # This implements the Line 10 Credit Limit Worksheet.
     line10 = form(1040).line(:pre_ctc_tax) # In 2023, line 18.
     line10 -= form('1040 Schedule 3').line[:foreign_tax_credit]
-    line10 -= form('1040 Schedule 3').line[:pship_tax_adjust]
+    line10 -= form('1040 Schedule 3').line[:pship_tax_adjust, :opt]
     line[10] = [ line10, 0 ].max
 
     line['11/credit'] = [ line['9c'], line[10] ].min

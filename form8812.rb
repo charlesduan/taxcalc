@@ -64,11 +64,15 @@ class Form8812 < TaxForm
       return
     end
 
-    sched_3 = find_or_compute_form('1040 Schedule 3')
-    if sched_3.line[:form_8812_worksheet_b_needed!]
-      raise "Worksheet B not implemented"
-    else
-      line[13] = f1040.line(:pre_ctc_tax) - sched_3.line[:form_8812_exclusions!]
+    with_form('1040 Schedule 3', otherwise: proc {
+      line[13] = f1040.line(:pre_ctc_tax)
+    }) do |sched_3|
+      if sched_3.line[:form_8812_worksheet_b_needed!]
+        raise "Worksheet B not implemented"
+      else
+        line[13] = f1040.line(:pre_ctc_tax) - \
+          sched_3.line[:form_8812_exclusions!]
+      end
     end
 
     line['14/ctc'] = [ line[12], line[13] ].min

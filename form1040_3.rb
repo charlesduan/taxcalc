@@ -23,7 +23,7 @@ class Form1040_3 < TaxForm
 
     # Foreign tax credit
     ftc_form = find_or_compute_form('Foreign Tax Credit')
-    line['1/foreign_tax_credit'] = ftc_form.line[:fill!] if ftc_form
+    line['1/foreign_tax_credit'] = ftc_form ? ftc_form.line[:fill!] : BlankZero
 
     #
     # If a partnership files Form 8986, then Form 8978 must be prepared and the
@@ -32,6 +32,7 @@ class Form1040_3 < TaxForm
     # computed, then it must be done here.
     #
     assert_no_forms(8986)
+    #line['6l/pship_tax_adjust'] = BlankZero
 
     # Child care expenses
     with_form(2441) do |f|
@@ -95,9 +96,11 @@ class Form1040_3 < TaxForm
     ss_tax_paid = Hash.new(BlankZero)
     forms('W-2').each do |w2|
       ss_wh = w2.line[4]
-      warn "Employer withheld too much social security tax" if x > SS_THRESHOLD
-      ss_wh = [ x, SS_THRESHOLD ].min
-      ss_tax_paid[w2.line[:ssn]] += ss_wh
+      if ss_wh > SS_THRESHOLD
+        warn "Employer withheld too much social security tax"
+      end
+      ss_wh = [ ss_wh, SS_THRESHOLD ].min
+      ss_tax_paid[w2.line[:a]] += ss_wh
     end
     line[11] = ss_tax_paid.values.map { |ss_tax|
       [ BlankZero, ss_tax - SS_THRESHOLD ].max

@@ -39,7 +39,7 @@ class QBIManager < TaxForm
       form.line[:B].split(/\n/).first
     end
     def tin
-      form.line[:A]
+      form.line[:ein]
     end
 
   end

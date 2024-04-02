@@ -14,6 +14,7 @@ require_relative 'form1040_e'
 require_relative 'form1040_se'
 require_relative 'form2441'
 require_relative 'form6251'
+require_relative 'form8812'
 require_relative 'form8889'
 require_relative 'form8959'
 require_relative 'form8960'
@@ -300,7 +301,7 @@ class Form1040 < TaxForm
 
     # Child tax credit and other credits
     form8812 = compute_form(8812)
-    line[19] = ctcw.line[:ctc] if form8812
+    line[19] = form8812.line[:ctc] if form8812
 
     line['20/nref_credits'] = sched_3.line[:nref_credits] if sched_3
     line[21] = sum_lines(19, 20)
@@ -340,7 +341,7 @@ class Form1040 < TaxForm
 
     # 28: refundable child tax credit.
     if form8812
-      calculate_more(form8812, :actc)
+      compute_more(form8812, :actc)
       line[28] = form8812.line[:actc]
     end
 
