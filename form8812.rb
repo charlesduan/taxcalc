@@ -6,7 +6,7 @@ require_relative 'tax_form'
 #
 class Form8812 < TaxForm
 
-  NAME = '8812'
+  NAME = '1040 Schedule 8812'
 
   def year
     2023
@@ -14,6 +14,8 @@ class Form8812 < TaxForm
 
   def compute
     f1040 = form(1040)
+
+    set_name_ssn
 
     #
     # Part 1

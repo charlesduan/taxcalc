@@ -62,7 +62,7 @@ class Form8606 < TaxForm
     end
 
     copy_analysis_line(13) { sum_lines(11, 12) }
-    line['14/tot_basis'] = line[13] - line[3]
+    line['14/tot_basis'] = line[3] - line[13]
     copy_analysis_line('15a')  { line[12] - line[7] }
     copy_analysis_line('15b')  { BlankZero }
     copy_analysis_line('15c') { line['15a'] - line['15b'] }

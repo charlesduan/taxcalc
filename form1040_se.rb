@@ -54,7 +54,7 @@ class Form1040SE < TaxForm
     line['2.reduce!'] = se_reduce
 
     line[2] = se_inc - se_reduce
-    if se_reduce >= 0
+    if se_reduce > 0
       line['2*note'] = 'Line 2 reduced based on ' + \
         'unreimbursed partnership expenses'
     end

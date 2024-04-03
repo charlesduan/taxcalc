@@ -300,7 +300,7 @@ class Form1040 < TaxForm
     sched_3 = find_or_compute_form('1040 Schedule 3')
 
     # Child tax credit and other credits
-    form8812 = compute_form(8812)
+    form8812 = compute_form('1040 Schedule 8812')
     line[19] = form8812.line[:ctc] if form8812
 
     line['20/nref_credits'] = sched_3.line[:nref_credits] if sched_3

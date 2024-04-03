@@ -81,7 +81,7 @@ class QdcgtWorksheet < TaxForm
   NAME = '1040 QDCGT Worksheet'
 
   def year
-    2020
+    2023
   end
 
   def compute
@@ -132,11 +132,11 @@ class QdcgtWorksheet < TaxForm
 end
 
 FilingStatus.set_param('qdcgt_exemption',
-                       single: 40_000, mfj: 80_000, mfs: 40_000,
-                       hoh: 53_600, qw: :mfj)
+                       single: 44_650, mfj: 89_250, mfs: :single,
+                       hoh: 59_750, qw: :mfj)
 FilingStatus.set_param('qdcgt_cap',
-                       single: 441_450, mfj: 496_600, mfs: 248_300,
-                       hoh: 469_050, qw: :mfj)
+                       single: 492_300, mfj: 553_850, mfs: :half_mfj,
+                       hoh: 523_050, qw: :mfj)
 
 # A one-liner that will convert the tables of the tax brackets worksheet into
 # the appropriate forms below:
