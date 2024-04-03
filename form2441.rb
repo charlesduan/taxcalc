@@ -36,14 +36,17 @@ class Form2441 < TaxForm
     #
     # Part I. Add providers.
     #
-    forms('Dependent Care Provider').each do |f|
-      unless qual_persons.map { |p| p.line[:ssn] }.include?(f.line[:dep_ssn])
+    if forms('Dependent Care Provider').count > 3
+      line['I.over_3_providers'] = 'X'
+    end
+    forms('Dependent Care Provider').sort_by { |f| f.line[:amount] }.each do |f|
+      unless qual_persons.map { |p| p.line[:name] }.include?(f.line[:dep_name])
         raise "Dependent care provider #{name} not for qualifying person"
       end
 
       if f.line[:address].length < 30
         address1, address2 = f.line[:address], nil
-      elsif f.line[:address] = /\A.{0,30}\s+/
+      elsif f.line[:address] =~ /\A.{0,30}\s+/
         address1, address2 = $&, $'
       else
         address1, address2 = f.line[:address][0, 30], f.line[:address][30..-1]
@@ -75,7 +78,7 @@ class Form2441 < TaxForm
         '2a.last' => lname,
         '2b' => p.line[:ssn],
         '2d' => forms('Dependent Care Provider') { |f|
-          f.line[:dep_ssn] == p.line[:ssn]
+          f.line[:dep_name] == p.line[:name]
         }.lines(:amount, :sum)
       })
     end
