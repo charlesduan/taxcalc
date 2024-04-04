@@ -9,7 +9,7 @@ class FormD40 < TaxForm
   NAME = 'D-40'
 
   def year
-    2022
+    2023
   end
 
   def compute
@@ -44,7 +44,9 @@ class FormD40 < TaxForm
     #)[1, 3]
 
     # Filing status
-    if f1040.line['status.mfj', :present] or f1040.line['status.mfs', :present]
+    if f1040.count == 2
+      line['1/status'] = 'mfssr'
+    elsif f1040.first.line['status.mfj', :present]
       line['1/status'] = 'mfssr'
     else
       raise 'Unknown filing status'
@@ -112,11 +114,12 @@ class FormD40 < TaxForm
       line['18/ded'] = compute_form('D-40 Calculation F').line[:ded]
     else
       line['17standard'] = 'X'
-      # Assumed no special conditions apply
+      # Assumed no special conditions apply. These amounts are given in the
+      # instructions under Filing Status, Standard Deduction.
       line['18/ded'] = case line['status']
-                       when 'mfssr', 'mfj', 'qw' then 25900
-                       when 'single', 'mfs' then 12950
-                       when 'hoh' then 19400
+                       when 'mfssr', 'mfj', 'qw' then 27700
+                       when 'single', 'mfs' then 13850
+                       when 'hoh' then 20800
                        else raise "Unknown status"
                        end
 
@@ -175,7 +178,7 @@ class FormD40 < TaxForm
     # Line 27: earned income credit. Assumed that there isn't one.
     # Line 28: Schedule H homeowner/renter property tax credit. The limit
     # appears on Instructions for Schedule H, Eligibility.
-    if f1040.any? { |f| f.line[:agi] <= 78_600 }
+    if f1040.any? { |f| f.line[:agi] <= 83_700 }
       raise "Schedule H may be applicable but not implemented"
     end
 

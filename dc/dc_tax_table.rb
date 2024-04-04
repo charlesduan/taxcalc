@@ -1,13 +1,34 @@
 module DcTaxTable
 
-  # Updated for 2018. DC tax rates have not changed as of 2020.
+  # Updated for 2024. DC tax rates have not changed as of 2022.
 
-  def self.parse_table(table)
-    res = []
-    table.each_line do |line|
-      res.push(line.chomp.split(/\s+/).map(&:to_i))
+  def compute_tax(income)
+    if income <= 100_000
+      return compute_tax_table(income)
+    else
+      return compute_tax_full(income)
     end
-    return res
+  end
+
+  #
+  # Computes tax according to the tax rates, ignoring the tax table.
+  #
+  def compute_tax_full(income)
+    if income <= 10_000
+      return (0.04 * income).round
+    elsif income <= 40_000
+      return 400 + (0.06 * (income - 10_000)).round
+    elsif income <= 60_000
+      return 2_200 + (0.065 * (income - 40_000)).round
+    elsif income <= 250_000
+      return 3_500 + (0.085 * (income - 60_000)).round
+    elsif income <= 500_000
+      return 19_650 + (0.0925 * (income - 250_000)).round
+    elsif income <= 1_000_000
+      return 42_775 + (0.0975 * (income - 500_000)).round
+    else
+      return 91_525 + (0.1075 * (income - 1_000_000)).round
+    end
   end
 
   def compute_tax_table(income)
@@ -19,16 +40,12 @@ module DcTaxTable
     raise "Income #{income} not found in tax table"
   end
 
-  def compute_tax(income)
-    if income <= 100_000
-      return compute_tax_table(income)
-    elsif income <= 350_000
-      return 3_500 + (0.085 * (income - 60_000)).round
-    elsif income <= 1_000_000
-      return 28_150 + (0.0875 * (income - 350_000)).round
-    else
-      return 85_025 + (0.0895 * (income - 1_000_000)).round
+  def self.parse_table(table)
+    res = []
+    table.each_line do |line|
+      res.push(line.chomp.split(/\s+/).map(&:to_i))
     end
+    return res
   end
 
   TAX_TABLE = parse_table(<<EOF)

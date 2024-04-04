@@ -12,7 +12,7 @@ class FormD40S < TaxForm
   NAME = 'D-40 Schedule S'
 
   def year
-    2022
+    2023
   end
 
   def compute
@@ -34,7 +34,7 @@ class FormD40S < TaxForm
   end
 
   def split_calc_j(name, amt)
-    line["J.#{name}.m"] = half = round(amt / 2)
+    line["J.#{name}.m"] = half = (amt / 2).round
     line["J.#{name}.s"] = amt - half
   end
 

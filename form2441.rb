@@ -34,27 +34,48 @@ class Form2441 < TaxForm
     qual_persons = forms('Dependent') { |f| age(f) <= 12 }
 
     #
-    # Part I. Add providers.
+    # Part I. Add providers. Because the highest-paid three providers must be
+    # listed first, they are sorted this way.
     #
-    if forms('Dependent Care Provider').count > 3
-      line['I.over_3_providers'] = 'X'
-    end
-    forms('Dependent Care Provider').sort_by { |f| f.line[:amount] }.each do |f|
+    providers = forms('Dependent Care Provider').sort_by { |f|
+      -f.line[:amount]
+    }
+
+    # Check that all providers match a dependent
+    providers.each do |f|
       unless qual_persons.map { |p| p.line[:name] }.include?(f.line[:dep_name])
         raise "Dependent care provider #{name} not for qualifying person"
       end
+    end
 
-      if f.line[:address].length < 30
-        address1, address2 = f.line[:address], nil
-      elsif f.line[:address] =~ /\A.{0,30}\s+/
-        address1, address2 = $&, $'
-      else
-        address1, address2 = f.line[:address][0, 30], f.line[:address][30..-1]
-      end
+    # If more than 3 providers, check the box and construct a continuation sheet
+    if providers.count > 3
+      line['I.over_3_providers'] = 'X'
+
+      addl_list = providers[3..-1].map { |f|
+        [
+          "1(a): #{f.line[:name]}",
+          ".br",
+          "1(b): #{f.line[:address]}",
+          ".br",
+          "1(c): #{f.line[:tin]}",
+          ".br",
+          "1(d): #{f.line[:employee?] ? 'Yes' : 'No'}",
+          ".br",
+          "1(e): #{f.line[:amount]}",
+          ".sp",
+        ]
+      }.flatten
+      line[:addl_providers_explanation!, :all] = [
+        'Additional Dependent Care Providers', *addl_list
+      ]
+    end
+
+    # For the first three providers, add them onto the form
+    providers[0, 3].each do |f|
       add_table_row({
-        '1a' => f.line[:name],
-        '1b.top' => address1,
-        '1b.bot' => address2,
+        '1a' => break_lines(f.line[:name], 15),
+        '1b' => break_lines(f.line[:address], 28),
         '1c' => f.line[:tin],
         '1d.yes' => f.line[:employee?] ? 'X' : nil,
         '1d.no' => f.line[:employee?] ? nil : 'X',
@@ -69,6 +90,9 @@ class Form2441 < TaxForm
     # reflect the entire amount expended for each qualified person, or the
     # amounts less employer benefits as the line 30 instructions specify.
     #
+    if qual_persons.count > 3
+      raise "Not implemented"
+    end
     qual_persons.each do |p|
       fname, lname = p.line[:name].reverse.split(/\s+/, 2).map(
         &:reverse
@@ -84,7 +108,7 @@ class Form2441 < TaxForm
     end
 
     line[:tot_expenses!] = line('2d', :sum)
-    if line[:tot_expenses!] != line('1e', :sum)
+    if line[:tot_expenses!] != providers.map { |p| p.line[:amount] }.sum
       raise "Inconsistency in dependent care expenses"
     end
 
