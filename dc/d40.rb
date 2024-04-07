@@ -2,6 +2,7 @@ require_relative '../tax_form'
 require_relative 'd40s'
 require_relative 'dc_tax_table'
 require_relative 'd2210'
+require_relative 'd40u'
 
 class FormD40 < TaxForm
   include DcTaxTable
@@ -162,7 +163,9 @@ class FormD40 < TaxForm
       end
     end
 
-    # Line 22: Schedule U credits. We don't have any of these.
+    sched_u = compute_form('D-40 Schedule U')
+    copy_line(22, sched_u, from: :nref_credits) if sched_u
+
     line[23] = sum_lines(21, 22)
     line['24/pre_hc_tax'] = [ BlankZero, line[20] - line[23] ].max
 
@@ -182,7 +185,8 @@ class FormD40 < TaxForm
       raise "Schedule H may be applicable but not implemented"
     end
 
-    # Line 29: refundable Schedule U credits. Assumed we don't have any.
+    copy_line(29, sched_u, from: :ref_credits) if sched_u
+    line[30] = sum_lines('27d', '27e', 28, 29)
 
     # Withholdings
     wh = forms('W-2').map { |f|
@@ -207,6 +211,7 @@ class FormD40 < TaxForm
 
     # Total payments and refundable credits.
     line['36/payments'] = sum_lines(*(30..35))
+    copy_line(41, sched_u, from: :contributions) if sched_u
 
     # If the payments/refunds are less than the total tax, then there is tax
     # due.
@@ -219,11 +224,14 @@ class FormD40 < TaxForm
           line[40] = d2210.line[:underpay_int]
         end
       end
+      place_lines(41)
       line['42/tot_due'] = sum_lines(37, 40, 41)
 
     else
       # Payments/refunds exceed total tax; a refund is due.
       line['38/tax_refund'] = line[:payments] - line[:tot_tax]
+      place_lines(41)
+      line['42/tot_due'] = sum_lines(37, 40, 41)
       line[43] = line[38] - sum_lines(39, 40, 41)
       if interview("Is your refund going to an account outside the U.S.?")
         line['43.outside_us.yes'] = 'X'

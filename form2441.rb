@@ -31,7 +31,7 @@ class Form2441 < TaxForm
     end
 
     # Disabled spouses and other dependents are not considered here.
-    qual_persons = forms('Dependent') { |f| age(f) <= 12 }
+    @qual_persons = forms('Dependent') { |f| age(f) <= 12 }
 
     #
     # Part I. Add providers. Because the highest-paid three providers must be
@@ -43,7 +43,7 @@ class Form2441 < TaxForm
 
     # Check that all providers match a dependent
     providers.each do |f|
-      unless qual_persons.map { |p| p.line[:name] }.include?(f.line[:dep_name])
+      unless @qual_persons.map { |p| p.line[:name] }.include?(f.line[:dep_name])
         raise "Dependent care provider #{name} not for qualifying person"
       end
     end
@@ -82,40 +82,13 @@ class Form2441 < TaxForm
         '1e' => f.line[:amount]
       }.compact)
     end
+    compute_part_iii
+  end
 
-    #
-    # Part II, first part.
-    #
-    # Add qualified persons. It is unclear whether the amounts in line 2d should
-    # reflect the entire amount expended for each qualified person, or the
-    # amounts less employer benefits as the line 30 instructions specify.
-    #
-    if qual_persons.count > 3
-      raise "Not implemented"
-    end
-    qual_persons.each do |p|
-      fname, lname = p.line[:name].reverse.split(/\s+/, 2).map(
-        &:reverse
-      ).reverse
-      add_table_row({
-        '2a.first' => fname,
-        '2a.last' => lname,
-        '2b' => p.line[:ssn],
-        '2d' => forms('Dependent Care Provider') { |f|
-          f.line[:dep_name] == p.line[:name]
-        }.lines(:amount, :sum)
-      })
-    end
-
-    line[:tot_expenses!] = line('2d', :sum)
-    if line[:tot_expenses!] != providers.map { |p| p.line[:amount] }.sum
-      raise "Inconsistency in dependent care expenses"
-    end
-
-    # Part III. Compute employer benefits.
+  # Part III. Compute employer benefits.
+  def compute_part_iii
 
     line[12] = forms('W-2').lines[10, :sum]
-
     confirm("No self-employer offered dependent care benefits")
 
     @use_form = form("Dependent Care Benefit Use")
@@ -123,8 +96,14 @@ class Form2441 < TaxForm
     line[14] = @use_form.line[:this_year_unused]
     line[15] = sum_lines(12, 13) - line[14, :opt]
 
-    line[16] = line[:tot_expenses!, :sum]
+    # If there are no relevant benefits, then this section is unnecessary.
+    return if (12..15).all? { |l| line[l] == 0 }
+
+    line[16] = forms('Dependent Care Provider').lines(:fsa, :sum)
     line[17] = [ line[15], line[16] ].min
+    if line[16] != line[17]
+      raise "Dependent care FSA numbers don't add up"
+    end
 
     compute_earned_income(18, 19)
 
@@ -149,12 +128,13 @@ class Form2441 < TaxForm
 
     unless line[:credit_not_permitted!]
 
-      line[27] = line['2b', :all].count >= 2 ? 6000 : 3000
+      line[27] = @qual_persons.count >= 2 ? 6000 : 3000
       line[28] = sum_lines(24, 25)
       line[29] = line[27] - line[28]
       if line[29] > 0
 
-        line[30] = line[:tot_expenses!] - line[28]
+        compute_line_2
+        line[30] = line[:tot_expenses!]
         line[31] = [ line[29], line[30] ].min
 
         line[3] = line[31]
@@ -163,11 +143,44 @@ class Form2441 < TaxForm
         # No credit is allowed. To implement this, line 3 (qualifying expenses)
         # is set to zero.
         #
-        confirm("You didn't pay 2022 child care expenses in 2023")
+        confirm("You didn't pay #{year - 1} child care expenses in #{year}")
         line[3] = BlankZero
       end
     end
 
+  end
+
+  #
+  # Computes line 2, qualifying persons. This sets line[:tot_expenses!] when
+  # done. It may be called multiple times, but will only run the computation
+  # once.
+  #
+  def compute_line_2
+    return if line[:tot_expenses!, :present]
+    #
+    # Part II, first part.
+    #
+    # Add qualified persons.
+    #
+    if @qual_persons.count > 3
+      raise "Not implemented"
+    end
+    @qual_persons.each do |person|
+      fname, lname = split_name(person.line[:name])
+      add_table_row({
+        '2a.first' => fname,
+        '2a.last' => lname,
+        '2b' => person.line[:ssn],
+        '2d' => forms('Dependent Care Provider').map { |provider|
+          if provider.line[:dep_name] == person.line[:name]
+            provider.line[:amount] - provider.line[:fsa, :opt]
+          else
+            BlankZero
+          end
+        }.sum
+      })
+    end
+    line[:tot_expenses!] = line('2d', :sum)
   end
 
   #
@@ -179,6 +192,8 @@ class Form2441 < TaxForm
     if line[:credit_not_permitted!]
       line['11/credit'] = BlankZero
     end
+
+    compute_line_2
 
     # If employer benefits were computed, then these lines differ
     if line[3, :present]

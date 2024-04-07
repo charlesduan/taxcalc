@@ -154,7 +154,12 @@ class TaxForm
   #
   def copy_line(l, form, from: nil)
     from ||= l
-    line[l] = form.line[from] if form.line[from, :present]
+    return unless form.line[from, :present]
+    if form.line[from, :all].count > 1
+      line[l, :all] = form.line[from, :all]
+    else
+      line[l] = form.line[from]
+    end
   end
 
   #
@@ -203,7 +208,7 @@ class TaxForm
   #
   # Sets the :name line based on an appropriate Biographical form.
   #
-  def set_name
+  def set_name(lname = :name)
     bio = forms('Biographical').find { |x|
       x.line[:whose] == 'mine'
     }
@@ -214,7 +219,7 @@ class TaxForm
           f.sbio.line[:last_name]
       end
     end
-    line[:name] = names
+    line[lname] = names
   end
 
   #
@@ -277,6 +282,34 @@ class TaxForm
   end
 
 
+
+  ########################################################################
+  #
+  # CONVENIENCE METHODS
+  #
+  ########################################################################
+
+  #
+  # Given a name, splits off the first and last names.
+  #
+  def split_name(name)
+    if name =~ /\s+(\S+)\z/
+      return [ $`, $1 ]
+    else
+      return [ name, nil ]
+    end
+  end
+
+  #
+  # Given a city-state-zip, split into parts.
+  #
+  def split_csz(csz)
+    if csz =~ /,?\s+(\w\w),?\s+(\d{5}(?:-\d+)?)\z/
+      return [$`, $1, $2]
+    else
+      raise "Could not parse city-state-zip #{csz}"
+    end
+  end
 
 
   ########################################################################
@@ -619,8 +652,10 @@ class TaxForm
       case type
       when :all
         value = [ value ].flatten
+        value = value.first if value.count == 1
       when :add
         value = [ @lines_data[line] || [], value ].flatten
+        value = value.first if value.count == 1
       else
         unless type == :overwrite
           warn("Overwriting value for #{line_name(line)}") if @lines_data[line]

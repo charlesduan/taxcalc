@@ -110,7 +110,7 @@ class Form1040_3 < TaxForm
     # 13: Other credits.
     line[14] = sum_lines(*"13a".."13z")
 
-    line['15/ref_credits'] = sum_lines(*8..14)
+    line['15/ref_credits'] = sum_lines(*9..14)
   end
 
   def needed?

@@ -187,10 +187,10 @@ class Form1040 < TaxForm
     # Wages, salaries, tips
     wages = forms('W-2').lines(1, :sum)
 
-    line['1a/wages'] = wages
+    line['1a/w2s'] = wages
     if forms('W-2').any? { |f| f.line[:cp_split!, :present] }
 
-      line['wages*note'] = "Line 1 based on community property allocation " \
+      line['w2s*note'] = "Line 1 based on community property allocation " \
         "from Form 8958"
     end
 
@@ -198,7 +198,7 @@ class Form1040 < TaxForm
       line['1e'] = f.line[:tax_benefit]
     }
 
-    line['1z'] = sum_lines(*("1a".."1i"))
+    line['1z/wages'] = sum_lines(*("1a".."1i"))
 
     sched_b = compute_form('1040 Schedule B')
 

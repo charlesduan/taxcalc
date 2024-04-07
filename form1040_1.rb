@@ -104,7 +104,7 @@ class Form1040_1 < TaxForm
     # Worksheet computation), and that there are no Schedule C businesses that
     # could make further contributions.
     #
-    line[16] = forms('1065 Schedule K-1').sum { |f|
+    line['16/se_ret'] = forms('1065 Schedule K-1').sum { |f|
       f.match_table_value('13.code', 13, find: 'R', default: 0)
     }
     with_form('1040 Schedule C') { |f|
