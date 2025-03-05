@@ -11,7 +11,7 @@ class Form1065 < TaxForm
   NAME = '1065'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -28,7 +28,7 @@ class Form1065 < TaxForm
     line['E'] = bio.line(:start)
 
     # Line F need not be filled in if the below condition is true. Schedule B is
-    # part of Form 1065.; the conditions are:
+    # part of Form 1065; the conditions are:
     #
     # - Total receipts less than $250k
     # - Total assets less than $1M
@@ -207,10 +207,14 @@ class Form1065 < TaxForm
     line['B29b.no'] = 'X'
     line['B30.no'] = 'X'
 
+    # Line 32 deals with certain partnerships for investment purposes, who don't
+    # need to file Form 1065.
+    line['B32.no'] = 'X'
+
     confirm(
       "You do not want to opt out of the centralized partnership audit regime"
     )
-    line['B31.no'] = 'X'
+    line['B33.no'] = 'X'
 
     pr_name = bio.line[:rep]
     pr_form = partners.find { |x| x.line['name'] == pr_name }
