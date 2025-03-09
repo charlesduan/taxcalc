@@ -12,14 +12,14 @@ class AssetManager < TaxForm
   NAME = 'Asset Manager'
 
   def year
-    2023
+    2024
   end
 
   def compute
 
     @assets = forms('Asset')
     @current_assets = @assets.select { |x|
-      x.line_date.year == year
+      x.line_date.year == this_year
     }
     if @current_assets.any? { |x| x.line[:amount] <= SAFE_HARBOR_THRESHOLD }
       line[:expense_safe_harbor?] = interview(

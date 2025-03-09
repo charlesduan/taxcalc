@@ -6,7 +6,7 @@ class Pub560Worksheet < TaxForm
   NAME = "Pub. 560 Worksheet"
 
   def year
-    2023
+    2024
   end
 
   def initialize(manager, ssn:, contrib_frac:)
@@ -16,19 +16,11 @@ class Pub560Worksheet < TaxForm
   end
 
   def annual_compensation_limit
-    case year
-    when 2023 then 330_000
-    when 2024 then 345_000
-    else raise "Must provide"
-    end
+    return 345_000 # 2024 limit
   end
 
   def additions_limit
-    case year
-    when 2023 then 66_000
-    when 2024 then 69_000
-    else raise "Must provide"
-    end
+    return 69_000 # 2024 limit
   end
 
   def compute

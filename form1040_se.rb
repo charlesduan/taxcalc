@@ -6,7 +6,7 @@ class Form1040SE < TaxForm
   NAME = '1040 Schedule SE'
 
   def year
-    2023
+    2024
   end
 
   def initialize(manager, ssn)

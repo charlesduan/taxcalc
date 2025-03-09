@@ -6,7 +6,7 @@ class Form1065K1 < TaxForm
   NAME = '1065 Schedule K-1'
 
   def year
-    2023
+    2024
   end
 
   def initialize(manager, partner_form)
@@ -78,6 +78,14 @@ class Form1065K1 < TaxForm
     line['14.code'] = 'A'
 
     #
+    # If the partners ever also have Schedule C income, that will have to be
+    # computed here so that Form 1040 Schedule SE can be correctly computed, so
+    # that the Pub. 560 Worksheet can be correctly computed below.
+    #
+    unless has_form?('1040 Schedule C')
+      @manager.no_form('1040 Schedule C')
+    end
+
     # Compute the partnership's employer contribution to a 401(k). This is
     # programmatically a little unsatisfying, as the Schedule K-1 should be
     # purely computed off of the 1065, but here the schedule performs the

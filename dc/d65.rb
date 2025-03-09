@@ -8,7 +8,7 @@ class FormD65 < TaxForm
   NAME = 'D-65'
 
   def year
-    2023
+    2024
   end
 
   def check_box(line_no, condition)
@@ -49,35 +49,35 @@ class FormD65 < TaxForm
     line[:agent_name] = f1065.line['PR.name']
     line[:agent_tin] = f1065.line['PR.tin!'].gsub("-", "")
 
-    copy_line(1, f1065, from: '1c')
+    copy_line(1, f1065, from: 'receipts')
     copy_line(2, f1065)
     line[3] = line[1] - line[2, :opt]
 
-    copy_line(4, f1065)
-    copy_line(5, f1065)
-    copy_line(6, f1065)
+    copy_line(4, f1065, from: 'pet_inc')
+    copy_line(5, f1065, from: 'farm_inc')
+    copy_line(6, f1065, from: 'net_gain')
 
     # Line 7 has something to do with QOFs; it is assumed that this partnership
     # is not for one. If it were, then Form 1065 Schedule B, line 25 suggests
     # that Form 8996 would be attached.
-    with_form(8996) do |f|
+    if has_form?(8996)
       raise "Qualified Opportunity Fund not implemented"
     end
-    copy_line(8, f1065, from: 7)
+    copy_line(8, f1065, from: 'other_inc')
 
     line[9] = sum_lines(3, 4, 5, 6, 7, 8)
 
-    copy_line(10, f1065, from: 9)
-    copy_line(11, f1065, from: 10)
-    copy_line(12, f1065, from: 11)
-    copy_line(13, f1065, from: 12)
-    copy_line(14, f1065, from: 13)
-    copy_line(15, f1065, from: 14)
-    copy_line(16, f1065, from: 15)
-    copy_line(17, f1065, from: '16c')
-    copy_line(18, f1065, from: 17)
-    copy_line(19, f1065, from: 18)
-    copy_line(20, f1065, from: 19)
+    copy_line(10, f1065, from: :wages_ded)
+    copy_line(11, f1065, from: :guaranteed_ded)
+    copy_line(12, f1065, from: :repairs_ded)
+    copy_line(13, f1065, from: :debts_ded)
+    copy_line(14, f1065, from: :rents_ded)
+    copy_line(15, f1065, from: :licenses_ded)
+    copy_line(16, f1065, from: :interest_ded)
+    copy_line(17, f1065, from: :depreciation_ded)
+    copy_line(18, f1065, from: :depletion_ded)
+    copy_line(19, f1065, from: :emp_plan_ded)
+    copy_line(20, f1065, from: :emp_benefits_ded)
     # Line 21 relates to QOFs
     copy_line(22, f1065, from: 20)
 
@@ -118,11 +118,11 @@ class FormD65 < TaxForm
     confirm("This partnership is not a partner in another partnership")
     check_box(:G, false)
 
-    check_box(:H, f1065.line['12a.yes', :present])
+    check_box(:H, !f1065.line[:no_basis_adjustment, :present])
     check_box(:I, @manager.submanager(:last_year).has_form?('D-65'))
     check_box(:J, @manager.submanager(:last_year).has_form?('D-30'))
     check_box(:K, @manager.submanager(:last_year).has_form?('Ballpark Fee'))
-    check_box(:L, f1065.line['16b.yes', :present])
+    check_box(:L, !f1065.line[:no_1099_needed, :present])
 
     if line[10, :opt] == 0
       line['M.no'] = '*'
@@ -131,7 +131,7 @@ class FormD65 < TaxForm
       raise 'DC wage withholding question not implemented'
     end
 
-    confirm("Your previous year 1065 was not amended or changed.")
+    interview("Your previous year 1065 was not amended or changed.")
     check_box(:N, false)
 
     line[:filing_explanation!, :all] = [
@@ -147,8 +147,6 @@ class FormD65 < TaxForm
     line[:continuation!] = 'Schedule of Pass-Through Distribution of Income'
 
     line[:telephone] = f1065.line['PR.phone'].gsub(/\D/, '')
-
-    compute_form('FR-165')
 
   end
 end

@@ -71,8 +71,15 @@ class Form1065 < TaxForm
 
     assert_no_forms('1099-MISC')
     line['1a'] = forms('1099-NEC').lines(1, :sum)
-    line['1c'] = line['1a'] - line['1b', :opt]
+    line['1c/receipts'] = line['1a'] - line['1b', :opt]
     line[3] = line['1c'] - line[2, :opt]
+    #
+    # Naming some nonexistent lines so D-65 uses names
+    # Line 4/pet_inc
+    # Line 5/farm_inc
+    # Line 6/net_gain
+    # Line 7/other_inc
+    #
     line['8/tot_inc'] = sum_lines(3, 4, 5, 6, 7)
 
     @asset_manager = compute_form('Asset Manager')
@@ -84,21 +91,22 @@ class Form1065 < TaxForm
 
     if @asset_manager.depreciation_total != 0
       line['16a'] = @asset_manager.depreciation_total
-      line['16c'] = line['16a'] - line['16b', :opt]
+      line['16c/depreciation_ded'] = line['16a'] - line['16b', :opt]
     end
 
     @expense_manager = compute_form('Business Expense Manager')
 
     @expense_manager.fill_lines(self, {
-      9 => 'Wages',
-      11 => 'Repairs',
-      12 => 'Debts',
-      13 => [ 'Rent_Equipment', 'Rent_Property' ],
-      14 => 'Licenses',
-      15 => [ 'Mortgage_Interest', 'Other_Interest' ],
-      17 => 'Depletion',
-      18 => 'Employee_Plans',
-      19 => 'Employee_Benefits',
+      '9/wages_ded' => 'Wages',
+      '10/guaranteed_ded' => 'Guaranteed_Payments',
+      '11/repairs_ded' => 'Repairs',
+      '12/debts_ded' => 'Debts',
+      '13/rents_ded' => [ 'Rent_Equipment', 'Rent_Property' ],
+      '14/licenses_ded' => 'Licenses',
+      '15/interest_ded' => [ 'Mortgage_Interest', 'Other_Interest' ],
+      '17/depletion_ded' => 'Depletion',
+      '18/emp_plan_ded' => 'Employee_Plans',
+      '19/emp_benefits_ded' => 'Employee_Benefits',
       # 2023: line 20 energy efficient buildings deduction not implemented
     }, other: 21, continuation: 'Line 21 Statement of Business Expenses')
 
@@ -169,7 +177,8 @@ class Form1065 < TaxForm
     line['B8.no'] = 'X'
     line['B9.no'] = 'X'
     line['B10a.no'] = 'X'
-    line['B10b.no'] = 'X'
+    # Line B10b.yes/basis_adjustment
+    line['B10b.no/no_basis_adjustment'] = 'X'
     line['B10c.no'] = 'X'
     line['B10d.no'] = 'X'
     line['B12.no'] = 'X'
@@ -182,7 +191,7 @@ class Form1065 < TaxForm
 
     line['B14.no'] = 'X'
     line['B15'] = 0
-    line['B16a.no'] = 'X'
+    line['B16a.no/no_1099_needed'] = 'X'
     line['B17'] = 0
     line['B18'] = 0
     line['B19.no'] = 'X'

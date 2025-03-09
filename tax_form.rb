@@ -311,6 +311,14 @@ class TaxForm
     end
   end
 
+  #
+  # Returns the current year. This is better than the subclasses' +year+ method
+  # because it returns the correct year even if the form is out of date.
+  #
+  def this_year
+    return @manager.year
+  end
+
 
   ########################################################################
   #
