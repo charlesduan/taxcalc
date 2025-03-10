@@ -218,7 +218,6 @@ class Form1065 < TaxForm
 
     # Line 32 deals with certain partnerships for investment purposes, who don't
     # need to file Form 1065.
-    line['B32.no'] = 'X'
 
     confirm(
       "You do not want to opt out of the centralized partnership audit regime"
@@ -270,11 +269,11 @@ class Form1065 < TaxForm
       end
     end
 
-    line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11))\
-      - sum_lines(*%w(K12 K13a K13b K13c2 K13d K21))
+    # Keep track of profit-sharing plan contributions.
+    psp_contrib = BlankZero
 
-    line['Analysis.2a(ii)'] = line['Analysis.1']
-
+    # The mailing address needs to be computed before Schedules K-1.
+    #
     # We assumed previously that the Schedule B line 6 answer was yes, so assets
     # are less than $10 million and no M-3 is filed.
     raise "No state in address" unless (line[:city_zip] =~ / ([A-Z]{2}) \d{5}/)
@@ -286,9 +285,6 @@ class Form1065 < TaxForm
     else
       line[:send_to!] = 'Ogden UT 84201-0011'
     end
-
-    # Keep track of profit-sharing plan contributions.
-    psp_contrib = BlankZero
 
     #
     # Compute Schedule K-1s.
@@ -306,8 +302,8 @@ class Form1065 < TaxForm
     # suggesting the need for a separate retirement contribution manager as
     # described in the Schedule K-1 program.
     if psp_contrib > 0
-      line['K13d.code'] = 'R'
-      line['K13d'] = psp_contrib
+      line['K13e.code'] = 'R'
+      line['K13e'] = psp_contrib
 
       unless form('5500-EZ').line(:acknowledgment, :present)
         raise "You must file Form 5500-EZ"
@@ -318,6 +314,11 @@ class Form1065 < TaxForm
     # This should be completed separately.
     #
     # compute_form(7004)
+
+    line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11))\
+      - sum_lines(*%w(K12 K13a K13b K13c2 K13d k13e K21))
+
+    line['Analysis.2a(ii)'] = line['Analysis.1']
 
   end
 end
