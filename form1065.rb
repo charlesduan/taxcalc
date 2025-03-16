@@ -108,7 +108,8 @@ class Form1065 < TaxForm
       '18/emp_plan_ded' => 'Employee_Plans',
       '19/emp_benefits_ded' => 'Employee_Benefits',
       # 2023: line 20 energy efficient buildings deduction not implemented
-    }, other: 21, continuation: 'Line 21 Statement of Business Expenses')
+    }, other: '21/other_ded',
+    continuation: 'Line 21 Statement of Business Expenses')
 
     # Rearrange the lines
     place_lines(9, 10, 11, 12, 13, 14, 15, '16a', '16b', 17, 18, 19, 20, 21)
