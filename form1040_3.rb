@@ -11,12 +11,12 @@ class Form1040_3 < TaxForm
   NAME = '1040 Schedule 3'
 
   def year
-    2023
+    2024
   end
 
-  # Social security tax withholding threshold. This is from Line 10, and must be
+  # Social security tax withholding threshold. This is from Line 11, and must be
   # updated every year.
-  SS_THRESHOLD = 9932
+  SS_THRESHOLD = 10453
 
   def compute
     set_name_ssn
@@ -78,7 +78,7 @@ class Form1040_3 < TaxForm
       line['6h', :present]    # DC homebuyer credit
     )
 
-    line['8/nref_credits'] = sum_lines(*1..7)
+    line['8/nref_credits'] = sum_lines('5a', '5b', *1..7)
 
     #
     # Part II
@@ -100,6 +100,8 @@ class Form1040_3 < TaxForm
         warn "Employer withheld too much social security tax"
       end
       ss_wh = [ ss_wh, SS_THRESHOLD ].min
+
+      # Index by W-2 line a (SSN)
       ss_tax_paid[w2.line[:a]] += ss_wh
     end
     line[11] = ss_tax_paid.values.map { |ss_tax|
@@ -119,6 +121,9 @@ class Form1040_3 < TaxForm
 
 end
 
+#
+# From line 4 instructions
+#
 FilingStatus.set_param('qrsc_limit',
-                       single: 36_500, mfj: 73_000, mfs: :single,
-                       hoh: 54_750, qw: :single)
+                       single: 38_250, mfj: 76_500, mfs: :single,
+                       hoh: 57_375, qw: :single)

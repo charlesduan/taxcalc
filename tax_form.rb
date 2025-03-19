@@ -683,6 +683,7 @@ class TaxForm
 
       unless @lines_data.include?(line)
         return false if type == :present
+        return false if type == :opt && line.to_s.end_with?('?')
         return BlankZero if type == :opt or type == :sum
         raise "#{line_name(line)} not defined"
       end
