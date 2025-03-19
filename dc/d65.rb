@@ -29,9 +29,11 @@ class FormD65 < TaxForm
 
     line[:business_name] = f1065.line[:name]
     addr, addr2 = f1065.line[:address], nil
-    if addr.length > 26
-      addr.match(/^(.{0,26}) (.*)$/) { |m| addr, addr2 = m[1], m[2] }
-    end
+
+    # Only necessary if filling in individual boxes
+    #if addr.length > 26
+    #  addr.match(/^(.{0,26}) (.*)$/) { |m| addr, addr2 = m[1], m[2] }
+    #end
     line[:address] = addr
     if addr2
       line[:address2] = addr2
@@ -79,9 +81,13 @@ class FormD65 < TaxForm
     copy_line(19, f1065, from: :emp_plan_ded)
     copy_line(20, f1065, from: :emp_benefits_ded)
     # Line 21 relates to QOFs
-    copy_line(22, f1065, from: 20)
+    copy_line(22, f1065, from: :other_ded)
 
     line[23] = sum_lines(*10..22)
+
+    if line[23] != f1065.line[:tot_ded]
+      warn("Total deductions does not equal Form 1065")
+    end
 
     line[24] = line[9] - line[23]
 
