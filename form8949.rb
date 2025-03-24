@@ -8,7 +8,7 @@ class Form8949 < TaxForm
   NAME = '8949'
 
   def year
-    2018
+    2024
   end
 
   def initialize(manager, term, reported, forms)

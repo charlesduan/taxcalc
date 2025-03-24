@@ -5,7 +5,7 @@ class Form1040B < TaxForm
   NAME = '1040 Schedule B'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -57,7 +57,5 @@ class Form1040B < TaxForm
       confirm("You had no relationship with a foreign trust")
       line['8.no'] = 'X'
     end
-
-    return self
   end
 end

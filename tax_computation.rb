@@ -29,12 +29,14 @@ class TaxComputation < TaxForm
   end
 
   def compute_with_schedule_d(sched_d)
-    if sched_d.line['20no', :present]
+    if sched_d.line['compute_d_tax', :present]
       line[:tax_method] = 'Sch D'
       return compute_tax_schedule_d # Not implemented; raises error
-    elsif sched_d.line[:lt_gain] > 0 && sched_d.line[:tot_gain] > 0
+    elsif sched_d.line['compute_qdcgt_tax', :present]
       line[:tax_method] = 'QDCGTW'
       return compute_tax_qdcgt
+    else
+      compute_no_schedule_d
     end
   end
 
@@ -101,8 +103,8 @@ class QdcgtWorksheet < TaxForm
       line[3] = @f1040.line[:cap_gain]
     end
 
-    line[4] = line[2] + line[3] # Total qualdiv and cap gains
-    line[5] = line[1] - line[4] # Income excluding qualdiv/capgain
+    line['4/tot_qdcg'] = line[2] + line[3] # Total qualdiv and cap gains
+    line['5/inc_no_qdcg'] = line[1] - line[4] # Income excluding qualdiv/capgain
 
     line[6] = @f1040.status.qdcgt_exemption
     line[7] = [ line[1], line[6] ].min  # Exemption, limited by income

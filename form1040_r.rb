@@ -5,7 +5,7 @@ class Form1040R < TaxForm
   NAME = '1040 Schedule R'
 
   def year
-    2023
+    2024
   end
 
   def compute

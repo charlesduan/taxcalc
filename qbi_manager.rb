@@ -12,7 +12,7 @@ class QBIManager < TaxForm
   NAME = 'QBI Manager'
 
   def year
-    2023
+    2024
   end
 
   #
@@ -98,11 +98,15 @@ class QBIManager < TaxForm
 
 end
 
+#
+# Determines whether Form 8995-A is required. See Form 8995-A instrudctions,
+# under "Who Can Take the Deduction," and Form 8995-A, line 3.
+#
 FilingStatus.set_param('qbi_threshold',
-                       single: 182_100, mfj: 364_200, mfs: :single,
+                       single: 191_950, mfj: 383_900, mfs: :single,
                        hoh: :single, qw: :single)
 
 FilingStatus.set_param('qbi_max',
-                       single: 232_100, mfj: 464_200, mfs: :single,
+                       single: 241_950, mfj: 483_900, mfs: :single,
                        hoh: :single, qw: :single)
 

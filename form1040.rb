@@ -133,18 +133,10 @@ class Form1040 < TaxForm
       line['ssd.dependent'] = 'X'
     end
 
-    #
-    # The introduction of the standard-deduction charity deduction introduces a
-    # circularity into the 1040 computation: To determine automatically whether
-    # to itemize or take the standard deduction, we must compute Schedule A,
-    # which requires computing the line 11 AGI, but the SD charity deduction
-    # must be determined at line 10. As a result, the user must determine
-    # itemization manually.
-    #
-    @itemize = interview('Do you want to itemize deductions?')
     if status.is('mfs')
-      line['ssd.isrdsa'] = 'X' if @itemize || interview(
-        'Are you a dual-status alien?'
+      line['ssd.isrdsa'] = 'X' if interview(
+        'Are you a dual-status alien ' \
+        'or is your spouse itemizing on a separate return?'
       )
     end
 
@@ -272,8 +264,8 @@ class Form1040 < TaxForm
 
     # Compute Schedule A, the presence of which will indicate whether deductions
     # are to be itemized.
-    if @itemize
-      sched_a = compute_form('1040 Schedule A')
+    sched_a = compute_form('1040 Schedule A')
+    if sched_a
       line['12/deduction'] = sched_a.line[:total]
     else
       %w(

@@ -8,7 +8,7 @@ class Form8960 < TaxForm
   NAME = '8960'
 
   def year
-    2023
+    2024
   end
 
   def needed?
@@ -76,7 +76,7 @@ class Form8960 < TaxForm
     end
     line['9d'] = sum_lines('9a', '9b', '9c')
 
-    if year > 2025
+    if this_year > 2025
       raise "Consider miscellaneous itemized deductions from NIIT"
     end
 

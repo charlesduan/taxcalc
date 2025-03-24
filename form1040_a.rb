@@ -6,7 +6,11 @@ class Form1040A < TaxForm
   NAME = '1040 Schedule A'
 
   def year
-    2020
+    2024
+  end
+
+  def needed?
+    @itemize_deductions
   end
 
   def compute
@@ -63,8 +67,17 @@ class Form1040A < TaxForm
 
     line['17/total'] = sum_lines(4, 7, 10, 14, 15, 16)
 
-    if line[17] < form(1040).status.standard_deduction
-      line[18] = 'X'
+    sd = form(1040).status.standard_deduction
+    @itemize_deductions = true
+    if line[17] < sd
+      if interview(
+          "Itemized deductions are #{line[17]}; " \
+          "standard deduction is #{sd}. Do you want to itemize anyway?"
+      )
+        line[18] = 'X'
+      else
+        @itemize_deductions = false
+      end
     end
 
   end
@@ -106,7 +119,7 @@ class Pub936Worksheet < TaxForm
   NAME = 'Pub. 936 Home Mortgage Interest Worksheet'
 
   def year
-    2020
+    2024
   end
 
   def compute
@@ -124,10 +137,9 @@ class Pub936Worksheet < TaxForm
     # number could correctly be used per the instructions.
     grandfathered, pre_tcja, post_tcja = 0, 0, 0
     f1098s.each do |f1098|
-      p = f1098.match_form('Real Estate', :property)
-      if p.line[:purchase_date] <= Date.new(1987, 10, 13)
+      if f1098.line[3] <= Date.new(1987, 10, 13)
         grandfathered += f1098.line[2]
-      elsif p.line[:purchase_date] < Date.new(2017, 12, 16)
+      elsif f11098.line[3] < Date.new(2017, 12, 16)
         pre_tcja += f1098.line[2]
       else
         post_tcja += f1098.line[2]
@@ -153,15 +165,14 @@ class Pub936Worksheet < TaxForm
     line[12] = sum_lines(1, 2, 7)
     line[13] = f1098s.lines(1, :sum) + f1098s.lines(6, :sum)
     if line[11] >= line[12]
+      # Interest is below limit
       line['15/ded_hm_int'] = line[13]
       line[16] = 0
     else
+      # Interest is above limit
       line[14] = (1.0 * line[11] / line[12]).round(3)
       line['15/ded_hm_int'] = (line[13] * line[14]).round
       line[16] = line[13] - line[15]
-      if line[16] > 0
-        raise "You should refine the Pub. 936 Worksheet implementation"
-      end
     end
   end
 

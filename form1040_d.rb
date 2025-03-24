@@ -5,7 +5,7 @@ class Form1040D < TaxForm
   NAME = '1040 Schedule D'
 
   def year
-    2018
+    2024
   end
 
   def needed?
@@ -78,27 +78,52 @@ class Form1040D < TaxForm
     line['16/tot_gain'] = line[7] + line[15]
 
     if line[16] > 0
-      if line[15] > 0
-        line['17yes'] = 'X'
-        raise "Need to check for special Schedule D forms"
-        #assert_form_unnecessary('Schedule D 28% Rate Gain Worksheet')
-        #assert_form_unnecessary('Schedule D Section 1250 Gain Worksheet')
-
-        line['20yes'] = 'X'
-        return
-      else
-        line['17no'] = 'X'
-      end
-        
-    elsif line[16] < 0
-      raise 'Not implemented'
-    end
-
-    if forms('1099-DIV').lines('1b', :sum) > 0
-      line['22yes'] = 'X'
+      compute_lines_17_20
     else
-      line['22no'] = 'X'
+      compute_line_21 if line[16] < 0
+      compute_line_22
+    end
+  end
+
+  def compute_lines_17_20
+    unless line[15] > 0 && line[16] > 0
+      line['17.no'] = 'X'
+      compute_line_22
+      return
     end
 
+    line['17.yes'] = 'X'
+
+    # These are lines 18 and 19
+    confirm("You had no section 1202 exclusion or collectibles gain")
+    line[18] = BlankZero
+    confirm("You sold no real property with section 1250 gain")
+    line[19] = BlankZero
+
+    #
+    # Note that I'm not accounting for the investment interest deduction on
+    # Form 4952 here.
+    #
+    if line[18] == 0 && line[19] == 0
+      line['20.yes/compute_qdcgt_tax'] = 'X'
+    else
+      line['20.no/compute_d_tax'] = 'X'
+    end
   end
+
+  def compute_line_21
+    line[21] = [
+      form(1040).status.halve_mfs(3000),
+      -line[16]
+    ].min
+  end
+
+  def compute_line_22
+    if forms('1099-DIV').lines('1b', :sum) > 0
+      line['22.yes/compute_qdcgt_tax'] = 'X'
+    else
+      line['22.no'] = 'X'
+    end
+  end
+
 end
