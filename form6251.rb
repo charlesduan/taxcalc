@@ -69,9 +69,9 @@ class Form6251 < TaxForm
 
     # 2h: qualified small business stock
     with_forms(8949) do |f|
-      %w(I II).each do |part|
-        f_line, g_line = "#{part}.1f", "#{part}.1g"
-        if f.line[f_part, :all].include?("Q")
+      %w(I II).each do |f_part|
+        f_line, g_line = "#{f_part}.1f", "#{f_part}.1g"
+        if f.line[f_line, :present] && f.line[f_line, :all].include?("Q")
           raise "AMT adjustment for QSBS not implemented"
         end
         # Because this appears only to apply to stock acquired before September
@@ -104,8 +104,20 @@ class Form6251 < TaxForm
 
     # 2k: adjustments for disposition of property.
     #
-    %w(4797 4684 8949).each do |f|
+    %w(4797 4684).each do |f|
       raise "Line 2k not implemented with form #{f}" if has_form?(f)
+    end
+
+    if has_form?(8949)
+      #
+      # Sales of stock purchased via an ISO have a different basis for AMT
+      # purposes, which would have been reported on a previous year's Form 3921.
+      # Ideally, the stock sale form should include the AMT basis, or this
+      # program should look back to previous Form 3921s received.
+      #
+      if interview("Did you sell any ISO-purchased stock?")
+        raise "Like 2k not implemented with form 8949"
+      end
     end
 
     # 2l: depreciation adjustments.

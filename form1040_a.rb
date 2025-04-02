@@ -88,9 +88,6 @@ class Form1040A < TaxForm
     # This calculates the various limits on home mortgage interest
     # deductibility.
     compute_form('Pub. 936 Home Mortgage Interest Worksheet') do |p936w|
-      if p936w.line[16] != 0
-        raise "Not able to handle mortgage interest deduction limit"
-      end
       line['8a'] = p936w.line[:ded_hm_int] if p936w
     end
 
@@ -139,7 +136,7 @@ class Pub936Worksheet < TaxForm
     f1098s.each do |f1098|
       if f1098.line[3] <= Date.new(1987, 10, 13)
         grandfathered += f1098.line[2]
-      elsif f11098.line[3] < Date.new(2017, 12, 16)
+      elsif f1098.line[3] < Date.new(2017, 12, 16)
         pre_tcja += f1098.line[2]
       else
         post_tcja += f1098.line[2]
