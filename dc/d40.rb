@@ -10,7 +10,7 @@ class FormD40 < TaxForm
   NAME = 'D-40'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -118,9 +118,9 @@ class FormD40 < TaxForm
       # Assumed no special conditions apply. These amounts are given in the
       # instructions under Filing Status, Standard Deduction.
       line['18/ded'] = case line['status']
-                       when 'mfssr', 'mfj', 'qw' then 27700
-                       when 'single', 'mfs' then 13850
-                       when 'hoh' then 20800
+                       when 'mfssr', 'mfj', 'qw' then 29_200
+                       when 'single', 'mfs' then 14_600
+                       when 'hoh' then 21_900
                        else raise "Unknown status"
                        end
 
@@ -256,7 +256,7 @@ class D40CalculationF < TaxForm
   NAME = 'D-40 Calculation F'
 
   def year
-    2020
+    2024
   end
 
   def compute
@@ -265,25 +265,29 @@ class D40CalculationF < TaxForm
     line[:ded_cap!] = (d40.line[:status] == 'mfs' ? 100000 : 200000)
 
     line[:a] = sch_as.lines(:total, :sum)
-    line[:b] = sch_as.lines(:salt, :sum)
+    line[:b] = sch_as.lines(:salt_inc, :sum)
     line[:c] = line_a - line_b
     line[:d] = sch_as.lines(:salt_real, :sum)
+    if line[:d] == 0 && has_form?(1098)
+      warn("Make sure you included real property taxes on Schedule A")
+    end
+
     line[:e] = sch_as.lines(:other_tax, :sum)
     line[:f] = sum_lines(:c, :d, :e)
 
     if d40.line[:agi] <= line[:ded_cap!]
-      line[:fill!] = line[:f]
+      line['n/ded'] = line[:f]
       return
     end
 
     line[:g] = %w(med_ded inv_int cas_theft).map { |l|
       sch_as.lines(l, :sum)
     }.inject(&:+)
-    line[:h] = line_f - line_g
+    line[:h] = line[:f] - line[:g]
     line[:i] = d40.line[:agi]
     line[:j] = line[:ded_cap!]
-    line[:k] = line_i - line_j
-    line[:l] = (line_k * 0.05).round
+    line[:k] = line[:i] - line[:j]
+    line[:l] = (line[:k] * 0.05).round
     line[:m] = [ 0, line_h - line_l ].max
     line['n/ded'] = sum_lines(:g, :m)
   end

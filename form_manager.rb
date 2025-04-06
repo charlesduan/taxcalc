@@ -259,7 +259,10 @@ class FormManager
 
   def ensure_no_forms(name)
     unless @no_forms.include?(name)
-      warn("Warning: No forms #{name} found for #{@name}.")
+      warn(
+        "Warning: No forms #{name}, in computing #{currently_computing&.name}" \
+        " for #{@name}."
+      )
       @no_forms[name] = 1
     end
   end

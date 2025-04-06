@@ -21,7 +21,7 @@ class Form1040A < TaxForm
 
     line['5a/salt_inc'] = forms('State Tax').lines(:amount, :sum) + \
       forms('W-2').lines(17, :sum)
-    line['5b/salt_real'] = forms('1098').lines(10, :sum)
+    line['5b/salt_real'] = forms('Real Estate').lines(:taxes, :sum)
     line['5d/salt_all'] = sum_lines(*%w(5a 5b 5c))
     line['5e/salt_lim'] = [
       form(1040).status.halve_mfs(10_000), line['5d']
@@ -130,22 +130,30 @@ class Pub936Worksheet < TaxForm
     f1098s = forms(1098) { |f| f.line[:property, :present] }
     return if f1098s.empty?
 
-    # TODO: This uses line 2 for the mortgage principal, although a smaller
-    # number could correctly be used per the instructions.
+    # Check that every 1098 form has a property
+    props = forms('Real Estate')
+    f1098s.each do |f|
+      unless props.any? { |pf| pf.line[:property] == f.line[:property] }
+        raise("No Real Estate form for #{f[:property]}")
+      end
+    end
+
+
     grandfathered, pre_tcja, post_tcja = 0, 0, 0
-    f1098s.each do |f1098|
-      if f1098.line[3] <= Date.new(1987, 10, 13)
-        grandfathered += f1098.line[2]
-      elsif f1098.line[3] < Date.new(2017, 12, 16)
-        pre_tcja += f1098.line[2]
+    props.each do |prop|
+      avg = (prop.line[:start_principal] + prop.line[:end_principal]) / 2
+      if prop.line[:origination_date] <= Date.new(1987, 10, 13)
+        grandfathered += avg
+      elsif prop.line[:origination_date] < Date.new(2017, 12, 16)
+        pre_tcja += avg
       else
-        post_tcja += f1098.line[2]
+        post_tcja += avg
       end
     end
     s = form(1040).status
 
-    line[1] = grandfathered
-    line[2] = pre_tcja
+    line['1/grandfathered_principal'] = grandfathered
+    line['2/pre_tcja_principal'] = pre_tcja
     line[3] = s.halve_mfs(1_000_000)
     line[4] = [ line[1], line[3] ].max
     line[5] = sum_lines(1, 2)
@@ -153,14 +161,14 @@ class Pub936Worksheet < TaxForm
     if post_tcja == 0 or line[6] >= s.halve_mfs(750_000)
       line[11] = line[6]
     else
-      line[7] = post_tcja
+      line['7/post_tcja_principal'] = post_tcja
       line[8] = s.halve_mfs(750_000)
       line[9] = [ line[6], line[8] ].max
       line[10] = sum_lines(6, 7)
       line[11] = [ line[9], line[10] ].min
     end
     line[12] = sum_lines(1, 2, 7)
-    line[13] = f1098s.lines(1, :sum) + f1098s.lines(6, :sum)
+    line['13/tot_int_points'] = f1098s.lines(1, :sum) + f1098s.lines(6, :sum)
     if line[11] >= line[12]
       # Interest is below limit
       line['15/ded_hm_int'] = line[13]

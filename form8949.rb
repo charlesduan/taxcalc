@@ -25,6 +25,8 @@ class Form8949 < TaxForm
 
   def compute
 
+    set_name_ssn
+
     # values is set to a three-element list:
     # - values[0]: Check this box for transactions with basis shown on 1099-B.
     # - values[1]: Check this box for transactions with basis not shown.

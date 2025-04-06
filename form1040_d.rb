@@ -15,6 +15,8 @@ class Form1040D < TaxForm
   def compute
     Form8949.generate(@manager) unless has_form?(8949)
 
+    set_name_ssn
+
     forms_a = forms(8949) { |f| f.line[:A, :present] }
     if forms_a.empty?
       line['1b.h'] = BlankZero

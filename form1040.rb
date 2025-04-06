@@ -60,6 +60,7 @@ class Form1040 < TaxForm
       end
     else
       assert_no_forms('1099-NEC', '1099-MISC')
+      @manager.no_form('1040 Schedule C')
     end
 
     compute_form('1040 Schedule E')
@@ -413,7 +414,7 @@ class Form1040 < TaxForm
 
       ly = @manager.submanager(:last_year)
       # Last year's tax shown, defined under "tax shown on your 20xx return"
-      last_year_tax = ly.form(1040).line[24]
+      last_year_tax = ly.form(1040).line[:tot_tax]
       last_year_tax -= ly.form(1040).sum_lines(27, 28, 29)
       last_year_tax -= ly.with_form(
         '1040 Schedule 3', otherwise: 0

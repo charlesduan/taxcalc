@@ -18,6 +18,8 @@ class Form8995A < TaxForm
     end
     if @qbi_manager.qbi.any? { |qbi| qbi.sstb }
       compute_form('8995-A Schedule A')
+    else
+      @manager.no_form('8995-A Schedule A')
     end
 
     @prefix = "A"
@@ -48,7 +50,7 @@ class Form8995A < TaxForm
     line[34] = form(1040).line[:qualdiv] + with_form(
       '1040 Schedule D', otherwise: form(1040).line[:cap_gain]
     ) { |f|
-      [ [ f.line[15, :opt], f.line[16, :opt] ].min, 0 ].max
+      [ [ f.line[:lt_gain, :opt], f.line[:tot_gain, :opt] ].min, 0 ].max
     }
     line[35] = [ line[33] - line[34], 0 ].max
     line[36] = (line[35] * 0.2).round
