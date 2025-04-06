@@ -36,6 +36,7 @@ class Marking
               when /^\d{4}X$/ then "f#{@name.downcase}"
               when /^(\d{4})-(\w+)$/ then "f#$1#$2".downcase
               when /^(\d{4})-(\w+) Schedule (\w+)$/ then "f#$1#$2#$3".downcase
+              when /1040 Schedule 8812/ then 'f1040s8'
               when /^(\d{4}) Schedule (\w+)$/ then "f#$1s#$2".downcase
               when /^(\d{4}) Schedule (\w+)-(\w+)$/ then "f#$1s#$2#$3".downcase
               when /Pub\. ([\w-]+)/ then "p#$1".downcase.gsub('-', '')

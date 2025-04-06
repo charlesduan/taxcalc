@@ -265,7 +265,7 @@ class D40CalculationF < TaxForm
     line[:ded_cap!] = (d40.line[:status] == 'mfs' ? 100000 : 200000)
 
     line[:a] = sch_as.lines(:total, :sum)
-    line[:b] = sch_as.lines(:salt_inc, :sum)
+    line[:b] = sch_as.lines(:salt, :sum)
     line[:c] = line_a - line_b
     line[:d] = sch_as.lines(:salt_real, :sum)
     if line[:d] == 0 && has_form?(1098)
