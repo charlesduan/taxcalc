@@ -333,7 +333,7 @@ class Form1040 < TaxForm
     with_form(8959) do |f|
       line['25c'] = f.line[:mc_wh]
     end
-    line['25d/withholding'] = sum_lines(*%w(25a 25b 25c 25d))
+    line['25d/withholding'] = sum_lines(*%w(25a 25b 25c))
 
     line['26/est_tax'] = forms('Estimated Tax').lines('amount', :sum) + \
       @manager.submanager(:last_year).form(1040).line(:refund_applied, :opt)
@@ -393,7 +393,8 @@ class Form1040 < TaxForm
   end
 
   #
-  # These follow the instructions for the estimated tax penalty.
+  # These follow the instructions for the estimated tax penalty. XXX: Since I've
+  # implemented Form 2210, this computation should be replaced with that one.
   #
   def compute_penalty
 
@@ -432,8 +433,9 @@ class Form1040 < TaxForm
 
         # Second test: Calculate payments
         tax_paid = sum_lines('25d', 26)
+        puts "Tax paid is #{tax_paid}"
         with_form('1040 Schedule 3') do |f|
-          tax_paid += line[11, :opt]
+          tax_paid += f.line[11, :opt]
         end
 
         # Second test: comparison
