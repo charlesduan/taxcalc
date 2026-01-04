@@ -7,7 +7,7 @@ class TaxComputation < TaxForm
   NAME = "Tax Computation"
 
   def year
-    2023
+    2024
   end
 
 
@@ -29,12 +29,14 @@ class TaxComputation < TaxForm
   end
 
   def compute_with_schedule_d(sched_d)
-    if sched_d.line['20no', :present]
+    if sched_d.line['compute_d_tax', :present]
       line[:tax_method] = 'Sch D'
       return compute_tax_schedule_d # Not implemented; raises error
-    elsif sched_d.line[:lt_gain] > 0 && sched_d.line[:tot_gain] > 0
+    elsif sched_d.line['compute_qdcgt_tax', :present]
       line[:tax_method] = 'QDCGTW'
       return compute_tax_qdcgt
+    else
+      compute_no_schedule_d
     end
   end
 
@@ -81,7 +83,7 @@ class QdcgtWorksheet < TaxForm
   NAME = '1040 QDCGT Worksheet'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -101,8 +103,8 @@ class QdcgtWorksheet < TaxForm
       line[3] = @f1040.line[:cap_gain]
     end
 
-    line[4] = line[2] + line[3] # Total qualdiv and cap gains
-    line[5] = line[1] - line[4] # Income excluding qualdiv/capgain
+    line['4/tot_qdcg'] = line[2] + line[3] # Total qualdiv and cap gains
+    line['5/inc_no_qdcg'] = line[1] - line[4] # Income excluding qualdiv/capgain
 
     line[6] = @f1040.status.qdcgt_exemption
     line[7] = [ line[1], line[6] ].min  # Exemption, limited by income
@@ -132,11 +134,12 @@ class QdcgtWorksheet < TaxForm
 end
 
 FilingStatus.set_param('qdcgt_exemption',
-                       single: 44_650, mfj: 89_250, mfs: :single,
-                       hoh: 59_750, qw: :mfj)
+                       single: 47_025, mfj: 94_050, mfs: :single,
+                       hoh: 63_000, qw: :mfj)
 FilingStatus.set_param('qdcgt_cap',
-                       single: 492_300, mfj: 553_850, mfs: :half_mfj,
-                       hoh: 523_050, qw: :mfj)
+                       single: 518_900, mfj: 583_750,
+                       mfs: 291_850, # not :half_mfj?
+                       hoh: 551_350, qw: :mfj)
 
 # A one-liner that will convert the tables of the tax brackets worksheet into
 # the appropriate forms below:
@@ -147,11 +150,11 @@ FilingStatus.set_param(
   'tax_brackets',
   single: nil,
   mfj: [
-    [ 190750, 0.22, 9385.00 ],
-    [ 364200, 0.24, 13200.00 ],
-    [ 462500, 0.32, 42336.00 ],
-    [ 693750, 0.35, 56211.00 ],
-    [ nil, 0.37, 70086.00 ],
+    [ 201050, 0.22, 9894.00 ],
+    [ 383900, 0.24, 13915.00 ],
+    [ 487450, 0.32, 44627.00 ],
+    [ 731200, 0.35, 59250.50 ],
+    [ nil, 0.37, 73874.50 ],
   ],
   mfs: nil,
   hoh: nil,

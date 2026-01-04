@@ -10,7 +10,7 @@ class Form6251 < TaxForm
   NAME = '6251'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -69,9 +69,9 @@ class Form6251 < TaxForm
 
     # 2h: qualified small business stock
     with_forms(8949) do |f|
-      %w(I II).each do |part|
-        f_line, g_line = "#{part}.1f", "#{part}.1g"
-        if f.line[f_part, :all].include?("Q")
+      %w(I II).each do |f_part|
+        f_line, g_line = "#{f_part}.1f", "#{f_part}.1g"
+        if f.line[f_line, :present] && f.line[f_line, :all].include?("Q")
           raise "AMT adjustment for QSBS not implemented"
         end
         # Because this appears only to apply to stock acquired before September
@@ -104,8 +104,20 @@ class Form6251 < TaxForm
 
     # 2k: adjustments for disposition of property.
     #
-    %w(4797 4684 8949).each do |f|
+    %w(4797 4684).each do |f|
       raise "Line 2k not implemented with form #{f}" if has_form?(f)
+    end
+
+    if has_form?(8949)
+      #
+      # Sales of stock purchased via an ISO have a different basis for AMT
+      # purposes, which would have been reported on a previous year's Form 3921.
+      # Ideally, the stock sale form should include the AMT basis, or this
+      # program should look back to previous Form 3921s received.
+      #
+      if interview("Did you sell any ISO-purchased stock?")
+        raise "Like 2k not implemented with form 8949"
+      end
     end
 
     # 2l: depreciation adjustments.
@@ -140,8 +152,8 @@ class Form6251 < TaxForm
     # might be affected but this is unlikely.
     confirm("You have no other adjustments for AMT (line 3)")
 
-    line[4] = sum_lines(1, 3, *'2a'..'2z')
-    if form(1040).status.is('mfs') && line[4] > 831_150
+    line['4/amt_inc'] = sum_lines(1, 3, *'2a'..'2z')
+    if form(1040).status.is('mfs') && line[4] > 875_950
       raise "Form 6251 Line 4 adjustment not implemented"
     end
     with_form('1040 Schedule E') do |f|
@@ -157,7 +169,7 @@ class Form6251 < TaxForm
 
     # Compute the exemption.
     if line[4] > form(1040).status.amt_exempt_max
-      line[5] = compute_form('6251 Line 5 Exemption Worksheet').line[6]
+      line[5] = compute_form('6251 Line 5 Exemption Worksheet').line[:exemption]
     else
       line[5] = form(1040).status.amt_exemption
     end
@@ -237,7 +249,9 @@ class Form6251 < TaxForm
     line[12] = line[6]
 
     check_line_13_conds
-    line[13] = compute_from_worksheets(4, 13) { BlankZero }
+    # If the Schedule D worksheet is ever implemented, the 13 below should be
+    # changed to an appropriate alias.
+    line[13] = compute_from_worksheets(:tot_qdcg, 13) { BlankZero }
 
     line[14] = with_form('1040 Schedule D', otherwise: BlankZero) do |sd|
       sd.line[19, :opt]
@@ -254,7 +268,7 @@ class Form6251 < TaxForm
     line[18] = amt_tax(line[17])
 
     line[19] = form(1040).status.amt_cg_exempt
-    line[20] = compute_from_worksheets(5, 14) {
+    line[20] = compute_from_worksheets(:inc_no_qdcg, 14) {
       [ 0, form(1040).line[:taxinc] ].max
     }
 
@@ -266,7 +280,7 @@ class Form6251 < TaxForm
     line[25] = form(1040).status.amt_cg_upper
 
     line[26] = line[21]
-    line[27] = compute_from_worksheets(5, 21) {
+    line[27] = compute_from_worksheets(:inc_no_qdcg, 21) {
       [ 0, form(1040).line[:taxinc] ].max
     }
 
@@ -304,10 +318,10 @@ class Form6251 < TaxForm
   end
 
   def amt_tax(amount)
-    if amount <= form(1040).status.halve_mfs(220_700)
+    if amount <= form(1040).status.halve_mfs(232_600)
       return (amount * 0.26).round
     else
-      return (amount * 0.28).round - form(1040).status.halve_mfs(4414)
+      return (amount * 0.28).round - form(1040).status.halve_mfs(4652)
     end
   end
 
@@ -334,20 +348,20 @@ class Line5ExemptionWorksheet < TaxForm
   NAME = '6251 Line 5 Exemption Worksheet'
 
   def year
-    2019
+    2024
   end
 
   def compute
     if form(6251).line[4] > form(1040).status.amt_exempt_zero
-      line[6] = 0
+      line['6/exemption'] = 0
       return
     end
     line[1] = form(1040).status.amt_exemption
-    line[2] = form(6251).line[4]
+    line[2] = form(6251).line[:amt_inc]
     line[3] = form(1040).status.amt_exempt_max
     line[4] = [ 0, line[2] - line[3] ].max
     line[5] = (line[4] * 0.25).round
-    line[6] = [ 0, line[1] - line[5] ].max
+    line['6/exemption'] = [ 0, line[1] - line[5] ].max
 
     if age < 24
       raise 'Special AMT exemption for children under 24 not implemented'
@@ -355,24 +369,39 @@ class Line5ExemptionWorksheet < TaxForm
   end
 end
 
-# Parameter order reminder: set_param(single, mfj, mfs, hoh, qw)
+#
+# On these parameters, see also amt_test_worksheet.rb, which is called in Form
+# 1040 Schedule 2.
+#
 
-# Used on AMT test worksheet, line 8
+#
+# Used on AMT test worksheet, line 8 and Form 6251, line 5.
+#
 FilingStatus.set_param('amt_exempt_max',
-                       single: 578_150, mfj: 1_156_300, mfs: :half_mfj,
+                       single: 609_350, mfj: 1_218_700, mfs: :half_mfj,
                        hoh: :single, qw: :mfj)
 
-# Used on the AMT test worksheet, line 6
+#
+# Used on the AMT test worksheet, line 6, and Form 6251, line 5.
+#
 FilingStatus.set_param('amt_exemption',
-                       single: 81_300, mfj: 126_500, mfs: :half_mfj, hoh:
+                       single: 85_700, mfj: 133_300, mfs: :half_mfj, hoh:
                        :single, qw: :mfj)
+
+#
+# Used in the initial test prior to filling out the line 5 worksheet.
+#
 FilingStatus.set_param('amt_exempt_zero',
-                       single: 810_000, mfj: 1_490_400, mfs: :half_mfj,
+                       single: 952_150, mfj: 1_751_900, mfs: :half_mfj,
                        hoh: :single, qw: :mfj)
+
+# Exemption for income excluding capital gains, for Form 6251, line 19.
 FilingStatus.set_param('amt_cg_exempt',
-                       single: 44_625, mfj: 89_250, mfs: :single,
-                       hoh: 59_750, qw: :mfj)
+                       single: 47_025, mfj: 94_050, mfs: :single,
+                       hoh: 63_000, qw: :mfj)
+
+# Limit for income excluding capital gains, for Form 6251, line 25.
 FilingStatus.set_param('amt_cg_upper',
-                       single: 492_300, mfj: 553_580, mfs: :half_mfj,
-                       hoh: 523_050, qw: :mfj)
+                       single: 518_900, mfj: 583_750, mfs: :half_mfj,
+                       hoh: 551_350, qw: :mfj)
 

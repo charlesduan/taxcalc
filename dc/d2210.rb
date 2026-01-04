@@ -4,7 +4,7 @@ class FormD2210 < TaxForm
   NAME = 'D-2210'
 
   def year
-    2023
+    2024
   end
 
   def needed?

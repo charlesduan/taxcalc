@@ -6,7 +6,7 @@ class Pub590AWorksheet1_2 < TaxForm
   NAME = "Pub. 590-A Worksheet 1-2"
 
   def year
-    2023
+    2024
   end
 
   def initialize(manager, ssn, spouse_ssn)
@@ -119,7 +119,7 @@ class Pub590AWorksheet1_2 < TaxForm
   # contributions are not implemented yet.
   #
   def enter_contributions
-    line[:age_limit] = (age > 50 ? 7500 : 6500)
+    line[:age_limit] = (age > 50 ? 8000 : 7000)
     line['6/contribution'] = @ira_analysis.line[:this_year_contrib]
     if line[6] > [ line[:age_limit], line[5] ].min
       raise "Excess contributions to traditional IRA not implemented"
@@ -164,12 +164,12 @@ end
 # Traditional IRA deduction limits for modified AGI, per worksheet line 1.
 FilingStatus.set_param(
   'ira_deduction_limit',
-  single: [ 73_000, 83_000 ], mfj: [ 116_000, 136_000 ], mfs: [ 0, 10_000 ],
+  single: [ 77_000, 87_000 ], mfj: [ 123_000, 143_000 ], mfs: [ 0, 10_000 ],
   hoh: :single, qw: :mfj
 )
 FilingStatus.set_param(
   'ira_deduction_limit_spouse',
-  single: nil, mfj: [ 218_000, 228_000 ], mfs: [ 0, 10_000 ],
+  single: nil, mfj: [ 230_000, 240_000 ], mfs: [ 0, 10_000 ],
   hoh: nil, qw: nil
 )
 

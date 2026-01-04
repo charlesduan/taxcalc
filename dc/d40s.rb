@@ -12,7 +12,7 @@ class FormD40S < TaxForm
   NAME = 'D-40 Schedule S'
 
   def year
-    2023
+    2024
   end
 
   def compute

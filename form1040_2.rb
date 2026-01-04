@@ -5,23 +5,22 @@ class Form1040_2 < TaxForm
   NAME = '1040 Schedule 2'
 
   def year
-    2023
+    2024
   end
 
   def compute
     set_name_ssn
 
-    # Bizarrely, Form 6251 (AMT) requires Schedule 2, Line 2. So it is computed
-    # first.
     assert_no_forms('1095-A') # Line 2; advance premium tax credit repayment
-    line['2/aptc'] = BlankZero
+    line['1a/aptc'] = BlankZero
+
+    line['1z'] = sum_lines(*('1a'..'1y'))
 
     amt_test = compute_form(
       "1040 Worksheet to See If You Should Fill In Form 6251"
     )
     if amt_test.line[:fill_yes, :present]
-      line[1] = compute_form(6251).line[:amt_tax]
-      place_lines(2)
+      line[2] = compute_form(6251).line[:amt_tax]
     end
 
     line['3/add_tax'] = sum_lines(1, 2)

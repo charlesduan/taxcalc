@@ -59,7 +59,7 @@ posdata = YAML.load(
 )
 form_file, *form_names = ARGV
 
-unless File.file?(form_file)
+unless form_file && File.file?(form_file)
   raise("Must provide form data file as first argument")
 end
 

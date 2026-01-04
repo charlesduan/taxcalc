@@ -1,6 +1,6 @@
 module DcTaxTable
 
-  # Updated for 2024. DC tax rates have not changed as of 2022.
+  # Updated for 2025. DC tax rates have not changed as of 2022.
 
   def compute_tax(income)
     if income <= 100_000

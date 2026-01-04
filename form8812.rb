@@ -9,7 +9,7 @@ class Form8812 < TaxForm
   NAME = '1040 Schedule 8812'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -34,7 +34,7 @@ class Form8812 < TaxForm
 
     if f1040.line[:dep_4_other, :present]
       line[6] = f1040.line[:dep_4_other, :all].count { |x| x == 'X' }
-      line[7] = line['2num'] * 500
+      line[7] = line[6] * 500
     end
 
     line[8] = sum_lines(5, 7)

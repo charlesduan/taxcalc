@@ -8,7 +8,7 @@ class AMTTestWorksheet < TaxForm
   NAME = "1040 Worksheet to See If You Should Fill In Form 6251"
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -52,7 +52,7 @@ class AMTTestWorksheet < TaxForm
       line[11] = line[7]
     end
 
-    if line[11] > f1040.status.halve_mfs(220_700)
+    if line[11] > f1040.status.halve_mfs(232_600)
       line['12yes'] = 'X'
       line[:fill_yes] = 'X'
       return

@@ -6,7 +6,7 @@ class Form1040SE < TaxForm
   NAME = '1040 Schedule SE'
 
   def year
-    2023
+    2024
   end
 
   def initialize(manager, ssn)
@@ -26,12 +26,13 @@ class Form1040SE < TaxForm
     # This always uses the long form Schedule SE, because the short-form one
     # doesn't deduct W-2 wages from the extra social security wages tax.
     #
-    se_inc = forms('1065 Schedule K-1') { |f|
-      f.line[:ssn] == @ssn
-    }.lines(14, :sum)
-    se_inc += forms('1040 Schedule C') { |f|
-      f.line[:ssn] == @ssn
-    }.lines(:net_profit, :sum)
+    se_inc = BlankZero
+    with_forms('1065 Schedule K-1') do |sch_k1|
+      se_inc += sch_k1.line[14] if sch_k1.line[:ssn] == @ssn
+    end
+    with_forms('1040 Schedule C') do |sch_c|
+      se_inc += sch_c.line[:net_profit] if sch_c.line[:ssn] == @ssn
+    end
 
     #
     # We now need to subtract out unreimbursed partnership expenses, per the

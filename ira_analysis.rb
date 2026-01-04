@@ -26,7 +26,7 @@ class IraAnalysis < TaxForm
   NAME = 'IRA Analysis'
 
   def year
-    2023
+    2024
   end
 
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
@@ -182,7 +182,10 @@ class IraAnalysis < TaxForm
 
     #
     # This follows the instructions in Pub. 590-B, "Contribution and
-    # distribution in the same year".
+    # distribution in the same year". However, because Form 1040 expects
+    # distributions to be computed before contributions, the order of the
+    # instructions is modified: Worksheet 1-1 is completed along with step 8 in
+    # the instructions, but steps 1-7 are done in the continuation.
     #
     @pub590b_w1_1 = compute_form("Pub. 590-B Worksheet 1-1", @ssn, @spouse_ssn)
 
@@ -205,6 +208,7 @@ class IraAnalysis < TaxForm
 
   def compute_contributions_and_distributions_continuation
 
+    # Step 1
     @pub590a_w1_2 = compute_form("Pub. 590-A Worksheet 1-2", @ssn, @spouse_ssn)
 
     # Step 2 is done here by setting line nondeductible_contrib
@@ -256,7 +260,7 @@ class IraAnalysis < TaxForm
     line['8606_3'] = sum_lines(:nondeductible_contrib, '8606_2')
     line['8606_4'] = [
       forms('Traditional IRA Contribution') { |f|
-        f.line[:date].year > @manager.year
+        f.line[:date].year > this_year
       }.lines(:amount, :sum),
       line[:nondeductible_contrib]
     ].min

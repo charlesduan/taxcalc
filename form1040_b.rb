@@ -5,7 +5,7 @@ class Form1040B < TaxForm
   NAME = '1040 Schedule B'
 
   def year
-    2023
+    2024
   end
 
   def compute
@@ -41,6 +41,8 @@ class Form1040B < TaxForm
 
     line['5l', :all] = forms('1099-DIV').lines('name')
     line['5r', :all] = forms('1099-DIV').lines('1a')
+    # TODO: If any 1099-DIV forms have qexception?, then those need to be added
+    # here.
     with_forms('1065 Schedule K-1') do |f|
       if f.line['6a', :present]
         add_table_row('1l' => f.line[:B].split("\n")[0], '1r' => f.line['6a'])
@@ -55,7 +57,5 @@ class Form1040B < TaxForm
       confirm("You had no relationship with a foreign trust")
       line['8.no'] = 'X'
     end
-
-    return self
   end
 end

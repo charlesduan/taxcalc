@@ -31,10 +31,8 @@ class Form1040 < TaxForm
   NAME = '1040'
 
   def year
-    2023
+    2024
   end
-
-  MONTHS = %w(jan feb mar apr may jun jul aug sep oct nov dec)
 
   def initialize(manager)
     super(manager)
@@ -62,6 +60,7 @@ class Form1040 < TaxForm
       end
     else
       assert_no_forms('1099-NEC', '1099-MISC')
+      @manager.no_form('1040 Schedule C')
     end
 
     compute_form('1040 Schedule E')
@@ -135,18 +134,10 @@ class Form1040 < TaxForm
       line['ssd.dependent'] = 'X'
     end
 
-    #
-    # The introduction of the standard-deduction charity deduction introduces a
-    # circularity into the 1040 computation: To determine automatically whether
-    # to itemize or take the standard deduction, we must compute Schedule A,
-    # which requires computing the line 11 AGI, but the SD charity deduction
-    # must be determined at line 10. As a result, the user must determine
-    # itemization manually.
-    #
-    @itemize = interview('Do you want to itemize deductions?')
     if status.is('mfs')
-      line['ssd.isrdsa'] = 'X' if @itemize || interview(
-        'Are you a dual-status alien?'
+      line['ssd.isrdsa'] = 'X' if interview(
+        'Are you a dual-status alien ' \
+        'or is your spouse itemizing on a separate return?'
       )
     end
 
@@ -171,13 +162,28 @@ class Form1040 < TaxForm
         :dep_2 => dep.line[:ssn],
         :dep_3 => dep.line[:relationship],
       }
-      case dep.line[:qualifying]
-      when 'child'
-        raise "Dependent marked as child but is too old" if age(dep) >= 17
+      #
+      # Is the named dependent a qualifying child? Note that qualifying
+      # relatives aren't implemented. Additionally, it is assumed that any named
+      # dependent satisfies the other requirements (didn't provide own support,
+      # isn't filing a joint return, lived with you for over half the year).
+      #
+      case
+      when age(dep) < 19
+      when age(dep) < 24 && dep.line[:student?, :opt]
+      when dep.line[:disabled?, :opt]
+      else
+        warn("#{dep.line[:name]} isn't a qualifying child")
+        next
+      end
+
+      #
+      # Determine which credit applies.
+      #
+      if age(dep) < 17
         row[:dep_4_ctc] = 'X'
-      when 'other' then row[:dep_4_other] = 'X'
-      when 'none'
-      else raise "Unknown dependent qualifying type #{dep.line[:qualifying]}"
+      else
+        row[:dep_4_other] = 'X'
       end
       add_table_row(row)
     end
@@ -259,8 +265,8 @@ class Form1040 < TaxForm
 
     # Compute Schedule A, the presence of which will indicate whether deductions
     # are to be itemized.
-    if @itemize
-      sched_a = compute_form('1040 Schedule A')
+    sched_a = compute_form('1040 Schedule A')
+    if sched_a
       line['12/deduction'] = sched_a.line[:total]
     else
       %w(
@@ -327,7 +333,7 @@ class Form1040 < TaxForm
     with_form(8959) do |f|
       line['25c'] = f.line[:mc_wh]
     end
-    line['25d/withholding'] = sum_lines(*%w(25a 25b 25c 25d))
+    line['25d/withholding'] = sum_lines(*%w(25a 25b 25c))
 
     line['26/est_tax'] = forms('Estimated Tax').lines('amount', :sum) + \
       @manager.submanager(:last_year).form(1040).line(:refund_applied, :opt)
@@ -387,7 +393,8 @@ class Form1040 < TaxForm
   end
 
   #
-  # These follow the instructions for the estimated tax penalty.
+  # These follow the instructions for the estimated tax penalty. XXX: Since I've
+  # implemented Form 2210, this computation should be replaced with that one.
   #
   def compute_penalty
 
@@ -406,14 +413,10 @@ class Form1040 < TaxForm
     # penalty"
     if line[:tax_owed] > 1000 && line[:tax_owed] > 0.1 * tax_shown
 
-      # Because I didn't use this program last year, I'm only going to implement
-      # this if I need it
-      raise "Tax penalty not implemented"
-
       ly = @manager.submanager(:last_year)
       # Last year's tax shown, defined under "tax shown on your 20xx return"
-      last_year_tax = ly.form(1040).line_16
-      last_year_tax -= ly.form(1040).sum_lines(*%w(18a, 18b, 18c))
+      last_year_tax = ly.form(1040).line[:tot_tax]
+      last_year_tax -= ly.form(1040).sum_lines(27, 28, 29)
       last_year_tax -= ly.with_form(
         '1040 Schedule 3', otherwise: 0
       ) { |f| f.sum_lines(9, 12) }
@@ -430,8 +433,9 @@ class Form1040 < TaxForm
 
         # Second test: Calculate payments
         tax_paid = sum_lines('25d', 26)
+        puts "Tax paid is #{tax_paid}"
         with_form('1040 Schedule 3') do |f|
-          tax_paid += line[10, :opt]
+          tax_paid += f.line[11, :opt]
         end
 
         # Second test: comparison
@@ -445,6 +449,6 @@ class Form1040 < TaxForm
 
 end
 FilingStatus.set_param('standard_deduction',
-                       single: 13_850, mfj: 27_700, mfs: :single,
-                       hoh: 20_800, qw: :mfj)
+                       single: 14_600, mfj: 29_200, mfs: :single,
+                       hoh: 21_900, qw: :mfj)
 

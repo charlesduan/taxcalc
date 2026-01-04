@@ -97,8 +97,8 @@ class Interviewer
     case data
     when nil then raise "Nil data for #{question}"
     when '-' then BlankZero
-    when /^-?\d+$/ then data.to_i
-    when /^-?\d*\.\d*$/ then data.to_f
+    when /^-?\d[\d,]*\.?$/ then data.gsub(/[,.]/, '').to_i
+    when /^-?[\d,]*\.\d+$/ then data.gsub(',', '').to_f
     when /^'(\d+)$/ then $1
     when /^\d{4}-\d{1,2}-\d{1,2}$/ then Date.strptime(data, "%Y-%m-%d")
     when /^\d+\/\d+\/\d{4}$/ then Date.strptime(data, "%m/%d/%Y")
