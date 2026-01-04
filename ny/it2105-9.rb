@@ -38,7 +38,7 @@ class FormIT2105_9 < TaxForm
     line[20] = sum_lines(18, 19)
     line[21] = line[17] - line[20]
     line[22] = (line[21] * 0.06801).round
-    line[23] = 0
+    line[23] = (7 * 0.00028 * line[21]).round
     line['24/amount'] = line[22] - line[23]
   end
 

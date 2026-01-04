@@ -11,7 +11,7 @@ class FormFP31 < TaxForm
   # due at the beginning of the reporting period.
   #
   def year
-    2023
+    2024
   end
 
   def compute
@@ -74,7 +74,7 @@ class DCAssetManager < TaxForm
   NAME = "DC Asset Manager"
 
   def year
-    2023
+    2024
   end
 
   # The last date for which assets are relevant.
@@ -240,7 +240,7 @@ class FormFP31ABCD1D2 < TaxForm
   NAME = "FP-31 Schedules A through D-2"
 
   def year
-    2023
+    2024
   end
 
   def compute

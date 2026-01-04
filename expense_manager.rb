@@ -80,6 +80,7 @@ class ExpenseManager < TaxForm
     'Safe_Harbor' => '1.263(a)-1(f) Safe Harbor',
     'Rent_Equipment' => 'Rented Vehicles, Machinery, and Equipment',
     'Rent_Property' => 'Rented Business Property',
+    'Office' => 'Office Expenses',
   }
 
 end

@@ -15,7 +15,10 @@ class Marking; class Controller
   attr_reader :forms
 
   def load_posdata(file)
-    @forms = YAML.load(open(file, &:read))
+    @forms = YAML.load(
+      open(file, &:read),
+      permitted_classes: [ Marking::Form, Marking::Line, Marking::Position ],
+    )
   end
 
   def import_forms(form_manager)

@@ -53,7 +53,10 @@ OptionParser.new do |opts|
 end.parse!
 
 
-posdata = YAML.load(open(@options.posdata, &:read))
+posdata = YAML.load(
+  open(@options.posdata, &:read),
+  permitted_classes: [ Marking::Form, Marking::Line, Marking::Position ],
+)
 form_file, *form_names = ARGV
 
 unless File.file?(form_file)
