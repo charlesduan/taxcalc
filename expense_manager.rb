@@ -13,7 +13,7 @@ class ExpenseManager < TaxForm
   NAME = 'Business Expense Manager'
 
   def year
-    2024
+    2025
   end
 
   def compute

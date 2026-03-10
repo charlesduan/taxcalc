@@ -30,23 +30,35 @@ function computeBoxAtPoint(point) {
         return undefined;
     }
 
-    // Find the bottom edge. The number of steps taken will be coincidentally
-    // equal to the y coordinate of the bottom edge.
+    // Find the bottom edge.
     let ymax = p.plus(advanceLine(p, p, new Point(0, 1), maxdy));
-    ymax = ymax.plus(0, 1); // Collect the bottom line for testing too
 
-    // Find the right edge. Again the returned number of steps will equal the x
-    // coordinate.
+    // Find the right edge.
     let xmax = p.plus(advanceLine(p, ymax, new Point(1, 0), maxdx));
 
     // Find the left edge.
     let xmin = p.plus(advanceLine(p, ymax, new Point(-1, 0), maxdx));
 
+    // Recalculate the left and right edge, based just on the bottom line. Use
+    // If the bottom line distance is reasonable, use whichever values lead to a
+    // smaller box.
+    let ybot = ymax.plus(0, 2);
+    let xbotmax = ymax.plus(advanceLine(ybot, ybot, new Point(1, 0), maxdx));
+    let xbotmin = ymax.plus(advanceLine(ybot, ybot, new Point(-1, 0), maxdx));
+    let xbotdiff = xbotmax.x - xbotmin.x;
+    if (xbotdiff > 20) {
+        if (xmax.x > xbotmax.x) { xmax = xbotmax; }
+        if (xmin.x < xbotmin.x) { xmin = xbotmin; }
+    }
+
     // Find the top edge.
-    let ymin = p.plus(advanceLine(xmin, xmax, new Point(0, -1), maxdy));
+    let ymin = p.plus(advanceLine(
+        new Point(xmin.x, p.y), new Point(xmax.x, p.y),
+        new Point(0, -1), maxdy)
+    );
 
     // Convert back to absolute coordinates
-    let res = [ xmin.x, ymin.y, xmax.x, ymax.y - 1 ];
+    let res = [ xmin.x, ymin.y, xmax.x, ymax.y ];
 
     // Sanity checks
     if (res[0] < 0) { res[0] = 0; }
@@ -76,8 +88,9 @@ function colorAt(p) {
  */
 function sameColor(p1, p2) {
     const c1 = colorAt(p1), c2 = colorAt(p2);
+    //console.log("Color at " + p1 + ": " + c1 + "; color at " + p2 + ": " + c2);
     for (let i = 0; i < 3; i++) {
-        if (Math.abs(c1[i] - c2[i]) > 20) {
+        if (Math.abs(c1[i] - c2[i]) > 10) {
             return false;
         }
     }
@@ -93,11 +106,22 @@ function sameColor(p1, p2) {
 function advanceLine(pMin, pMax, delta, maxSteps) {
     for (let i = 1; i <= maxSteps; i++) {
         let totalDelta = delta.times(i);
-        for (let pIter = pMin; pIter !== null; pIter = pIter.nextToward(pMax)) {
-            if (!sameColor(pIter, pIter.plus(totalDelta))) {
-                return delta.times(i - 1);
-            }
+        // The edges must match exactly.
+        if (!sameColor(pMin, pMin.plus(totalDelta))) {
+            return delta.times(i - 1);
         }
+        if (!sameColor(pMax, pMax.plus(totalDelta))) {
+            return delta.times(i - 1);
+        }
+
+        // Otherwise we check for a threshold error.
+        let errs = 0;
+        let count = 0;
+        for (let pIter = pMin; pIter !== null; pIter = pIter.nextToward(pMax)) {
+            count += 1;
+            if (!sameColor(pIter, pIter.plus(totalDelta))) { errs += 1; }
+        }
+        if (errs > 5 || errs * 1.0 / count > 0.1) { return delta.times(i - 1); }
     }
     return delta.times(maxSteps);
 }

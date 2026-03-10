@@ -8,7 +8,7 @@ require 'categorization'
 class HomeOfficeManager < TaxForm
 
   def year
-    2024
+    2025
   end
 
   NAME = 'Home Office Manager'

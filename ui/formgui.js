@@ -392,6 +392,7 @@ function findNextSplitBox(line, page, pos) {
     //if (!boxcalc.sameColor(rect.center(), nextPoint)) { return; }
 
     const newRect = boxcalc.computeBoxAtPoint(nextPoint);
+    if (!boxcalc.sameColor(rect.center(), newRect.center())) { return; }
     if (newRect && Math.abs(newRect.max.y - rect.max.y) < 10) {
         // Have to manually provide the toolbar info because theoretically
         // the toolbar could have changed by this point

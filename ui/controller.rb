@@ -90,7 +90,7 @@ class Marking; class Controller
 
   def send_cmd(cmd, args)
     res = JSON.generate({ 'command' => cmd, 'payload' => args})
-    puts "-> #{res}"
+    #puts "-> #{res}"
     @node_io.puts(res)
   end
 

@@ -1,12 +1,16 @@
 require 'tax_form'
 require 'form1040_se'
 
+#
+# Implements the Deduction Worksheet for Self-Employed in chapter 5 of this
+# publication.
+#
 class Pub560Worksheet < TaxForm
 
   NAME = "Pub. 560 Worksheet"
 
   def year
-    2024
+    2025
   end
 
   def initialize(manager, ssn:, contrib_frac:)
@@ -16,11 +20,21 @@ class Pub560Worksheet < TaxForm
   end
 
   def annual_compensation_limit
-    return 345_000 # 2024 limit
+    # This is under chapter 4, Qualified Plans, Employer Deduction, Deduction
+    # Limits.
+    return 345_000 if this_year == 2024
+    return 350_000 if this_year == 2025
+    return 360_000 if this_year == 2026
+    raise "Limit not known"
   end
 
-  def additions_limit
-    return 69_000 # 2024 limit
+  def employer_contribution_limit
+    # This is under chapter 4, Qualified Plans, Contributions, Employer
+    # Contributions.
+    return 69_000 if year == 2024
+    return 70_000 if year == 2025
+    return 72_000 if year == 2026
+    raise "Limit not known"
   end
 
   def compute
@@ -29,22 +43,26 @@ class Pub560Worksheet < TaxForm
       raise "403(b) test not implemented; see memo in Pub. 560 code"
     end
 
+    #
+    # This necessitates that Form 1065, Schedule K-1 be computed sufficiently.
+    #
     f1040_se = compute_form('1040 Schedule SE', @ssn)
     unless f1040_se
       raise "Form 1040 Schedule SE failed, despite partnership income"
     end
+
     line[:ssn] = @ssn
     line[1] = f1040_se.line[:tot_inc]
     line[2] = f1040_se.line[:se_ded]
     line[3] = line[1] - line[2]
 
-    # The formula below implements the Rate Table for Self-Employed.
+    # The formula below implements the Rate Worksheet for Self-Employed.
     line[4] = (@contrib_frac / (1 + @contrib_frac)).round(6)
 
     line[5] = (line[3] * line[4]).round
     line[6] = (annual_compensation_limit * @contrib_frac).round
     line[7] = [ line[5], line[6] ].min
-    line[8] = additions_limit
+    line[8] = employer_contribution_limit
     #
     # Assume no elective deferrals.
     #

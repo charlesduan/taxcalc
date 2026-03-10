@@ -12,7 +12,7 @@ class AssetManager < TaxForm
   NAME = 'Asset Manager'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -67,7 +67,7 @@ class AssetManager < TaxForm
     if has_safe_harbor_expenses?
       address = case
                 when has_form?(1065)
-                  form(1065).line[:address] + ", " + form(1065).line[:city_zip]
+                  form(1065).line[:address] + ", " + form(1065).line[:city_zip!]
                 when has_form?(1040)
                   form(1040).line[:home_address] + ", " + \
                     form(1040).line[:city_zip]

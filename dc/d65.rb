@@ -8,7 +8,7 @@ class FormD65 < TaxForm
   NAME = 'D-65'
 
   def year
-    2024
+    2025
   end
 
   def check_box(line_no, condition)
@@ -39,7 +39,7 @@ class FormD65 < TaxForm
       line[:address2] = addr2
     end
 
-    csz = f1065.line[:city_zip]
+    csz = f1065.line[:city_zip!]
     if csz =~ /,? ([A-Z][A-Z]) (\d{5}(?:-\d{4})?)$/
       line[:city] = $`
       line[:state] = $1
@@ -52,7 +52,7 @@ class FormD65 < TaxForm
     line[:agent_tin] = f1065.line['PR.tin!'].gsub("-", "")
 
     copy_line(1, f1065, from: 'receipts')
-    copy_line(2, f1065)
+    copy_line(2, f1065, from: 'cogs')
     line[3] = line[1] - line[2, :opt]
 
     copy_line(4, f1065, from: 'pet_inc')
@@ -137,7 +137,7 @@ class FormD65 < TaxForm
       raise 'DC wage withholding question not implemented'
     end
 
-    interview("Your previous year 1065 was not amended or changed.")
+    confirm("Your previous year 1065 was not amended or changed.")
     check_box(:N, false)
 
     line[:filing_explanation!, :all] = [

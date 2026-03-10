@@ -154,7 +154,7 @@ end
 begin
 
   @rubyRd.each do |line|
-    puts "<- #{line}"
+    #puts "<- #{line}"
     obj = JSON.parse(line)
     command, payload = obj['command'], obj['payload']
     if @controller.respond_to?("cmd_#{command}")

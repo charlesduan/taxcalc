@@ -6,7 +6,7 @@ class Form1065K1 < TaxForm
   NAME = '1065 Schedule K-1'
 
   def year
-    2024
+    2025
   end
 
   def initialize(manager, partner_form)
@@ -25,7 +25,7 @@ class Form1065K1 < TaxForm
     line['B'] = [
       f1065.line[:name],
       f1065.line[:address],
-      f1065.line[:city_zip]
+      f1065.line[:city_zip!]
     ].join("\n")
     line['C'] = f1065.line(:send_to!).sub(/\s+\d{5}(?:-\d{4})?$/, '')
     line['D'] = 'X' if f1065.line('ptp', :present)
@@ -33,7 +33,7 @@ class Form1065K1 < TaxForm
     line['F'] = [
       @partner_form.line['name'],
       @partner_form.line['address'],
-      @partner_form.line['address2']
+      @partner_form.line['city_zip']
     ].join("\n")
     line["G.#{@partner_form.line['liability']}"] = 'X'
     line["H1.#{@partner_form.line['nationality']}"] = 'X'
@@ -74,7 +74,7 @@ class Form1065K1 < TaxForm
     # Line 14 must be computed before line 13 because line 13, the retirement
     # contributions, depends on the self-employment income computed in line 14.
     #
-    line[14] = (f1065.line['K14a'] * share).round
+    line['14/se_inc'] = (f1065.line['K14a'] * share).round
     line['14.code'] = 'A'
 
     #
@@ -89,9 +89,16 @@ class Form1065K1 < TaxForm
     # Compute the partnership's employer contribution to a 401(k). This is
     # programmatically a little unsatisfying, as the Schedule K-1 should be
     # purely computed off of the 1065, but here the schedule performs the
-    # computation that the 1065 uses. A better approach would be to have a 401k
-    # contribution manager that determines each partner's profit-sharing
-    # allocation.
+    # computation that the 1065 uses.
+    #
+    # Unfortunately, this problem is probably unsolvable. Computing the 401(k)
+    # contribution depends on the Pub. 560 worksheet as noted below, which in
+    # turn depends on Form 1040 Schedule SE for the computation of the
+    # self-employment deduction. That form, in turn, requires line 14 of this
+    # form (1065 K-1) so that self-employment income can be computed. Absent an
+    # independent mechanism for computing the self-employment deduction, there
+    # doesn't seem to be a way to avoid stopping in the middle of the K-1
+    # computation to figure the 401(k) contribution.
     #
     if bio.line['401k_contrib', :present]
       ws = compute_form(

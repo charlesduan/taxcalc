@@ -8,7 +8,7 @@ class Form7004 < TaxForm
 
   NAME = '7004'
   def year
-    2024
+    2025
   end
 
   def compute
@@ -16,7 +16,13 @@ class Form7004 < TaxForm
     copy_line(:name, bio)
     copy_line(:ein, bio)
     copy_line(:address, bio)
-    copy_line(:city_zip, bio)
+    line[:city], line[:state], line[:zip] = split_csz(bio.line[:city_zip])
+    if bio.line[:nationality] == 'domestic'
+      line[:country] = 'USA'
+    else
+      line[:country] = bio.line[:country]
+    end
+
 
     line[1] = '09'
     line['5a'] = year.to_s[2..3]

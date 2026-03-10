@@ -11,16 +11,23 @@ class Form1065 < TaxForm
   NAME = '1065'
 
   def year
-    2024
+    2025
   end
 
   def compute
 
     bio = form('Partnership')
     line['name'] = bio.line(:name)
-    line['address'] = bio.line(:address) + \
-      (bio.line(:address2, :present) ? " " + bio.line(:address2) : "")
-    line['city_zip'] = bio.line(:city_zip)
+    line['address'] = bio.line(:address)
+
+    line[:city], line[:state], line[:zip] = split_csz(bio.line['city_zip'])
+    line['city_zip!'] = bio.line(:city_zip)
+    if bio.line[:nationality] == 'domestic'
+      line[:country] = 'USA'
+    else
+      line[:country] = bio.line[:country]
+    end
+
     line['A'] = bio.line('business')
     line['B'] = bio.line('product')
     line['C'] = bio.line('code')
@@ -75,6 +82,7 @@ class Form1065 < TaxForm
     line[3] = line['1c'] - line[2, :opt]
     #
     # Naming some nonexistent lines so D-65 uses names
+    # Line 2/cogs
     # Line 4/pet_inc
     # Line 5/farm_inc
     # Line 6/net_gain
@@ -196,7 +204,12 @@ class Form1065 < TaxForm
     line['B17'] = 0
     line['B18'] = 0
     line['B19.no'] = 'X'
+
+    # Form 8938 for line 20 is about foreign assets.
     line['B20.no'] = 'X'
+
+    # Line 21 deals with section 721(c) partnerships, which involve transfers of
+    # property with built-in gain to foreign-related entities.
     line['B21.no'] = 'X'
     line['B22.no'] = 'X'
     line['B23.no'] = 'X'
@@ -215,6 +228,8 @@ class Form1065 < TaxForm
     # entity. Line 30 deals with cryptocurrency.
     line['B29a.no'] = 'X'
     line['B29b.no'] = 'X'
+
+    # Cryptocurrency
     line['B30.no'] = 'X'
 
     # Line 32 deals with certain partnerships for investment purposes, who don't
@@ -235,7 +250,9 @@ class Form1065 < TaxForm
       # The TIN is no longer on the form, but still need it for DC
       line['PR.tin!'] = pr_form.line['ssn']
       line['PR.address'] = pr_form.line['address']
-      line['PR.address2'] = pr_form.line['address2']
+      line['PR.city'], line['PR.state'], line['PR.zip'] = split_csz(
+        pr_form.line[:city_zip]
+      )
       line['PR.phone'] = pr_form.line['phone']
     else
       raise "No support for non-individual partnership representative"
@@ -270,22 +287,20 @@ class Form1065 < TaxForm
       end
     end
 
-    # Keep track of profit-sharing plan contributions.
-    psp_contrib = BlankZero
-
     # The mailing address needs to be computed before Schedules K-1.
     #
     # We assumed previously that the Schedule B line 6 answer was yes, so assets
     # are less than $10 million and no M-3 is filed.
-    raise "No state in address" unless (line[:city_zip] =~ / ([A-Z]{2}) \d{5}/)
-    state = $1
     if %w(
       CT DE DC GA IL IN KY ME MD MA MI NH NJ NY NC OH PA RI SC TN VT VA WV WI
-    ).include?(state)
+    ).include?(line[:state])
       line[:send_to!] = 'Kansas City MO 64999-0011'
     else
       line[:send_to!] = 'Ogden UT 84201-0011'
     end
+
+    # Keep track of profit-sharing plan contributions.
+    psp_contrib = BlankZero
 
     #
     # Compute Schedule K-1s.
@@ -299,9 +314,8 @@ class Form1065 < TaxForm
 
     #
     # This has to be done here because it must follow the computations of the
-    # Schedule K-1s. This is not ideal because line 13 is obviously above,
-    # suggesting the need for a separate retirement contribution manager as
-    # described in the Schedule K-1 program.
+    # Schedule K-1s. This is not ideal because line 13 is obviously above, but
+    # it seems necessary as described in the Schedule K-1 program.
     if psp_contrib > 0
       line['K13e.code'] = 'R'
       line['K13e'] = psp_contrib
@@ -311,16 +325,21 @@ class Form1065 < TaxForm
       end
     end
 
+    place_lines('K14a')
+
     #
     # This should be completed separately.
     #
-    # compute_form(7004)
+    unless has_form?(7004)
+      warn("You should compute the extension of time form 7004 first")
+    end
 
     line['Analysis.1'] = sum_lines(*%w(K1 K2 K3c K4c K5 K6a K7 K8 K9a K10 K11))\
       - sum_lines(*%w(K12 K13a K13b K13c2 K13d k13e K21))
 
     line['Analysis.2a(ii)'] = line['Analysis.1']
 
+    place_lines(:send_to!)
   end
 end
 

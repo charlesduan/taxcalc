@@ -4,7 +4,7 @@ class D65PassThroughDistribution < TaxForm
   NAME = 'Schedule of Pass-Through Distribution of Income'
 
   def year
-    2024
+    2025
   end
 
   def compute

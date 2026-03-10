@@ -6,7 +6,12 @@ class Form1040SE < TaxForm
   NAME = '1040 Schedule SE'
 
   def year
-    2024
+    2025
+  end
+
+  def max_ss_wages
+    return 176_100 if this_year == 2025
+    raise "Unknown max_ss_wages"
   end
 
   def initialize(manager, ssn)
@@ -28,7 +33,11 @@ class Form1040SE < TaxForm
     #
     se_inc = BlankZero
     with_forms('1065 Schedule K-1') do |sch_k1|
-      se_inc += sch_k1.line[14] if sch_k1.line[:ssn] == @ssn
+      #
+      # This ought to separate out farm and non-farm income based on the
+      # relevant codes, but so far I don't have any farm income
+      #
+      se_inc += sch_k1.line[:se_inc] if sch_k1.line[:ssn] == @ssn
     end
     with_forms('1040 Schedule C') do |sch_c|
       se_inc += sch_c.line[:net_profit] if sch_c.line[:ssn] == @ssn
@@ -75,7 +84,7 @@ class Form1040SE < TaxForm
     # Assuming no church employee income
 
     line['6/se_inc'] = sum_lines('4c', '5b')
-    line['7!'] = 160_200 # Maximum social security wages, 2022
+    line['7!'] = max_ss_wages
 
     relevant_w2 = forms('W-2') { |f|
       f.line[:a] == @ssn
@@ -83,7 +92,9 @@ class Form1040SE < TaxForm
     line['8a'] = relevant_w2.lines(3, :sum) + relevant_w2.lines(7, :sum)
 
     # The current instructions state to skip to line 11 if line 8a is over the
-    # limit (line 7). But the computations below will reach the same result.
+    # limit (line 7). But what's basically going on is that these computations
+    # figure out if total income exceeded the SS max, so there's no harm in
+    # continuing to add them and checking.
 
     # Lines 8b and 8c relate to unreported tips and employee wages
     # miscategorized as independent contractor payments. These two assertions
@@ -95,14 +106,9 @@ class Form1040SE < TaxForm
 
     line['8d'] = sum_lines('8a', '8b', '8c')
 
-    l9 = line['7!'] - line['8d']
-    if l9 <= 0
-      line[9] = 0
-      line[10] = 0
-    else
-      line[9] = l9
-      line[10] = ([ line[6], line[9] ].min * 0.124).round
-    end
+    line[9] = [ line['7!'] - line['8d'], 0 ].max
+    line[10] = ([ line[6], line[9] ].min * 0.124).round
+
     line[11] = (line[6] * 0.029).round
     line['12/se_tax'] = sum_lines(10, 11)
     line['13/se_ded'] = (line[12] * 0.5).round
