@@ -2,14 +2,91 @@
 
 require 'gtk3'
 
-the_app = Gtk::Application.new("org.sbf5.taxcalc", :flags_none)
+class TaxUIApp < Gtk::Application
+  def initialize
+    super("org.sbf5.taxcalc", :flags_none)
 
-the_app.signal_connect("activate") do |app|
-  puts(the_app.equal?(app))
-  window = Gtk::ApplicationWindow.new(app)
-  window.set_title("Hello world")
-  window.set_default_size(300, 300)
-  window.show_all
+    signal_connect("activate") do |app|
+      @window = Gtk::ApplicationWindow.new(self)
+      @window.set_title("Tax Calculation UI")
+      @window.set_default_size(612 * 2 + 20, 1000)
+
+      vbox = Gtk::Box.new(:vertical)
+      toolbar = initialize_toolbar
+      vbox.pack_start(toolbar, expand: false)
+      vbox.pack_start(Gtk::Separator.new(:horizontal))
+      main_view = Gtk::ScrolledWindow.new()
+      vbox.pack_start(main_view, expand: true, fill: true)
+      @window.add(vbox)
+      @window.show_all
+      @split_tools.hide
+    end
+
+
+  end
+
+  attr_accessor :window
+
+  def initialize_toolbar
+    toolbar = Gtk::Box.new(:horizontal)
+    @form_name_label = Gtk::Label.new("(No form loaded)")
+    toolbar.pack_start(@form_name_label, padding: 3)
+
+    toolbar.pack_start(Gtk::Separator.new(:vertical))
+
+    add_page_tools(toolbar)
+
+    toolbar.pack_start(Gtk::Separator.new(:vertical))
+
+    toolbar.pack_start(Gtk::Label.new("Line"), padding: 3)
+    @line_selector = Gtk::ComboBoxText.new
+    toolbar.pack_start(@line_selector)
+
+    toolbar.pack_start(Gtk::Separator.new(:vertical))
+
+    add_split_tools(toolbar)
+
+    return toolbar
+  end
+
+  def add_page_tools(toolbar)
+    page_label = Gtk::Label.new("Page")
+    toolbar.pack_start(page_label, padding: 3)
+
+    @prev_page_button = Gtk::Button.new
+    @prev_page_button.add(Gtk::Label.new("<"))
+    toolbar.pack_start(@prev_page_button)
+
+    @page_selector = Gtk::ComboBoxText.new
+    toolbar.pack_start(@page_selector)
+
+    @next_page_button = Gtk::Button.new
+    @next_page_button.add(Gtk::Label.new(">"))
+    toolbar.pack_start(@next_page_button)
+  end
+
+  def add_split_tools(toolbar)
+    toolbar.pack_start(Gtk::Label.new("Split line?"), padding: 3)
+    @split_line_check = Gtk::CheckButton.new
+    toolbar.pack_start(@split_line_check)
+
+    @split_line_check.signal_connect("toggled") do
+      if @split_line_check.active?
+        @split_tools.show
+      else
+        @split_tools.hide
+      end
+    end
+
+    @split_tools = Gtk::Box.new(:horizontal)
+    @split_tools.pack_start(Gtk::Label.new("Split separator"), padding: 3)
+    @split_sep_editor = Gtk::Entry.new
+    @split_tools.pack_start(@split_sep_editor)
+    toolbar.pack_start(@split_tools)
+  end
+
 end
+
+the_app = TaxUIApp.new
 
 the_app.run
