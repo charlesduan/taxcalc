@@ -6,6 +6,23 @@ class TaxUIApp < Gtk::Application
   def initialize
     super("org.sbf5.taxcalc", :flags_none)
 
+    @provider = Gtk::CssProvider.new
+    Gtk::StyleContext.add_provider_for_screen(
+      Gdk::Screen.default, @provider, Gtk::StyleProvider::PRIORITY_APPLICATION
+    )
+    @provider.load_from_data(<<~CSS)
+      #toolbar separator {
+        margin-left: 8px;
+        margin-right: 8px;
+      }
+      #page_selector {
+        min-width: 60px;
+      }
+      #line_selector {
+        min-width: 300px;
+      }
+    CSS
+
     signal_connect("activate") do |app|
       @window = Gtk::ApplicationWindow.new(self)
       @window.set_title("Tax Calculation UI")
@@ -15,9 +32,11 @@ class TaxUIApp < Gtk::Application
       toolbar = initialize_toolbar
       vbox.pack_start(toolbar, expand: false)
       vbox.pack_start(Gtk::Separator.new(:horizontal))
-      main_view = Gtk::ScrolledWindow.new()
-      vbox.pack_start(main_view, expand: true, fill: true)
+      @main_view = Gtk::ScrolledWindow.new()
+      vbox.pack_start(@main_view, expand: true, fill: true)
       @window.add(vbox)
+
+      load_image('fp1.png')
       @window.show_all
       @split_tools.hide
     end
@@ -29,6 +48,7 @@ class TaxUIApp < Gtk::Application
 
   def initialize_toolbar
     toolbar = Gtk::Box.new(:horizontal)
+    toolbar.name = "toolbar"
     @form_name_label = Gtk::Label.new("(No form loaded)")
     toolbar.pack_start(@form_name_label, padding: 3)
 
@@ -40,6 +60,7 @@ class TaxUIApp < Gtk::Application
 
     toolbar.pack_start(Gtk::Label.new("Line"), padding: 3)
     @line_selector = Gtk::ComboBoxText.new
+    @line_selector.name = "line_selector"
     toolbar.pack_start(@line_selector)
 
     toolbar.pack_start(Gtk::Separator.new(:vertical))
@@ -58,6 +79,7 @@ class TaxUIApp < Gtk::Application
     toolbar.pack_start(@prev_page_button)
 
     @page_selector = Gtk::ComboBoxText.new
+    @page_selector.name = "page_selector"
     toolbar.pack_start(@page_selector)
 
     @next_page_button = Gtk::Button.new
@@ -84,6 +106,13 @@ class TaxUIApp < Gtk::Application
     @split_tools.pack_start(@split_sep_editor)
     toolbar.pack_start(@split_tools)
   end
+
+  def load_image(image_file)
+    @pixbuf = GdkPixbuf::Pixbuf.new(:file => image_file)
+    image = Gtk::Image.new(pixbuf: @pixbuf)
+    @main_view.add(image)
+  end
+
 
 end
 
