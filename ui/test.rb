@@ -1,121 +1,42 @@
 #!/usr/bin/env ruby
 
-require 'gtk3'
+require 'glib2'
 
-class TaxUIApp < Gtk::Application
-  def initialize
-    super("org.sbf5.taxcalc", :flags_none)
+reader, writer = IO.pipe
 
-    @provider = Gtk::CssProvider.new
-    Gtk::StyleContext.add_provider_for_screen(
-      Gdk::Screen.default, @provider, Gtk::StyleProvider::PRIORITY_APPLICATION
-    )
-    @provider.load_from_data(<<~CSS)
-      #toolbar separator {
-        margin-left: 8px;
-        margin-right: 8px;
-      }
-      #page_selector {
-        min-width: 60px;
-      }
-      #line_selector {
-        min-width: 300px;
-      }
-    CSS
+pid = fork do
+  ch = GLib::IOChannel.new(reader, "r")
+  ch.add_watch(GLib::IOChannel::IN) { |io, condition|
+    puts "Got condition #{condition} on #{io}"
+    text = io.read(3)
+    puts "Read #{text}"
+    true
+  }
 
-    signal_connect("activate") do |app|
-      @window = Gtk::ApplicationWindow.new(self)
-      @window.set_title("Tax Calculation UI")
-      @window.set_default_size(612 * 2 + 20, 1000)
+  context = GLib::MainContext.default
+  mainloop = GLib::MainLoop.new(context, true)
 
-      vbox = Gtk::Box.new(:vertical)
-      toolbar = initialize_toolbar
-      vbox.pack_start(toolbar, expand: false)
-      vbox.pack_start(Gtk::Separator.new(:horizontal))
-      @main_view = Gtk::ScrolledWindow.new()
-      vbox.pack_start(@main_view, expand: true, fill: true)
-      @window.add(vbox)
-
-      load_image('fp1.png')
-      @window.show_all
-      @split_tools.hide
-    end
-
-
-  end
-
-  attr_accessor :window
-
-  def initialize_toolbar
-    toolbar = Gtk::Box.new(:horizontal)
-    toolbar.name = "toolbar"
-    @form_name_label = Gtk::Label.new("(No form loaded)")
-    toolbar.pack_start(@form_name_label, padding: 3)
-
-    toolbar.pack_start(Gtk::Separator.new(:vertical))
-
-    add_page_tools(toolbar)
-
-    toolbar.pack_start(Gtk::Separator.new(:vertical))
-
-    toolbar.pack_start(Gtk::Label.new("Line"), padding: 3)
-    @line_selector = Gtk::ComboBoxText.new
-    @line_selector.name = "line_selector"
-    toolbar.pack_start(@line_selector)
-
-    toolbar.pack_start(Gtk::Separator.new(:vertical))
-
-    add_split_tools(toolbar)
-
-    return toolbar
-  end
-
-  def add_page_tools(toolbar)
-    page_label = Gtk::Label.new("Page")
-    toolbar.pack_start(page_label, padding: 3)
-
-    @prev_page_button = Gtk::Button.new
-    @prev_page_button.add(Gtk::Label.new("<"))
-    toolbar.pack_start(@prev_page_button)
-
-    @page_selector = Gtk::ComboBoxText.new
-    @page_selector.name = "page_selector"
-    toolbar.pack_start(@page_selector)
-
-    @next_page_button = Gtk::Button.new
-    @next_page_button.add(Gtk::Label.new(">"))
-    toolbar.pack_start(@next_page_button)
-  end
-
-  def add_split_tools(toolbar)
-    toolbar.pack_start(Gtk::Label.new("Split line?"), padding: 3)
-    @split_line_check = Gtk::CheckButton.new
-    toolbar.pack_start(@split_line_check)
-
-    @split_line_check.signal_connect("toggled") do
-      if @split_line_check.active?
-        @split_tools.show
-      else
-        @split_tools.hide
-      end
-    end
-
-    @split_tools = Gtk::Box.new(:horizontal)
-    @split_tools.pack_start(Gtk::Label.new("Split separator"), padding: 3)
-    @split_sep_editor = Gtk::Entry.new
-    @split_tools.pack_start(@split_sep_editor)
-    toolbar.pack_start(@split_tools)
-  end
-
-  def load_image(image_file)
-    @pixbuf = GdkPixbuf::Pixbuf.new(:file => image_file)
-    image = Gtk::Image.new(pixbuf: @pixbuf)
-    @main_view.add(image)
-  end
-
-
+  ch.add_watch(GLib::IOChannel::ERR) { |io, condition|
+    puts "Error"
+    mainloop.quit
+  }
+  ch.add_watch(GLib::IOChannel::HUP) { |io, condition|
+    puts "Hung up"
+    mainloop.quit
+  }
+  puts "Starting main loop"
+  mainloop.run
+  puts "Done with main loop"
 end
 
-the_app = TaxUIApp.new
+loop do
+  text = gets
+  break unless text
+  puts "Sending #{text}"
+  writer.write(text)
+end
+puts "Closing"
+writer.close
+reader.close
 
-the_app.run
+Process.wait(pid)

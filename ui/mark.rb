@@ -68,20 +68,20 @@ OptionParser.new do |opts|
 end.parse!
 
 
-@rubyRd, @nodeWr = IO.pipe
-@nodeRd, @rubyWr = IO.pipe
+@ctrl_read, @ui_write = IO.pipe
+@ui_read, @ctrl_write = IO.pipe
 
 #
 # Node.js expects blocking file descriptors
 #
-@nodeRd.fcntl(
-  Fcntl::F_SETFL, @nodeRd.fcntl(Fcntl::F_GETFL) & ~Fcntl::O_NONBLOCK
-);
-@nodeWr.fcntl(
-  Fcntl::F_SETFL, @nodeWr.fcntl(Fcntl::F_GETFL) & ~Fcntl::O_NONBLOCK
-);
+#@nodeRd.fcntl(
+  #Fcntl::F_SETFL, @nodeRd.fcntl(Fcntl::F_GETFL) & ~Fcntl::O_NONBLOCK
+#);
+#@nodeWr.fcntl(
+  #Fcntl::F_SETFL, @nodeWr.fcntl(Fcntl::F_GETFL) & ~Fcntl::O_NONBLOCK
+#);
 
-@controller = Marking::Controller.new(@rubyWr)
+@controller = Marking::Controller.new(@ctrl_write)
 
 # Load the posdata and import tax forms
 @controller.load_posdata(@options.posdata) if File.exist?(@options.posdata)
@@ -136,24 +136,21 @@ if @options.pages
 end
 
 pid = fork do
-  @rubyRd.close
-  @rubyWr.close
+  @ctrl_read.close
+  @ctrl_write.close
   Dir.chdir(File.dirname(__FILE__))
-  exec(
-    './qode', 'main.js',
-    @nodeRd.fileno.to_s, @nodeWr.fileno.to_s,
-    @nodeRd => @nodeRd, @nodeWr => @nodeWr
-  )
+  require_relative 'ui'
+  TaxUIApp.new.run(@ui_read, @ui_write)
 end
 
-@nodeRd.close
-@nodeWr.close
+@ui_read.close
+@ui_write.close
 
 @controller.start
 
 begin
 
-  @rubyRd.each do |line|
+  @ctrl_read.each do |line|
     #puts "<- #{line}"
     obj = JSON.parse(line)
     command, payload = obj['command'], obj['payload']
@@ -173,8 +170,8 @@ rescue
 
 end
 
-@rubyRd.close
-@rubyWr.close
+@ctrl_read.close
+@ctrl_write.close
 
 
 Process.wait(pid)
