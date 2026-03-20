@@ -146,8 +146,6 @@ end
 @ui_read.close
 @ui_write.close
 
-@controller.start
-
 begin
 
   @ctrl_read.each do |line|

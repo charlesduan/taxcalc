@@ -7,7 +7,7 @@ class TaxUIApp < Gtk::Application
   def initialize(read_io, write_io)
     super("org.sbf5.taxcalc", :flags_none)
 
-    @apibridge = TaxAPIBridge.new(read_io, write_io, self)
+    @api_bridge = TaxAPIBridge.new(read_io, write_io, self)
     @updating_toolbar = false
 
     initialize_css
@@ -18,6 +18,8 @@ class TaxUIApp < Gtk::Application
       @window.set_default_size(612 * 2 + 20, 1000)
 
       initialize_window_contents
+
+      @api_bridge.send("ready", nil)
     end
   end
 

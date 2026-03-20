@@ -1,42 +1,13 @@
 #!/usr/bin/env ruby
 
-require 'glib2'
+require 'gtk3'
+require 'poppler'
+require 'cairo'
 
-reader, writer = IO.pipe
+doc = Poppler::Document.new(file: 'f1040.pdf')
 
-pid = fork do
-  ch = GLib::IOChannel.new(reader, "r")
-  ch.add_watch(GLib::IOChannel::IN) { |io, condition|
-    puts "Got condition #{condition} on #{io}"
-    text = io.read(3)
-    puts "Read #{text}"
-    true
-  }
+num = doc.n_pages
+puts "There are #{num} pages"
 
-  context = GLib::MainContext.default
-  mainloop = GLib::MainLoop.new(context, true)
+page = doc.get_page(0)
 
-  ch.add_watch(GLib::IOChannel::ERR) { |io, condition|
-    puts "Error"
-    mainloop.quit
-  }
-  ch.add_watch(GLib::IOChannel::HUP) { |io, condition|
-    puts "Hung up"
-    mainloop.quit
-  }
-  puts "Starting main loop"
-  mainloop.run
-  puts "Done with main loop"
-end
-
-loop do
-  text = gets
-  break unless text
-  puts "Sending #{text}"
-  writer.write(text)
-end
-puts "Closing"
-writer.close
-reader.close
-
-Process.wait(pid)

@@ -79,8 +79,8 @@ class Marking; class Controller
     end
   end
 
-  def start
-    send_cmd('loadPdf', {
+  def cmd_ready
+    send_cmd('load_pdf', {
       'form' => @current_form.name,
       'file' => File.absolute_path(@current_form.file),
       'lines' => @current_form.line_names,
