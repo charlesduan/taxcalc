@@ -42,13 +42,22 @@ begin
 
     when 'select_page'
       page = payload['page']
-      # Need to draw_line_boxes
+      send_cmd('draw_line_box', {
+        'id' => '1',
+        'page' => page,
+        'pos' => [ 100, 200, 150, 220 ],
+      })
+      send_cmd('draw_line_box', {
+        'id' => 'A really long line of text',
+        'page' => page,
+        'pos' => [ 100, 300, 105, 320 ],
+      })
 
     when 'split_changed'
       send_cmd('set_toolbar_info', {
         'line' => payload['line'],
         'split' => payload['split'],
-        'separator' => ''
+        'separator' => '',
       })
 
     when 'split_sep_changed'

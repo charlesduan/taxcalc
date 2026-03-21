@@ -4,7 +4,7 @@ require_relative 'pdf_assembler'
 require 'json'
 require 'open-uri'
 
-class Marking; class Controller
+module Marking; class Controller
 
   def initialize(node_io)
     @forms = {}

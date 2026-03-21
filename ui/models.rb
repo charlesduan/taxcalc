@@ -1,6 +1,6 @@
 require 'open-uri'
 
-class Marking
+module Marking
 
   #
   # A tax form's line position data. The form is identified by name, associated
@@ -295,6 +295,148 @@ class Marking
     end
 
   end
+
+  class Point
+    def initialize(x, y)
+      raise "Invalid point coordinate" unless x.is_a?(Numeric)
+      raise "Invalid point coordinate" unless y.is_a?(Numeric)
+      @x, @y = x, y
+    end
+
+    attr_reader :x, :y
+
+    def +(point, y = nil)
+      point = Point.new(point, y) if y
+      return Point.new(@x + point.x, @y + point.y)
+    end
+
+    def *(scale)
+      return Point.new(@x * scale, @y * scale)
+    end
+
+    def /(scale)
+      return Point.new(@x / scale, @y / scale)
+    end
+
+    #
+    # Compare points based first on their x coordinates and then on their y
+    # coordinates if the x coordinates are equal.
+    #
+    def <=>(other)
+      raise "Not a point" unless other.is_a?(Point)
+      res = (@x <=> other.x)
+      res = (@y <=> other.y) if res == 0
+      return res
+    end
+
+    include Comparable
+
+    #
+    # Computes a point that moves one unit horizontally or vertically toward the
+    # argument. Consistent with the <=> operator, it moves the x coordinate
+    # first, then the y coordinate. If the points are the same, return nil.
+    #
+    def next_toward(other)
+      raise "Not a point" unless other.is_a?(Point)
+
+      #
+      # This operation produces:
+      # * If other.x > @x by more than 1, then 1
+      # * If other.x < @x by more than 1, then -1
+      # * Otherwise, other.x - @x
+      # So adding xdiff to @x moves @x closer to other.x, but by a magnitude of
+      # at most 1.
+      #
+      xdiff = [ -1, other.x - @x, 1 ].sort[1]
+      if xdiff != 0
+        return Point.new(@x + xdiff, @y)
+      else
+        ydiff = [ -1, other.y - @x, 1 ].sort[1]
+        return nil if ydiff == 0
+        return Point.new(@x, @y + ydiff)
+      end
+    end
+
+    def to_s
+      return "(#@x, #@y)"
+    end
+
+  end # Point
+
+
+  class Rectangle
+    def initialize(*args)
+      args = args[0] if args.count == 1 && args[0].is_a?(Array)
+      if args.count == 4
+        p1, p2 = Point.new(args[0], args[1]), Point.new(args[2], args[3])
+      else
+        p1, p2 = args[0], args[1]
+      end
+      raise "Not a point" unless p1.is_a?(Point)
+      raise "Not a point" unless p2.is_a?(Point)
+
+      # Order by x coordinate
+      p1, p2 = p2, p1 if p1.x > p2.x
+
+      # If y coordinates are out of order, then reconstruct points
+      if p1.y > p2.y
+        p1, p2 = Point.new(p1.x, p2.y), Point.new(p2.x, p1.y)
+      end
+
+      @min, @max = p1, p2
+    end
+
+    attr_reader :min, :max
+
+    def width
+      return @max.x - @min.x
+    end
+
+    def height
+      return @max.y - @min.y
+    end
+
+    def *(scale)
+      return Rectangle.new(@min * scale, @max * scale)
+    end
+
+    def /(scale)
+      return Rectangle.new(@min / scale, @max / scale)
+    end
+
+    def center
+      return Point.new((@min.x + @max.x) / 2, (@min.y + @max.y) / 2)
+    end
+
+    def to_a
+      return [ @min.x, @min.y, @max.x, @max.y ]
+    end
+
+    def to_s
+      return "[#@min--#@max]"
+    end
+
+    #
+    # Positions a widget on a Gtk::Layout consistent with this rectangle.
+    #
+    def position_widget(widget, layout)
+      widget.set_size_request(width, height)
+      layout.put(widget, @min.x, @min.y)
+    end
+
+    #
+    # A "split" line consists of a series of boxes horizontally next to each
+    # other, which are about evenly spaced apart. This method calculates a good
+    # starting point for guessing the next box of a split. The guessed point is
+    # at the vertical midpoint of the rectangle, and half a rectangle to the
+    # right.
+    #
+    def next_split_start_point
+      return Point.new(@max.x + (width / 2), (@max.y + @min.y) / 2)
+    end
+
+  end # Rectangle
+
 
 end
 

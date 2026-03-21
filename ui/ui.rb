@@ -2,12 +2,17 @@ require 'gtk3'
 require 'poppler'
 require 'cairo'
 require_relative 'api_bridge'
+require_relative 'boxcalc'
+require_relative 'models'
 
 class TaxUIApp < Gtk::Application
+  include Marking
+
   def initialize(read_io, write_io)
     super("org.sbf5.taxcalc", :flags_none)
 
     @api_bridge = TaxAPIBridge.new(read_io, write_io, self)
+    @boxcalc = BoxCalculator.new(self)
     @updating_toolbar = false
 
     @zoom = 2
@@ -47,6 +52,9 @@ class TaxUIApp < Gtk::Application
       #line_selector {
         min-width: 300px;
       }
+      #container label {
+        background-color: yellow;
+      }
     CSS
   end
 
@@ -56,6 +64,7 @@ class TaxUIApp < Gtk::Application
     vbox.pack_start(toolbar, expand: false)
     vbox.pack_start(Gtk::Separator.new(:horizontal))
     @main_view = Gtk::ScrolledWindow.new()
+    @main_view.name = "container"
     vbox.pack_start(@main_view, expand: true, fill: true)
     @window.add(vbox)
     @window.show_all
@@ -157,17 +166,12 @@ class TaxUIApp < Gtk::Application
     end
 
     @image = Gtk::Image.new(surface: @surface)
-    @fixed = Gtk::Layout.new
-    @fixed.set_size(*page.size.map { |x| x * @zoom })
-    @fixed.signal_connect("button-press-event") { |widget, event|
-      handle_click(widget, event)
-    }
-    @fixed.add_events([
-      :button_press_mask, :pointer_motion_mask
-    ])
-    @fixed.put(@image, 0, 0)
-    @main_view.add(@fixed)
-    @fixed.show_all
+    @layout = Gtk::Fixed.new
+    eb = make_clickable(@layout)
+    @layout.set_size_request(*page.size.map { |x| x * @zoom })
+    @layout.put(@image, 0, 0)
+    @main_view.add(eb)
+    eb.show_all
 
     @api_bridge.send('select_page', { 'page' => current_page })
   end
@@ -202,8 +206,37 @@ class TaxUIApp < Gtk::Application
     @split_tools.hide
   end
 
+  def make_clickable(widget)
+    eb = Gtk::EventBox.new
+    eb.add(widget)
+    eb.signal_connect("button-press-event") { |widget, event|
+      handle_click(widget.child, event)
+    }
+    eb.add_events([
+      :button_press_mask, :pointer_motion_mask
+    ])
+    return eb
+  end
+
   def handle_click(widget, event)
-    puts "Got a click at (#{event.x}, #{event.y})"
+    if event.type.name == 'GDK_2BUTTON_PRESS'
+      if widget == @layout
+        puts "COMPUTING BOX"
+        box = @boxcalc.compute_box_at_point(event.x, event.y)
+        add_line_box(box) if box
+      elsif widget.is_a?(Gtk::Label)
+        puts "CLICKED LABEL #{widget.text}"
+        return true
+      end
+    end
+  end
+
+  def add_line_box(rect, info = nil)
+    @api_bridge.send("add_line_box", {
+      'toolbar' => (info || toolbar_info),
+      'page' => current_page,
+      'pos' => (rect / @zoom.to_f).to_a,
+    })
   end
 
   ########################################################################
@@ -259,6 +292,17 @@ class TaxUIApp < Gtk::Application
         end
       end
     end
+  end
+
+  def cmd_draw_line_box(payload)
+    id, page, pos = payload['id'], payload['page'], payload['pos']
+    return if page != current_page
+    l = Gtk::Label.new(id)
+    l.tooltip_text = id
+    l.ellipsize = :end
+    eb = make_clickable(l)
+    rect = (Rectangle.new(pos) * @zoom).position_widget(eb, @layout)
+    eb.show_all
   end
 
 end
