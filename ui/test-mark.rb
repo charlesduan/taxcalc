@@ -40,6 +40,34 @@ begin
         'lines' => [ 'a', 'b', 'c' ],
       })
 
+    when 'select_page'
+      page = payload['page']
+      # Need to draw_line_boxes
+
+    when 'split_changed'
+      send_cmd('set_toolbar_info', {
+        'line' => payload['line'],
+        'split' => payload['split'],
+        'separator' => ''
+      })
+
+    when 'split_sep_changed'
+
+    when 'line_changed'
+      if payload['line'] == 'a'
+        send_cmd('set_toolbar_info', {
+          'line' => payload['line'],
+          'split' => true,
+          'separator' => '-'
+        })
+      else
+        send_cmd('set_toolbar_info', {
+          'line' => payload['line'],
+          'split' => false,
+          'separator' => nil
+        })
+      end
+
     else
       warn("Unknown command #{command}")
     end

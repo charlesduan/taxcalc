@@ -95,7 +95,7 @@ class Marking; class Controller
   end
 
   def select_line(line)
-    send_cmd('setToolbarInfo', {
+    send_cmd('set_toolbar_info', {
       'line' => line.name,
       'split' => line.split?,
       'separator' => line.split? ? line.separator : nil
@@ -157,20 +157,20 @@ class Marking; class Controller
   def draw_line_boxes(line)
     if line.split?
       (1 .. line.split_count).each do |i|
-        send_cmd('drawLineBox', {
+        send_cmd('draw_line_box', {
           'id' => line.split_id(i),
           'page' => line.pos(i).page, 'pos' => line.pos(i).to_a
         })
       end
 
     elsif line.pos
-      send_cmd('drawLineBox', {
+      send_cmd('draw_line_box', {
         'id' => line.name, 'page' => line.pos.page, 'pos' => line.pos.to_a
       })
     end
   end
 
-  def cmd_selectPage(args)
+  def cmd_select_page(args)
     page = args['page']
     @current_form.lines.each do |line|
       next unless line.page == page
@@ -199,11 +199,11 @@ class Marking; class Controller
     end
   end
 
-  def cmd_lineChanged(args)
+  def cmd_line_changed(args)
     select_line(@current_form.line(args['line']))
   end
 
-  def cmd_splitChanged(args)
+  def cmd_split_changed(args)
     line_obj = @current_form.line(args['line'])
     unless line_obj
       warn("No line object found for #{args['line']}")
@@ -211,12 +211,12 @@ class Marking; class Controller
     end
     if args['split']
       return if line_obj.split?
-      send_cmd('removeLineBox', 'id' => line_obj.name) if line_obj.positioned?
+      send_cmd('remove_line_box', 'id' => line_obj.name) if line_obj.positioned?
       line_obj.make_split(args['separator'])
     else
       return unless line_obj.split?
       (1..line_obj.split_count).reverse_each do |i|
-        send_cmd('removeLineBox', 'id' => line_obj.split_id(i))
+        send_cmd('remove_line_box', 'id' => line_obj.split_id(i))
       end
       line_obj.make_not_split
     end
@@ -224,7 +224,7 @@ class Marking; class Controller
     select_line(@current_form.line(args['line']))
   end
 
-  def cmd_splitSepChanged(args)
+  def cmd_split_sep_changed(args)
     line_obj = @current_form.line(args['line'])
     unless line_obj && line_obj.split?
       warn("Non-split line #{args['line']} when split was expected")

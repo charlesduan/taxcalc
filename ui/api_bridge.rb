@@ -34,7 +34,7 @@ class TaxAPIBridge
       begin
         @app.send(command, obj["payload"])
       rescue
-        warn("API Bridge: caught error: #$!")
+        warn("API Bridge: caught error: #{$!.full_message}")
       end
     else
       warn("API Bridge: unknown command #{obj['command']}")
