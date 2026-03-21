@@ -1,6 +1,6 @@
-#!/usr/bin/env ruby
-
 require 'gtk3'
+require 'poppler'
+require 'cairo'
 require_relative 'api_bridge'
 
 class TaxUIApp < Gtk::Application
@@ -10,12 +10,14 @@ class TaxUIApp < Gtk::Application
     @api_bridge = TaxAPIBridge.new(read_io, write_io, self)
     @updating_toolbar = false
 
+    @zoom = 2
+
     initialize_css
 
     signal_connect("activate") do |app|
       @window = Gtk::ApplicationWindow.new(self)
       @window.set_title("Tax Calculation UI")
-      @window.set_default_size(612 * 2 + 20, 1000)
+      @window.set_default_size(612 * @zoom + 20, 1000)
 
       initialize_window_contents
 
@@ -88,17 +90,30 @@ class TaxUIApp < Gtk::Application
     page_label = Gtk::Label.new("Page")
     toolbar.pack_start(page_label, padding: 3)
 
-    @prev_page_button = Gtk::Button.new
-    @prev_page_button.add(Gtk::Label.new("<"))
-    toolbar.pack_start(@prev_page_button)
+    prev_page_button = Gtk::Button.new
+    prev_page_button.add(Gtk::Label.new("<"))
+    prev_page_button.signal_connect("clicked") do
+      @page_selector.active = [
+        @page_selector.active - 1,
+        0
+      ].max
+    end
+    toolbar.pack_start(prev_page_button)
 
     @page_selector = Gtk::ComboBoxText.new
     @page_selector.name = "page_selector"
+    @page_selector.signal_connect("changed") { load_page }
     toolbar.pack_start(@page_selector)
 
-    @next_page_button = Gtk::Button.new
-    @next_page_button.add(Gtk::Label.new(">"))
-    toolbar.pack_start(@next_page_button)
+    next_page_button = Gtk::Button.new
+    next_page_button.add(Gtk::Label.new(">"))
+    next_page_button.signal_connect("clicked") do
+      @page_selector.active = [
+        @page_selector.active + 1,
+        @page_selector.model.iter_n_children - 1
+      ].min
+    end
+    toolbar.pack_start(next_page_button)
   end
 
   def add_split_tools(toolbar)
@@ -124,6 +139,13 @@ class TaxUIApp < Gtk::Application
 
   ########################################################################
   #
+  # UI EVENT HANDLERS
+  #
+  ########################################################################
+
+
+  ########################################################################
+  #
   # CONTROLLER COMMAND RESPONSES
   #
   ########################################################################
@@ -138,34 +160,44 @@ class TaxUIApp < Gtk::Application
   end
 
   def cmd_load_pdf(payload)
-    name = payload["name"]
-    pages = payload["pages"]
+    form = payload["form"]
+    file = payload["file"]
     lines = payload["lines"]
+
+    @document = Poppler::Document.new(file: file)
+    pages = @document.n_pages
+
     updating_toolbar do
-      @form_name_label.text = "Form #{name}"
+      @form_name_label.text = "Form #{form}"
       @page_selector.remove_all
       1.upto(pages) do |page|
-        @page_selector.append(page.to_s)
+        @page_selector.append_text(page.to_s)
       end
+      @page_selector.active = 0
       @line_selector.remove_all
       lines.each do |line|
-        @line_selector.append(line)
+        @line_selector.append_text(line)
       end
     end
+    load_page
   end
 
-  def cmd_load_page(payload)
-    page = payload["page"]
-    file = payload["file"]
-    return if page.to_s != @page_selector.active_text
+  def load_page
+    return if @updating_toolbar
 
-    @pixbuf = GdkPixbuf::Pixbuf.new(:file => image_file)
-    image = Gtk::Image.new(pixbuf: @pixbuf)
-    @main_view.add(image)
+    page = @document[@page_selector.active]
+    @surface = Cairo::ImageSurface.new(*page.size.map { |x| x * @zoom })
+    context = Cairo::Context.new(@surface)
+    context.scale(@zoom, @zoom)
+    page.render(context)
+    if @image
+      @main_view.remove(@image)
+      @image.destroy
+    end
+    @image = Gtk::Image.new(surface: @surface)
+    @main_view.add(@image)
+    @image.show
   end
 
 end
 
-the_app = TaxUIApp.new
-
-the_app.run
