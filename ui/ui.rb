@@ -55,6 +55,9 @@ class TaxUIApp < Gtk::Application
       #container label {
         background-color: yellow;
       }
+      #container label#drag {
+        background-color: green;
+      }
     CSS
   end
 
@@ -168,6 +171,44 @@ class TaxUIApp < Gtk::Application
     @image = Gtk::Image.new(surface: @surface)
     @layout = Gtk::Fixed.new
     eb = make_clickable(@layout)
+    target_list = [Gtk::TargetEntry.new("text/uri-list", 0, 0)]
+    eb.drag_source_set([ :button1_mask ], target_list, :copy)
+    eb.drag_dest_set([ :all ], target_list, :copy)
+
+    eb.signal_connect("drag-begin") do |widget, context|
+      puts "BEGIN DRAG"
+      @drag = Gtk::Label.new("")
+      @layout.put(@drag, 0, 0)
+      @drag.name = "drag"
+      @drag.show
+    end
+    eb.signal_connect("drag-motion") do |widget, context, x, y, time|
+      puts "MOVE DRAG #{x} #{y}"
+      @drag.set_size_request(x, y)
+      #@layout.remove(@drag) if @drag.parent
+    end
+    eb.signal_connect("drag-drop") do |widget, context|
+      puts "DROP DRAG"
+    end
+    eb.signal_connect("drag-leave") do |widget, context|
+      puts "LEAVE DRAG"
+    end
+    eb.signal_connect("drag-end") do |widget, context|
+      @layout.remove(@drag) if @drag
+      @drag.destroy
+      @drag = nil
+      puts "END DRAG"
+    end
+    eb.signal_connect("drag-failed") do |widget, context|
+      puts "FAILED DRAG"
+    end
+    eb.signal_connect("drag-data-get") do |widget, context, data, info, time|
+      data.set(Gdk::Selection::TYPE_STRING, "test")
+      puts "Got drag-data-get"
+    end
+    eb.signal_connect("drag-data-received") do |*args|
+      puts "Received data"
+    end
     @layout.set_size_request(*page.size.map { |x| x * @zoom })
     @layout.put(@image, 0, 0)
     @main_view.add(eb)
