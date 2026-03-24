@@ -13,8 +13,10 @@ pid = fork do
   @ctrl_read.close
   @ctrl_write.close
   Dir.chdir(File.dirname(__FILE__))
-  require_relative 'ui'
-  TaxUIApp.new(@ui_read, @ui_write).run
+  exec(
+    "./ui.rb", @ui_read.to_i.to_s, @ui_write.to_i.to_s,
+    @ui_read => @ui_read, @ui_write => @ui_write
+  )
 end
 
 @ui_read.close

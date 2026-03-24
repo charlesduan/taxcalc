@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'gtk3'
 require 'poppler'
 require 'cairo'
@@ -156,6 +158,7 @@ class TaxUIApp < Gtk::Application
 
   def load_page
     return if @updating_toolbar
+    return unless @document
 
     # By coincidence, the combo box index and Poppler page index are both
     # zero-indexed and thus match.
@@ -173,7 +176,15 @@ class TaxUIApp < Gtk::Application
 
     @image = Gtk::Image.new(surface: @surface)
     @layout = Gtk::Fixed.new
-    eb = make_clickable(@layout)
+    eb = make_clickable(@layout) do |event|
+      if event.type.name == 'GDK_2BUTTON_PRESS'
+        box = @boxcalc.compute_box_at_point(event.x, event.y)
+        add_line_box(box) if box
+      elsif event.type.name == 'GDK_BUTTON_PRESS'
+        @click_point = Point.new(event.x, event.y)
+        false
+      end
+    end
     make_draggable(eb)
     @layout.set_size_request(*page.size.map { |x| x * @zoom })
     @layout.put(@image, 0, 0)
@@ -219,12 +230,8 @@ class TaxUIApp < Gtk::Application
   def make_clickable(widget)
     eb = Gtk::EventBox.new
     eb.add(widget)
-    eb.signal_connect("button-press-event") { |widget, event|
-      handle_click(widget.child, event)
-    }
-    eb.add_events([
-      :button_press_mask, :pointer_motion_mask
-    ])
+    eb.signal_connect("button-press-event") { |widget, event| yield(event) }
+    eb.add_events([ :button_press_mask, :pointer_motion_mask ])
     return eb
   end
 
@@ -235,6 +242,7 @@ class TaxUIApp < Gtk::Application
     eb.drag_dest_set([ :all ], target_list, :copy)
 
     eb.signal_connect("drag-motion") do |widget, context, x, y, time|
+      puts "drag-data-motion start"
       if !@drag
         @drag = Gtk::Label.new
         @drag.single_line_mode = false
@@ -248,6 +256,7 @@ class TaxUIApp < Gtk::Application
         )
       end
       @drag.set_size_request((@click_point.x - x).abs, (@click_point.y - y).abs)
+      puts "drag-data-jotion end"
     end
     eb.signal_connect("drag-end") do |widget, context|
       @layout.remove(@drag) if @drag
@@ -260,23 +269,6 @@ class TaxUIApp < Gtk::Application
     eb.signal_connect("drag-data-received") do |widget, context, x, y, data|
       rect = Rectangle.new(@click_point, Point.new(x, y))
       add_line_box(rect)
-    end
-  end
-
-  def handle_click(widget, event)
-    if event.type.name == 'GDK_2BUTTON_PRESS'
-      if widget == @layout
-        puts "COMPUTING BOX"
-        box = @boxcalc.compute_box_at_point(event.x, event.y)
-        add_line_box(box) if box
-      elsif widget.is_a?(Gtk::Label)
-        @api_bridge.send("remove_line", { 'id' => widget.text })
-        return true
-      end
-    elsif event.type.name == 'GDK_BUTTON_PRESS'
-      @click_point = Point.new(event.x, event.y)
-      puts "Point #@click_point: #{@boxcalc.color_at(@click_point)}"
-      return false
     end
   end
 
@@ -349,7 +341,12 @@ class TaxUIApp < Gtk::Application
     l = Gtk::Label.new(id)
     l.tooltip_text = id
     l.ellipsize = :end
-    eb = make_clickable(l)
+    eb = make_clickable(l) do |event|
+      if event.type.name == 'GDK_2BUTTON_PRESS'
+        @api_bridge.send("remove_line", { 'id' => l.text })
+        true
+      end
+    end
     rect = (Rectangle.new(pos) * @zoom).position_widget(eb, @layout)
     eb.show_all
     @line_boxes[id] = eb
@@ -368,3 +365,9 @@ class TaxUIApp < Gtk::Application
 
 end
 
+puts "Input is #{ARGV[0]}, output is #{ARGV[1]}"
+IO.open(ARGV[0].to_i, 'r') do |rio|
+  IO.open(ARGV[1].to_i, 'w') do |wio|
+    TaxUIApp.new(rio, wio).run
+  end
+end

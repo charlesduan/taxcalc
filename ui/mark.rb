@@ -139,8 +139,17 @@ pid = fork do
   @ctrl_read.close
   @ctrl_write.close
   Dir.chdir(File.dirname(__FILE__))
-  require_relative 'ui'
-  TaxUIApp.new(@ui_read, @ui_write).run
+
+  #
+  # I'm not sure why, but loading the UI in the forked process fails on MacOS.
+  # Thus, a new Ruby instance is started.
+  #
+  exec(
+    "./ui.rb", @ui_read.to_i.to_s, @ui_write.to_i.to_s,
+    # This indicates to exec that the pipes should remain open in the exec'ed
+    # process.
+    @ui_read => @ui_read, @ui_write => @ui_write
+  )
 end
 
 @ui_read.close

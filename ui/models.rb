@@ -305,9 +305,19 @@ module Marking
 
     attr_reader :x, :y
 
+    def ==(point)
+      raise "Not a point" unless point.is_a?(Point)
+      return @x == point.x && @y == point.y
+    end
+
     def +(point, y = nil)
       point = Point.new(point, y) if y
       return Point.new(@x + point.x, @y + point.y)
+    end
+
+    def -(point, y = nil)
+      point = Point.new(point, y) if y
+      return Point.new(@x - point.x, @y - point.y)
     end
 
     def *(scale)
@@ -316,6 +326,11 @@ module Marking
 
     def /(scale)
       return Point.new(@x / scale, @y / scale)
+    end
+
+    def round
+      return self if @x.integer? && @y.integer?
+      return Point.new(x.round, y.round)
     end
 
     #
@@ -351,9 +366,22 @@ module Marking
       if xdiff != 0
         return Point.new(@x + xdiff, @y)
       else
-        ydiff = [ -1, other.y - @x, 1 ].sort[1]
+        ydiff = [ -1, other.y - @y, 1 ].sort[1]
         return nil if ydiff == 0
         return Point.new(@x, @y + ydiff)
+      end
+    end
+
+    #
+    # Computes all the points from this point to the given one, using the
+    # next_toward method.
+    #
+    def upto(other)
+      pt = self
+      loop do
+        yield(pt)
+        pt = pt.next_toward(other)
+        return unless pt
       end
     end
 
@@ -362,6 +390,8 @@ module Marking
     end
 
   end # Point
+
+  Origin = Point.new(0, 0)
 
 
   class Rectangle
@@ -388,12 +418,37 @@ module Marking
 
     attr_reader :min, :max
 
+    def ==(other)
+      raise "Not a rectangle" unless other.is_a?(Rectangle)
+      return (@min == other.min && @max == other.max)
+    end
+
     def width
       return @max.x - @min.x
     end
 
     def height
       return @max.y - @min.y
+    end
+
+    def include?(point)
+      return false if point.x < @min.x
+      return false if point.x > @max.x
+      return false if point.y < @min.y
+      return false if point.y > @max.y
+      return true
+    end
+
+    #
+    # Returns a point that is closest to the given point and within this
+    # rectangle.
+    #
+    def constrain(point)
+      return point if include?(point)
+      return Point.new(
+        [ @min.x, point.x, @max.x ].sort[1],
+        [ @min.y, point.y, @max.y ].sort[1],
+      )
     end
 
     def *(scale)
