@@ -77,6 +77,19 @@ begin
         })
       end
 
+    when 'remove_line'
+      send_cmd('remove_line_box', { 'id' => payload['id'] })
+
+    when 'add_line_box'
+      line = payload['toolbar']['line']
+      page = payload['page']
+      pos = payload['pos']
+      if line
+        send_cmd('remove_line_box', 'id' => line)
+        send_cmd('draw_line_box', 'id' => line, 'page' => page, 'pos' => pos)
+      end
+
+
     else
       warn("Unknown command #{command}")
     end

@@ -14,6 +14,7 @@ class TaxUIApp < Gtk::Application
     @api_bridge = TaxAPIBridge.new(read_io, write_io, self)
     @boxcalc = BoxCalculator.new(self)
     @updating_toolbar = false
+    @line_boxes = {}
 
     @zoom = 2
 
@@ -55,8 +56,9 @@ class TaxUIApp < Gtk::Application
       #container label {
         background-color: yellow;
       }
-      #container label#drag {
+      #container #drag {
         background-color: green;
+        font-size: 0.1px;
       }
     CSS
   end
@@ -167,55 +169,22 @@ class TaxUIApp < Gtk::Application
       @main_view.remove(c)
       c.destroy
     end
+    @line_boxes.clear
 
     @image = Gtk::Image.new(surface: @surface)
     @layout = Gtk::Fixed.new
     eb = make_clickable(@layout)
-    target_list = [Gtk::TargetEntry.new("text/uri-list", 0, 0)]
-    eb.drag_source_set([ :button1_mask ], target_list, :copy)
-    eb.drag_dest_set([ :all ], target_list, :copy)
-
-    eb.signal_connect("drag-begin") do |widget, context|
-      puts "BEGIN DRAG"
-      @drag = Gtk::Label.new("")
-      @layout.put(@drag, 0, 0)
-      @drag.name = "drag"
-      @drag.show
-    end
-    eb.signal_connect("drag-motion") do |widget, context, x, y, time|
-      puts "MOVE DRAG #{x} #{y}"
-      @drag.set_size_request(x, y)
-      #@layout.remove(@drag) if @drag.parent
-    end
-    eb.signal_connect("drag-drop") do |widget, context|
-      puts "DROP DRAG"
-    end
-    eb.signal_connect("drag-leave") do |widget, context|
-      puts "LEAVE DRAG"
-    end
-    eb.signal_connect("drag-end") do |widget, context|
-      @layout.remove(@drag) if @drag
-      @drag.destroy
-      @drag = nil
-      puts "END DRAG"
-    end
-    eb.signal_connect("drag-failed") do |widget, context|
-      puts "FAILED DRAG"
-    end
-    eb.signal_connect("drag-data-get") do |widget, context, data, info, time|
-      data.set(Gdk::Selection::TYPE_STRING, "test")
-      puts "Got drag-data-get"
-    end
-    eb.signal_connect("drag-data-received") do |*args|
-      puts "Received data"
-    end
+    make_draggable(eb)
     @layout.set_size_request(*page.size.map { |x| x * @zoom })
     @layout.put(@image, 0, 0)
+    @surface_data = @surface.data
     @main_view.add(eb)
     eb.show_all
 
     @api_bridge.send('select_page', { 'page' => current_page })
   end
+
+  attr_accessor :surface_data, :surface
 
   def current_page
     return @page_selector.active + 1
@@ -259,6 +228,41 @@ class TaxUIApp < Gtk::Application
     return eb
   end
 
+  def make_draggable(eb)
+
+    target_list = [ Gtk::TargetEntry.new("text/uri-list", 0, 0) ]
+    eb.drag_source_set([ :button1_mask ], target_list, :copy)
+    eb.drag_dest_set([ :all ], target_list, :copy)
+
+    eb.signal_connect("drag-motion") do |widget, context, x, y, time|
+      if !@drag
+        @drag = Gtk::Label.new
+        @drag.single_line_mode = false
+        @layout.put(@drag, @click_point.x, @click_point.y)
+        @drag.name = "drag"
+        @drag.show
+      end
+      unless x > @click_point.x && y > @click_point.y
+        @layout.move(
+          @drag, [ x, @click_point.x ].min, [ y, @click_point.y ].min
+        )
+      end
+      @drag.set_size_request((@click_point.x - x).abs, (@click_point.y - y).abs)
+    end
+    eb.signal_connect("drag-end") do |widget, context|
+      @layout.remove(@drag) if @drag
+      @drag.destroy
+      @drag = nil
+    end
+    eb.signal_connect("drag-data-get") do |widget, context, data, info, time|
+      data.set(Gdk::Selection::TYPE_STRING, "test")
+    end
+    eb.signal_connect("drag-data-received") do |widget, context, x, y, data|
+      rect = Rectangle.new(@click_point, Point.new(x, y))
+      add_line_box(rect)
+    end
+  end
+
   def handle_click(widget, event)
     if event.type.name == 'GDK_2BUTTON_PRESS'
       if widget == @layout
@@ -266,9 +270,13 @@ class TaxUIApp < Gtk::Application
         box = @boxcalc.compute_box_at_point(event.x, event.y)
         add_line_box(box) if box
       elsif widget.is_a?(Gtk::Label)
-        puts "CLICKED LABEL #{widget.text}"
+        @api_bridge.send("remove_line", { 'id' => widget.text })
         return true
       end
+    elsif event.type.name == 'GDK_BUTTON_PRESS'
+      @click_point = Point.new(event.x, event.y)
+      puts "Point #@click_point: #{@boxcalc.color_at(@click_point)}"
+      return false
     end
   end
 
@@ -344,7 +352,19 @@ class TaxUIApp < Gtk::Application
     eb = make_clickable(l)
     rect = (Rectangle.new(pos) * @zoom).position_widget(eb, @layout)
     eb.show_all
+    @line_boxes[id] = eb
   end
+
+  def cmd_remove_line_box(payload)
+    id = payload['id']
+    if @line_boxes.include?(id)
+      eb = @line_boxes[id]
+      @layout.remove(eb)
+      eb.destroy
+      @line_boxes.delete(id)
+    end
+  end
+
 
 end
 

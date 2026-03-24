@@ -102,7 +102,7 @@ module Marking; class Controller
     })
   end
 
-  def cmd_addLineBox(args)
+  def cmd_add_line_box(args)
     line = args['toolbar']['line']
     page = args['page']
     pos = Position.new(page, args['pos'])
@@ -117,20 +117,20 @@ module Marking; class Controller
 
     if line_obj.split? && args['toolbar']['split']
       new_id = line_obj.add_pos(pos)
-      send_cmd('drawLineBox', {
+      send_cmd('draw_line_box', {
         'id' => new_id, 'page' => page, 'pos' => pos.to_a
       })
-      send_cmd('findNextSplitBox', {
+      send_cmd('find_next_split_box', {
         'line' => line, 'page' => page, 'pos' => pos.to_a
       })
     elsif !line_obj.split? && !args['toolbar']['split']
 
       # A split box is neither expected nor present
       if line_obj.pos && line_obj.pos.page == page
-        send_cmd('removeLineBox', { 'id' => line })
+        send_cmd('remove_line_box', { 'id' => line })
       end
       line_obj.add_pos(pos)
-      send_cmd('drawLineBox', {
+      send_cmd('draw_line_box', {
         'id' => line, 'page' => page, 'pos' => pos.to_a
       })
     else
@@ -178,7 +178,7 @@ module Marking; class Controller
     end
   end
 
-  def cmd_removeLine(args)
+  def cmd_remove_line(args)
     if args['id'] =~ /\[(\d+)\]\z/
       line, boxno = $`, $1.to_i
     else
@@ -190,7 +190,7 @@ module Marking; class Controller
       return
     end
     line_obj.remove_pos(boxno).each do |id|
-      send_cmd('removeLineBox', { 'id' => id })
+      send_cmd('remove_line_box', { 'id' => id })
     end
     if line_obj.split?
       select_next_line(line_obj.name)
