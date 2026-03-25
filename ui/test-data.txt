@@ -1,0 +1,6 @@
+Form 1040
+    first_name  Arqwaal
+    last_name   Sooyamijian
+    status.single       X
+    1a  10000
+    1b  234

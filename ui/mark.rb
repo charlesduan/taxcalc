@@ -158,7 +158,7 @@ end
 begin
 
   @ctrl_read.each do |line|
-    #puts "<- #{line}"
+    puts "<- #{line}"
     obj = JSON.parse(line)
     command, payload = obj['command'], obj['payload']
     if @controller.respond_to?("cmd_#{command}")
@@ -171,14 +171,14 @@ begin
   @controller.cmd_save('file' => 'posdata.yaml')
 
 rescue
-
   Process.kill("HUP", pid)
   @controller.cmd_save('file' => 'autosave-posdata.yaml')
+  raise
 
+ensure
+  @ctrl_read.close
+  @ctrl_write.close
 end
-
-@ctrl_read.close
-@ctrl_write.close
 
 
 Process.wait(pid)

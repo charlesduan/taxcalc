@@ -242,7 +242,6 @@ class TaxUIApp < Gtk::Application
     eb.drag_dest_set([ :all ], target_list, :copy)
 
     eb.signal_connect("drag-motion") do |widget, context, x, y, time|
-      puts "drag-data-motion start"
       if !@drag
         @drag = Gtk::Label.new
         @drag.single_line_mode = false
@@ -256,7 +255,6 @@ class TaxUIApp < Gtk::Application
         )
       end
       @drag.set_size_request((@click_point.x - x).abs, (@click_point.y - y).abs)
-      puts "drag-data-jotion end"
     end
     eb.signal_connect("drag-end") do |widget, context|
       @layout.remove(@drag) if @drag
@@ -362,12 +360,29 @@ class TaxUIApp < Gtk::Application
     end
   end
 
+  def cmd_find_next_split_box(payload)
+    line = payload['line']
+    page = payload['page']
+    pos = payload['pos']
+    return if current_page != page
+    rect = Rectangle.new(pos) * @zoom
+    next_point = rect.next_split_start_point
+
+    new_rect = @boxcalc.compute_box_at_point(next_point)
+    return unless new_rect
+    return unless @boxcalc.same_color(rect.center, new_rect.center)
+    return unless (new_rect.max.y - rect.max.y).abs < 10
+
+    add_line_box(new_rect, 'line' => line, 'split' => true)
+  end
+
 
 end
 
-puts "Input is #{ARGV[0]}, output is #{ARGV[1]}"
 IO.open(ARGV[0].to_i, 'r') do |rio|
   IO.open(ARGV[1].to_i, 'w') do |wio|
+    puts "Running UI"
     TaxUIApp.new(rio, wio).run
+    puts "Done running UI"
   end
 end

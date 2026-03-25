@@ -24,9 +24,7 @@ class TaxAPIBridge
 
   def send(command, payload)
     json = JSON.generate({ "command" => command, "payload" => payload })
-    puts("UI send: #{json}")
     res = @write_io.puts(json)
-    puts("UI send result: #{res.inspect}")
     @write_io.flush
   end
 

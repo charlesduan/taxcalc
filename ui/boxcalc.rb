@@ -18,7 +18,7 @@ class BoxCalculator
     p = y.nil? ? x.round : Point.new(x.round, y.round)
 
     max_rect = surface_rect
-    return undefined unless max_rect.include?(p)
+    return nil unless max_rect.include?(p)
 
     # Bottom edge
     ymax = p + advance_line(p, p, Point.new(0, 1), @maxdy)

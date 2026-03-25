@@ -6,10 +6,10 @@ require 'open-uri'
 
 module Marking; class Controller
 
-  def initialize(node_io)
+  def initialize(ui_io)
     @forms = {}
     @current_form = nil
-    @node_io = node_io
+    @ui_io = ui_io
   end
 
   attr_reader :forms
@@ -17,7 +17,10 @@ module Marking; class Controller
   def load_posdata(file)
     @forms = YAML.load(
       open(file, &:read),
-      permitted_classes: [ Marking::Form, Marking::Line, Marking::Position ],
+      permitted_classes: [
+        Marking::Form, Marking::Line, Marking::Position,
+        Marking::Point, Marking::Rectangle
+      ],
     )
   end
 
@@ -79,7 +82,7 @@ module Marking; class Controller
     end
   end
 
-  def cmd_ready
+  def cmd_ready(args)
     send_cmd('load_pdf', {
       'form' => @current_form.name,
       'file' => File.absolute_path(@current_form.file),
@@ -91,7 +94,8 @@ module Marking; class Controller
   def send_cmd(cmd, args)
     res = JSON.generate({ 'command' => cmd, 'payload' => args})
     #puts "-> #{res}"
-    @node_io.puts(res)
+    @ui_io.puts(res)
+    @ui_io.flush
   end
 
   def select_line(line)
