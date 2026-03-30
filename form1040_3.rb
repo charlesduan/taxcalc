@@ -11,12 +11,12 @@ class Form1040_3 < TaxForm
   NAME = '1040 Schedule 3'
 
   def year
-    2024
+    2025
   end
 
   # Social security tax withholding threshold. This is from Line 11, and must be
   # updated every year.
-  SS_THRESHOLD = 10453
+  SS_THRESHOLD = 10918
 
   def compute
     set_name_ssn
@@ -26,15 +26,19 @@ class Form1040_3 < TaxForm
     line['1/foreign_tax_credit'] = ftc_form ? ftc_form.line[:fill!] : BlankZero
 
     #
-    # If a partnership files Form 8986, then Form 8978 must be prepared and the
-    # result reported on line 6l/pship_tax_adjust. However, this affects the
-    # computation of Form 2441, so to the extent that Form 8978 is to be
-    # computed, then it must be done here.
+    # If a partnership files Form 8986 (adjustment relating to audits), then
+    # Form 8978 must be prepared and the result reported on line
+    # 6l/pship_tax_adjust. However, this affects the computation of Form 2441,
+    # so to the extent that Form 8978 is to be computed, then it must be done
+    # here.
     #
     assert_no_forms(8986)
     #line['6l/pship_tax_adjust'] = BlankZero
 
-    # Child care expenses
+    #
+    # Child care expenses. This is one of the early-computed schedules in
+    # form1040.rb.
+    #
     with_form(2441) do |f|
       compute_more(f, :credit)
       line['2/childcare_credit'] = f.line[:credit]
@@ -125,5 +129,5 @@ end
 # From line 4 instructions
 #
 FilingStatus.set_param('qrsc_limit',
-                       single: 38_250, mfj: 76_500, mfs: :single,
-                       hoh: 57_375, qw: :single)
+                       single: 39_500, mfj: 79_000, mfs: :single,
+                       hoh: 59_250, qw: :single)

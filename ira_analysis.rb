@@ -56,11 +56,6 @@ class IraAnalysis < TaxForm
 
     # Collect distributions, which are reported on 1099-R.
     all_1099rs = forms('1099-R', ssn: @ssn)
-    all_1099rs.each do |x|
-      next if x.line[:ira_sep_simple?]
-      next if [ 1, 2, 3, 4, 5, 7 ].include?(f.line[7])
-      raise "Non-IRA 1099-R forms not implemented"
-    end
 
     # Collect the traditional IRA basis from last year.
     ly = @manager.submanager(:last_year)
@@ -78,20 +73,17 @@ class IraAnalysis < TaxForm
     # reflect these. To implement any other destinations for an IRA
     # distribution, see the 1040 line 4a instructions.
     #
-    distrib = {
-      'roth' => BlankZero,
-      'cash' => BlankZero
-    }
+    distrib = {}
     all_1099rs.each do |f|
-      distrib[f.line[:destination]] += f.line[1]
-      if f.line[:destination] != 'roth'
-        raise "Cannot handle 1099-R distributions that are not Roth conversions"
-      end
+      type = distrib_type(f)
+      distrib[type] = (distrib[type] || 0) + f.line[1]
     end
     distrib.each do |d, v|
       line["distrib_#{d}"] = v
     end
     line[:total_distrib] = all_1099rs.lines(1, :sum)
+
+    line[:rollover?] = (distrib[:roth_rollover] || distrib[:trad_rollover])
 
     #
     # II. Computing
@@ -123,6 +115,34 @@ class IraAnalysis < TaxForm
     end
 
   end
+
+  #
+  # Given a Form 1099-R, determines the type of distribution.
+  #
+  def distrib_type(form)
+    source, dest = form.line[:source].to_sym, form.line[:destination].to_sym
+    case [ source, dest ]
+    when [ :trad_ira, :roth_ira ]
+      raise "Inconsistent form" unless x.line[:ira_sep_simple?]
+      raise "Inconsistent form" unless x.line[7, :all].include?('2')
+      return :roth_conversion
+    when [ :roth_ira, :roth_ira ]
+      raise "Inconsistent form" unless x.line[7, :all].include?('H')
+      return :roth_rollover
+    when [ :trad_ira, :trad_ira ], [ :trad_ira, :trad_qp ]
+      raise "Inconsistent form" unless x.line[:ira_sep_simple?]
+      raise "Inconsistent form" unless x.line[7, :all].include?('G')
+      return :trad_rollover
+    when [ :trad_qp, :trad_qp ]
+      raise "Inconsistent form" unless x.line[7, :all].include?('G')
+      # This is the IRA analysis; should it deal with QPs?
+      raise "Look at this"
+    else
+      raise "Unknown 1099-R type"
+    end
+  end
+
+
 
   # This method is called to continue computation when Form 1040 requires the
   # deductible contributions amount.

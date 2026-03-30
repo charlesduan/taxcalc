@@ -10,40 +10,36 @@ class Form1040_1 < TaxForm
   NAME = '1040 Schedule 1'
 
   def year
-    2024
+    2025
   end
 
   def compute
     set_name_ssn
 
+    assert_no_forms('1099-K')
+
     #
     # Part I: Additional Income
     #
 
-    if @manager.has_form?('1099-G')
-      line['1/taxrefund'] = compute_1099g
-    end
     # If this line ever includes refunds for taxes other than income taxes, line
     # 2b on Form 6251 (AMT) needs to be adjusted
+    line['1/taxrefund'] = compute_1099g
 
-    if has_form?(:Alimony)
-      raise "Alimony forms not implemented"
-      #line['2a'] = forms(:Alimony).lines(:amount, :sum)
-    else
-      line['2a/alimony'] = BlankZero
-    end
+    confirm("You received no alimony")
+    line['2a/alimony'] = BlankZero
 
-    with_form('1040 Schedule C') do |sch_c|
-      line['3/bus_inc'] = sch_c.line(:net_profit)
-    end
+    line['3/bus_inc'] = with_form(
+      '1040 Schedule C', otherwise: BlankZero
+    ) { |sch_c| sch_c.line(:net_profit) }
 
     # Line 4 is assumed to be zero; otherwise implement Form 4797
     confirm("No business property was sold or lost")
     line['4/other_gains'] = BlankZero
 
-    with_form('1040 Schedule E') do |sched_e|
-      line['5/rrerpst'] = sched_e.line[:tot_inc]
-    end
+    line['5/rrerpst'] = with_form(
+      '1040 Schedule E', otherwise: BlankZero
+    ) { |sched_e| sched_e.line[:tot_inc] }
 
     other_income
 
@@ -65,9 +61,7 @@ class Form1040_1 < TaxForm
     # Other income from Form 8889, HSA excess contributions
     #
     with_form(8889) do |f|
-      f.other_income do |desc, amt|
-        add_other_income(desc, amt)
-      end
+      raise "Form 8889 not implemented"
     end
 
     line['8z.expl/other_inc_expl'] = @expls.join("; ")
@@ -121,8 +115,13 @@ class Form1040_1 < TaxForm
     end
     line['20/ira_ded'] = forms('IRA Analysis').lines[:deductible_contrib, :sum]
 
+    if form(1040).status.is?('mfs')
+      raise "Implement check box"
+    end
+
     student_loan_magi = form(1040).line[:tot_inc] - sum_lines(*11..20)
-    if !form(1040).status.is(:mfs) && student_loan_magi < 185_000
+    # From Form 1040 instructions, Schedule 1, line 21
+    if !form(1040).status.is(:mfs) && student_loan_magi < 200_000
       raise "Student loan interest deduction not implemented"
     end
 
@@ -136,6 +135,9 @@ class Form1040_1 < TaxForm
   # that is not the case, see the comment below.
   #
   def compute_1099g
+    return BlankZero unless has_form?('1099-G')
+    raise "1099-G computation has not been reviewed"
+
     assert_no_lines('1099-G', 1, 4, 5, 6, 7, 9, 11)
     salt_recovery = forms('1099-G').lines(2, :sum)
     lym = @manager.submanager(:last_year)

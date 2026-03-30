@@ -9,34 +9,17 @@ class Form2210 < TaxForm
   NAME = '2210'
 
   def year
-    2024
+    2025
   end
-
-  ADD_TAX_LINES = [
-      4, # SE tax
-      8, # IRA distributions
-      9, 10,
-      11, # Medicare tax
-      12, # NIIT
-      14, 15, 16,
-      '17a', '17c', '17d', '17e', '17f', '17g', '17h', '17i', '17j', '17l',
-      '17z',
-      19,
-  ]
 
   def compute
 
-    f1040 = form(1040)
+    analysis = form("Penalty Analysis")
 
-    # TODO: replace with alias
-    line[1] = f1040.line[22]
-
-    with_form('1040 Schedule 2') do |f|
-      line[2] = f.sum_lines(*ADD_TAX_LINES)
-    end
-
-    # I don't qualify for any credits, relevant to line 3
-    line[4] = sum_lines(1, 2, 3)
+    line[1] = analysis.line[:tax_after_credits]
+    line[2] = analysis.line[:sched_2_additions]
+    line[3] = analysis.line[:refundable_credits]
+    line[4] = sum_lines(1, 2) - line[3]
     return if line[4] < 1000
 
     line[5] = (line[4] * 0.9).round
@@ -46,23 +29,29 @@ class Form2210 < TaxForm
     return if line[7] < 1000
 
     ly = @manager.submanager(:last_year)
+    ly_f1040 = ly.form(1040)
 
-    # TODO: replace with alias. I'm going to use the Tax Shown formula from the
-    # 1040 instructions.
-    ly.with_form(1040, otherwise: BlankZero) do |f|
-      line[:ly_tax!] = f.line[:tot_tax] - f.sum_lines(27, 28, 29) \
-        - ly.with_form('1040 Schedule 3', otherwise: BlankZero) { |f3|
-          f3.sum_lines(9, 12)
-        }
+    # TODO: Next year, use the Penalty Analysis form for the tax shown.
+    line[:ly_tax!] = ly_f1040.line[22] - ly_f1040.sum_lines(
+      27, 28, 29
+    ) + ly.with_form('1040 Schedule 2', otherwise: 0) { |f|
+      f.sum_lines(
+        *%w(4 8 9 11 12 14 15 16 17a 17c 17d 17e 17f 17g 17h 17i 17j 17l 17z 19)
+      )
+    } - ly.with_form('1040 Schedule 3', otherwise: 0) { |f|
+      f.sum_lines(*%w(9 12 13b))
+    }
 
-      line[:ly_threshold!] = f1040.line('status.mfs', :present) ? \
-        75_000 : 150_000
+    if f1040.line('status.mfs', :present)
+      line[:ly_threshold!] = 75_000
+    else
+      line[:ly_threshold!] = 150_000
+    end
 
-      if f.line[:agi] > line[:ly_threshold!]
-        line[8] = (1.1 * line[:ly_tax!]).round
-      else
-        line[8] = line[:ly_tax!]
-      end
+    if ly_f1040.line[:agi] > line[:ly_threshold!]
+      line[8] = (1.1 * line[:ly_tax!]).round
+    else
+      line[8] = line[:ly_tax!]
     end
 
     line[9] = [ line[5], line[8] ].min
@@ -72,6 +61,10 @@ class Form2210 < TaxForm
     else
       line['9.no'] = 'X'
       return
+    end
+
+    if line['9.yes', :present]
+      raise "The remainder of the form has not been checked"
     end
 
     last_col = nil
@@ -104,13 +97,22 @@ class Form2210 < TaxForm
       end
     end
 
+    worksheet = compute_form('2210 Worksheet')
+    line['19/penalty'] = worksheet.line[14]
 
+
+  end
+
+  def needed?
+    return false if line('9.no', :present)
+    # This is not completely correct
+    return true
   end
 end
 
 class Form2210Worksheet < TaxForm
 
-  NAME = '2210'
+  NAME = '2210 Worksheet'
 
   def year
     2024

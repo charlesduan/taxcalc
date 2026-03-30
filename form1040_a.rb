@@ -6,7 +6,7 @@ class Form1040A < TaxForm
   NAME = '1040 Schedule A'
 
   def year
-    2024
+    2025
   end
 
   def needed?
@@ -23,9 +23,18 @@ class Form1040A < TaxForm
       forms('W-2').lines(17, :sum)
     line['5b/salt_real'] = forms('Real Estate').lines(:taxes, :sum)
     line['5d/salt_all'] = sum_lines(*%w(5a 5b 5c))
-    line['5e/salt_lim'] = [
-      form(1040).status.halve_mfs(10_000), line['5d']
-    ].min
+
+    cap_test = (form(1040).line(:agi) <= form(1040).status.halve_mfs(500_000))
+    cap_test ||= !has_form?(2555)
+    cap_test ||= !has_form?(4563)
+    if cap_test?
+      line[:salt_cap] = form(1040).status.halve_mfs(40_000)
+    else
+      compute_form('Schedule A State and Local Tax Deduction Worksheet') do |f|
+        line[:salt_cap] = f.line[:salt_cap]
+      end
+    end
+    line['5e/salt_lim'] = [ line[:salt_cap], line['5d'] ].min
 
     # This is for foreign taxes and the GST. The former is better dealt with as
     # a credit; the latter applies only to transfers of over $11 million.
@@ -88,7 +97,7 @@ class Form1040A < TaxForm
     # This calculates the various limits on home mortgage interest
     # deductibility.
     compute_form('Pub. 936 Home Mortgage Interest Worksheet') do |p936w|
-      line['8a'] = p936w.line[:ded_hm_int] if p936w
+      line['8a'] = p936w.line[:ded_hm_int]
     end
 
     #
@@ -107,6 +116,44 @@ class Form1040A < TaxForm
   end
 end
 
+class SALTWorksheet < TaxForm
+  NAME = 'Schedule A State and Local Tax Deduction Worksheet'
+  def year
+    2025
+  end
+  def compute
+    #
+    # The worksheet refers to the actual amount to be deducted (Schedule A, line
+    # 5d) several times. Since the worksheet is meant to compute a cap rather
+    # than the actual amount, those references are ignored.
+    #
+    line[1] = 40_000
+    line[2] = form(1040).line[:agi]
+    confirm("You didn't exclude income from Puerto Rico")
+    with_form(2555) do |f|
+      line['3b'] = f.line[45]
+      line['3c'] = f.line[50]
+    end
+    with_form(4563) do |f|
+      line['3d'] = f.line[15]
+    end
+    line['3e'] = sum_lines(*'3a'..'3d')
+    line[4] = sum_lines(2, '3e')
+    line[5] = form(1040).status.halve_mfs(500_000)
+    if line[4] > line[5]
+      line['6.yes'] = 'X'
+      line[6] = line[4] - line[5]
+      line[7] = (line[6] * 0.3).round
+      line[8] = line[1] - line[7]
+      line[9] = [ 10_000, line[8] ].max
+    else
+      line['6.no'] = 'X'
+      line[9] = line[1]
+    end
+    line['10/salt_cap'] = form(1040).status.halve_mfs(line[9])
+  end
+end
+
 #
 # Computes what portion of home mortgage interest is deductible. So far, I have
 # not hit the limits (line 16) and so have not implemented some features, such
@@ -116,7 +163,7 @@ class Pub936Worksheet < TaxForm
   NAME = 'Pub. 936 Home Mortgage Interest Worksheet'
 
   def year
-    2024
+    2025
   end
 
   def compute

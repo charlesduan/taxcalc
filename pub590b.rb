@@ -35,8 +35,8 @@ class Pub590BWorksheet1_1 < TaxForm
 
     line[9] = line[5] - line[8]
 
-    if analysis.line[:distrib_roth] > 0
-      line10frac = analysis.line[:distrib_roth].to_f / line[5]
+    if analysis.line[:distrib_roth_conversion] > 0
+      line10frac = analysis.line[:distrib_roth_conversion].to_f / line[5]
       line['10/taxable_roth_conv'] = (line10frac * line[9]).round
 
       line[11] = line[9] - line[10]

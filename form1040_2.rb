@@ -5,7 +5,7 @@ class Form1040_2 < TaxForm
   NAME = '1040 Schedule 2'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -23,7 +23,7 @@ class Form1040_2 < TaxForm
       line[2] = compute_form(6251).line[:amt_tax]
     end
 
-    line['3/add_tax'] = sum_lines(1, 2)
+    line['3/add_tax'] = sum_lines('1z', 2)
 
     #
     # Part II
@@ -77,7 +77,7 @@ class Form1040_2 < TaxForm
       line['17d'] = f.line[:hsa_testing_tax]
     end
 
-    line[18] = sum_lines(*"17a".."17z")
+    line[18] = sum_lines(*("17a".."17z"))
 
     # The 965 tax seems to have to do with shareholders of foreign corporations.
 
