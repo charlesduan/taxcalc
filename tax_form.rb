@@ -125,6 +125,13 @@ class TaxForm
   end
 
   #
+  # Aliases a line to have a second name.
+  #
+  def alias_line(line, new_alias)
+    @lines.add_alias(line, new_alias)
+  end
+
+  #
   # An alternate way of accessing lines. If the given method is of the form
   # line_[name], then it will be converted to the call +line[name, *args]+.
   #
@@ -546,7 +553,7 @@ class TaxForm
   # subtract one day from the birthday.
   def age(bio = nil)
     bio ||= form(1040).bio
-    return year - (bio.line[:dob] - 1).year
+    return this_year - (bio.line[:dob] - 1).year
   end
 
   #
@@ -646,6 +653,24 @@ class TaxForm
       parts.each do |p|
         @aliases[p] = line
       end
+    end
+
+    def add_alias(line, new_alias)
+      line = resolve_alias(line)
+      new_alias = new_alias.to_s
+      new_line_name = "#{line}/#{new_alias}"
+      if @lines_data.include?(line)
+        @lines_data[new_line_name] = @lines_data[line]
+        @lines_data.delete(line)
+      end
+      if @lines_order.include?(line)
+        @lines_order[@lines_order.index(line)] = new_line_name
+      end
+      parts = line.split('/')
+      parts.each do |p|
+        @aliases[p] = new_line_name
+      end
+      @aliases[new_alias] = new_line_name
     end
 
     def line_name(line)

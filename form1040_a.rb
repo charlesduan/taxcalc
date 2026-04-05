@@ -27,7 +27,7 @@ class Form1040A < TaxForm
     cap_test = (form(1040).line(:agi) <= form(1040).status.halve_mfs(500_000))
     cap_test ||= !has_form?(2555)
     cap_test ||= !has_form?(4563)
-    if cap_test?
+    if cap_test
       line[:salt_cap] = form(1040).status.halve_mfs(40_000)
     else
       compute_form('Schedule A State and Local Tax Deduction Worksheet') do |f|

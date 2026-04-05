@@ -4,7 +4,7 @@ class Pub590AWorksheet1_1 < TaxForm
   NAME = "Pub. 590-A Worksheet 1-1"
 
   def year
-    2024
+    2025
   end
 
   def initialize(manager, ssn, spouse_ssn)

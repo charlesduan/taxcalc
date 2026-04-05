@@ -9,7 +9,7 @@ class Form8812 < TaxForm
   NAME = '1040 Schedule 8812'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -23,17 +23,18 @@ class Form8812 < TaxForm
 
     line[1] = f1040.line[:agi]
     # Lines 2a-2c relate to foreign or US territory income.
+    assert_no_forms(2555, 4563)
     line['2d'] = sum_lines(%w(2a 2b 2c))
     line[3] = sum_lines(1, '2d')
 
 
-    if f1040.line[:dep_4_ctc, :present]
-      line[4] = f1040.line[:dep_4_ctc, :all].count { |x| x == 'X' }
-      line[5] = line[4] * 2000
+    if f1040.line[:dep_ctc, :present]
+      line[4] = f1040.line[:dep_ctc, :all].count { |x| x == 'X' }
+      line[5] = line[4] * 2200
     end
 
-    if f1040.line[:dep_4_other, :present]
-      line[6] = f1040.line[:dep_4_other, :all].count { |x| x == 'X' }
+    if f1040.line[:dep_other, :present]
+      line[6] = f1040.line[:dep_other, :all].count { |x| x == 'X' }
       line[7] = line[6] * 500
     end
 
@@ -66,14 +67,15 @@ class Form8812 < TaxForm
       return
     end
 
-    with_form('1040 Schedule 3', otherwise: proc {
-      line[13] = f1040.line(:pre_ctc_tax)
-    }) do |sched_3|
+    line[13] = with_form(
+      '1040 Schedule 3', otherwise: f1040.line(:pre_ctc_tax)
+    ) do |sched_3|
+      # This is Credit Limit Worksheet A, but the key parts are implemented in
+      # Schedule 3.
       if sched_3.line[:form_8812_worksheet_b_needed!]
         raise "Worksheet B not implemented"
       else
-        line[13] = f1040.line(:pre_ctc_tax) - \
-          sched_3.line[:form_8812_exclusions!]
+        f1040.line(:pre_ctc_tax) - sched_3.line[:form_8812_exclusions!]
       end
     end
 
@@ -85,7 +87,7 @@ class Form8812 < TaxForm
   #
   def compute_actc
 
-    if line[12] <= line[14]
+    if line[12, :opt] <= line[14]
       line['27/actc'] = BlankZero
       return
     end

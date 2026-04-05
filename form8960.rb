@@ -8,7 +8,7 @@ class Form8960 < TaxForm
   NAME = '8960'
 
   def year
-    2024
+    2025
   end
 
   def needed?
@@ -71,9 +71,12 @@ class Form8960 < TaxForm
       l9b *= 1.0 * line[8] / form(1040).line_agi
       line['9b'] = [ l9b.round, f.line[:salt_lim] ].min
     end
-    with_form(4954) do |f|
-      line['9c'] = f.line[5]
-    end
+    #
+    # This no longer appears to be allowed
+    #
+    #with_form(4954) do |f|
+    #  line['9c'] = f.line[5]
+    #end
     line['9d'] = sum_lines('9a', '9b', '9c')
 
     if this_year > 2025

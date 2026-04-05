@@ -16,6 +16,8 @@ class Form2210 < TaxForm
 
     analysis = form("Penalty Analysis")
 
+    f1040 = form(1040)
+
     line[1] = analysis.line[:tax_after_credits]
     line[2] = analysis.line[:sched_2_additions]
     line[3] = analysis.line[:refundable_credits]
@@ -140,8 +142,10 @@ class Form2210Worksheet < TaxForm
 
     unless line("1a.#{col}", :present)
       line["1a.#{col}"] = form(2210).line["17#{col}"]
+    end
     compute_period(1, 'a', 4, 15)
     compute_period(2, 'a')
     compute_period(3, 'a')
     compute_period(4, 'a')
+  end
 end

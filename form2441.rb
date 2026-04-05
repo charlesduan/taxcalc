@@ -8,7 +8,7 @@ class Form2441 < TaxForm
   NAME = '2441'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -21,7 +21,7 @@ class Form2441 < TaxForm
         'Did you live apart from your spouse for the last 6 months of the year?'
       )
       if mfs_except
-        line[:mfs_except] = 'X'
+        line['A/mfs_except'] = 'X'
         line[:credit_not_permitted!] = false
       else
         line[:credit_not_permitted!] = true
@@ -30,8 +30,30 @@ class Form2441 < TaxForm
       line[:credit_not_permitted!] = false
     end
 
-    # Disabled spouses and other dependents are not considered here.
-    @qual_persons = forms('Dependent') { |f| age(f) <= 12 }
+    #
+    # Line B (student/disabled deemed income) not implemented.
+    #
+    if interview("Were you or your spouse a student or disabled?")
+      raise "Student/disabled income not implemented"
+      line[:B] = 'X'
+      # See Form 2441, line 5 instructions. You will have to compute the
+      # spouse's considered monthly income in compute_earned_income.
+    end
+
+    #
+    # Select qualifying persons. Disabled spouses and other dependents are not
+    # considered here. If a child is age 13, then only certain expenses qualify,
+    # but those are selected later.
+    #
+    @qual_persons = forms('Dependent') { |f|
+      age(f) <= 13
+    }
+
+    line[:benefit_cap!] = case @qual_persons.count
+                          when 0 then 0
+                          when 1 then 3000
+                          else        6000
+                          end
 
     #
     # Part I. Add providers. Because the highest-paid three providers must be
@@ -39,14 +61,29 @@ class Form2441 < TaxForm
     #
     providers = forms('Dependent Care Provider').sort_by { |f|
       -f.line[:amount]
-    }
+    }.select { |f|
 
-    # Check that all providers match a dependent
-    providers.each do |f|
-      unless @qual_persons.map { |p| p.line[:name] }.include?(f.line[:dep_name])
-        raise "Dependent care provider #{name} not for qualifying person"
+      #
+      # Check that there is a corresponding dependent and that the dependent was
+      # less than age 13 when service was provided. First, find the
+      # corresponding dependent.
+      #
+      dep = @qual_persons.find { |p| p.line[:name] == f.line[:dep_name] }
+      unless dep
+        raise "No qual. person for dependent care provider #{f.line[:name]}"
       end
-    end
+
+      #
+      # The cutoff is the child's 13th birthday.
+      #
+      cutoff = dep.line[:dob] >> (13 * 12)
+      if f.line[:date] >= cutoff
+        warn("Dep. care #{f.line[:name]} provided after age 13")
+        false
+      else
+        true
+      end
+    }
 
     # If more than 3 providers, check the box and construct a continuation sheet
     if providers.count > 3
@@ -77,37 +114,46 @@ class Form2441 < TaxForm
         '1a' => break_lines(f.line[:name], 15),
         '1b' => break_lines(f.line[:address], 28),
         '1c' => f.line[:tin],
-        '1d.yes' => f.line[:employee?] ? 'X' : nil,
-        '1d.no' => f.line[:employee?] ? nil : 'X',
+        (f.line[:employee?] ? '1d.yes' : '1d.no') => 'X',
         '1e' => f.line[:amount]
-      }.compact)
+      })
     end
+
     compute_part_iii
   end
 
   # Part III. Compute employer benefits.
   def compute_part_iii
 
-    line[12] = forms('W-2').lines[10, :sum]
+    line_12 = forms('W-2').lines[10, :sum]
     confirm("No self-employer offered dependent care benefits")
 
+    with_form("Dependent Care Benefit Use") do |form|
+      line[13] = form.line[:last_year_grace_period_use]
+    end
+
+    # Determine if Part III is required; return otherwise
+    return if line_12 == 0 && line[13, :opt] == 0
+
+    # At this point we have to fill in Part III, so set lines and variables
+    line[12] = line_12
+    place_lines(13)
     @use_form = form("Dependent Care Benefit Use")
-    line[13] = @use_form.line[:last_year_grace_period_use]
-    line[14] = @use_form.line[:this_year_unused]
+
+    # This is computed early to figure line 14.
+    line[16] = forms('Dependent Care Provider').lines(:fsa, :sum)
+
+    # The forfeited/carryover amount is whatever wasn't spent.
+    line[14] = sum_lines(12, 13) - line[16]
     line[15] = sum_lines(12, 13) - line[14, :opt]
 
-    # If there are no relevant benefits, then this section is unnecessary.
-    return if (12..15).all? { |l| line[l] == 0 }
+    place_lines(16)
 
-    line[16] = forms('Dependent Care Provider').lines(:fsa, :sum)
     line[17] = [ line[15], line[16] ].min
-    if line[16] != line[17]
-      raise "Dependent care FSA numbers don't add up"
-    end
 
     compute_earned_income(18, 19)
 
-    line[20] = [ line[17], line[18], line[19] ].min
+    line[20] = [ line[17], line[18], line[19], 0 ].min
     line[21] = [
       form(1040).status.halve_mfs(5000), @use_form.line[:max_contrib]
     ].min
@@ -128,7 +174,7 @@ class Form2441 < TaxForm
 
     unless line[:credit_not_permitted!]
 
-      line[27] = @qual_persons.count >= 2 ? 6000 : 3000
+      line[27] = line[:benefit_cap!]
       line[28] = sum_lines(24, 25)
       line[29] = line[27] - line[28]
       if line[29] > 0
@@ -173,7 +219,7 @@ class Form2441 < TaxForm
         '2b' => person.line[:ssn],
         '2d' => forms('Dependent Care Provider').map { |provider|
           if provider.line[:dep_name] == person.line[:name]
-            provider.line[:amount] - provider.line[:fsa, :opt]
+            [ 0, provider.line[:amount] - provider.line[:fsa, :opt] ].max
           else
             BlankZero
           end
@@ -191,6 +237,7 @@ class Form2441 < TaxForm
 
     if line[:credit_not_permitted!]
       line['11/credit'] = BlankZero
+      return
     end
 
     compute_line_2
@@ -200,19 +247,24 @@ class Form2441 < TaxForm
       line[4] = line[18]
       line[5] = line[19]
     else
-      line[3] = line['2b', :all].count >= 2 ? 6000 : 3000
+      line[3] = [ line[:tot_expenses!], line[:benefit_cap!] ].min
       compute_earned_income(4, 5)
     end
 
     line[6] = [ line[3], line[4], line[5] ].min
     line[7] = form(1040).line[:agi]
 
-    # If AGI is under $43,000, then a scaling fraction of line 8 may be higher.
-    # This calculation has not been implemented.
-    if line[7] < 43_000
-      raise "Dependent Care Credit fraction not implemented"
-    end
-    line[8] = 20
+    #
+    # The line 8 formula is:
+    #
+    # - Take 15k off the AGI
+    # - Every 2000 corresponds to a step of 1
+    # - Max is 35, min is 20
+    #
+    # We don't need to worry about single-digit values since all values will be
+    # between 20 and 35.
+    #
+    line[8] = [ 34 - ((line[7] - 15000) / 2000).floor, 35, 20 ].sort[1]
 
     line['9a'] = (line[6] * line[8] / 100.0).round
     line['9b'] = BlankZero
@@ -220,11 +272,13 @@ class Form2441 < TaxForm
 
     # This implements the Line 10 Credit Limit Worksheet.
     line10 = form(1040).line(:pre_ctc_tax) # In 2023, line 18.
-    line10 -= form('1040 Schedule 3').line[:foreign_tax_credit]
+    line10 -= form('1040 Schedule 3').line[:foreign_tax_credit, :opt]
     line10 -= form('1040 Schedule 3').line[:pship_tax_adjust, :opt]
     line[10] = [ line10, 0 ].max
 
     line['11/credit'] = [ line['9c'], line[10] ].min
+
+    place_lines(*12..31)
 
   end
 
@@ -240,11 +294,8 @@ class Form2441 < TaxForm
     status = form(1040).status
     if status.is?(:mfj)
       line[spouse_line] = earned_income_for(@manager, spouse_ssn)
-      if [ line[my_line], line[spouse_line] ].min < 5000
-        if interview("Were you or your spouse a student or disabled?")
-          raise "Student/disabled income not implemented"
-          # See Form 2441, line 5 instructions
-        end
+      if line[:B, :present]
+        raise "Computation of student/disabled income not implemented"
       end
     elsif status.is?(:mfs)
       if !line[:mfs_except, :present]

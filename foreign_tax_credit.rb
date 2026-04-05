@@ -8,7 +8,7 @@ class ForeignTaxCredit < TaxForm
   NAME = "Foreign Tax Credit"
 
   def year
-    2024
+    2025
   end
 
   def compute

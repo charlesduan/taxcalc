@@ -10,7 +10,18 @@ class Form6251 < TaxForm
   NAME = '6251'
 
   def year
-    2024
+    2025
+  end
+
+  def needed?
+    return true if line[7] > line[10]
+    test_lines = sum_lines('2c'..'2z', 3)
+    if test_lines < 0
+      if line[7] - test_lines > line[10]
+        return true
+      end
+    end
+    return false
   end
 
   def compute
@@ -23,14 +34,16 @@ class Form6251 < TaxForm
       end
     end
 
-    line[1] = form(1040).line[:taxinc]
+    line['1a'] = form(1040).line[:tot_deductions] - with_form(
+      '1040 Schedule 1-A', otherwise: BlankZero
+    ) { |f| f.line[37] }
+
+    line['1b'] = form(1040).line[:agi] - line['1a']
 
     # Schedule A tax deduction, or 1040 standard deduction.
     line['2a'] = with_form('1040 Schedule A', otherwise: proc {
       form(1040).line[:deduction]
-    }) do |f|
-      f.line[:salt]
-    end
+    }) { |f| f.line[:salt] }
 
     with_form('1040 Schedule 1') do |f|
       # 2b: undoing income attributed to state/local income tax refunds
@@ -64,7 +77,7 @@ class Form6251 < TaxForm
     line['2g'] = forms('1099-INT').lines(9, :sum) + \
       forms('1099-DIV').lines(12, :sum)
     if has_form?(8814)
-      raise "Form 6251, line 2g inclusion of From 8814 not implemented"
+      raise "Form 6251, line 2g inclusion of Form 8814 not implemented"
     end
 
     # 2h: qualified small business stock
@@ -152,8 +165,8 @@ class Form6251 < TaxForm
     # might be affected but this is unlikely.
     confirm("You have no other adjustments for AMT (line 3)")
 
-    line['4/amt_inc'] = sum_lines(1, 3, *'2a'..'2z')
-    if form(1040).status.is('mfs') && line[4] > 875_950
+    line['4/amt_inc'] = sum_lines('1b', 3, *'2a'..'2z')
+    if form(1040).status.is('mfs') && line[4] > 900_350
       raise "Form 6251 Line 4 adjustment not implemented"
     end
     with_form('1040 Schedule E') do |f|
@@ -318,10 +331,10 @@ class Form6251 < TaxForm
   end
 
   def amt_tax(amount)
-    if amount <= form(1040).status.halve_mfs(232_600)
+    if amount <= form(1040).status.halve_mfs(239_100)
       return (amount * 0.26).round
     else
-      return (amount * 0.28).round - form(1040).status.halve_mfs(4652)
+      return (amount * 0.28).round - form(1040).status.halve_mfs(4782)
     end
   end
 
@@ -348,7 +361,7 @@ class Line5ExemptionWorksheet < TaxForm
   NAME = '6251 Line 5 Exemption Worksheet'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -378,30 +391,30 @@ end
 # Used on AMT test worksheet, line 8 and Form 6251, line 5.
 #
 FilingStatus.set_param('amt_exempt_max',
-                       single: 609_350, mfj: 1_218_700, mfs: :half_mfj,
+                       single: 626_350, mfj: 1_252_700, mfs: :half_mfj,
                        hoh: :single, qw: :mfj)
 
 #
 # Used on the AMT test worksheet, line 6, and Form 6251, line 5.
 #
 FilingStatus.set_param('amt_exemption',
-                       single: 85_700, mfj: 133_300, mfs: :half_mfj, hoh:
+                       single: 88_100, mfj: 137_000, mfs: :half_mfj, hoh:
                        :single, qw: :mfj)
 
 #
 # Used in the initial test prior to filling out the line 5 worksheet.
 #
 FilingStatus.set_param('amt_exempt_zero',
-                       single: 952_150, mfj: 1_751_900, mfs: :half_mfj,
+                       single: 978_750, mfj: 1_800_700, mfs: :half_mfj,
                        hoh: :single, qw: :mfj)
 
 # Exemption for income excluding capital gains, for Form 6251, line 19.
 FilingStatus.set_param('amt_cg_exempt',
-                       single: 47_025, mfj: 94_050, mfs: :single,
-                       hoh: 63_000, qw: :mfj)
+                       single: 48_350, mfj: 96_700, mfs: :single,
+                       hoh: 64_750, qw: :mfj)
 
 # Limit for income excluding capital gains, for Form 6251, line 25.
 FilingStatus.set_param('amt_cg_upper',
-                       single: 518_900, mfj: 583_750, mfs: :half_mfj,
-                       hoh: 551_350, qw: :mfj)
+                       single: 533_400, mfj: 600_050, mfs: 300_000,
+                       hoh: 566_700, qw: :mfj)
 

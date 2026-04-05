@@ -10,7 +10,7 @@ class Form8606 < TaxForm
   NAME = '8606'
 
   def year
-    2024
+    2025
   end
 
   def copy_analysis_line(to_line)

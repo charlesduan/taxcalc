@@ -12,7 +12,7 @@ class QBIManager < TaxForm
   NAME = 'QBI Manager'
 
   def year
-    2024
+    2025
   end
 
   #
@@ -103,10 +103,10 @@ end
 # under "Who Can Take the Deduction," and Form 8995-A, line 3.
 #
 FilingStatus.set_param('qbi_threshold',
-                       single: 191_950, mfj: 383_900, mfs: :single,
+                       single: 197_300, mfj: 394_600, mfs: :single,
                        hoh: :single, qw: :single)
 
 FilingStatus.set_param('qbi_max',
-                       single: 241_950, mfj: 483_900, mfs: :single,
+                       single: 247_300, mfj: 494_600, mfs: :single,
                        hoh: :single, qw: :single)
 

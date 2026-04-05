@@ -1,4 +1,5 @@
 require 'tax_form'
+require_relative 'form2210'
 
 #
 # Analysis for underpayment penalty. The purpose is to compute the tax shown,
@@ -6,8 +7,8 @@ require 'tax_form'
 # across years, it is useful to compute it separately so that it is retained in
 # the computation data.
 #
-class PenaltyManager < TaxForm
-  NAME = 'Penalty Manager'
+class PenaltyAnalysis < TaxForm
+  NAME = 'Penalty Analysis'
   def year
     2025
   end

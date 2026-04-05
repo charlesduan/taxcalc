@@ -60,7 +60,7 @@ class Form1040_1 < TaxForm
     #
     # Other income from Form 8889, HSA excess contributions
     #
-    with_form(8889) do |f|
+    if has_form?(8889)
       raise "Form 8889 not implemented"
     end
 
@@ -84,8 +84,8 @@ class Form1040_1 < TaxForm
     # add_inc computed above.
     #
 
-    with_form(8889) do |f|
-      line['13/hsa_adj'] = f.line[:hsa_ded]
+    if has_form?(8889)
+      line['13/hsa_adj'] = form(8889).line[:hsa_ded]
     end
 
     if has_form?('1040 Schedule SE')

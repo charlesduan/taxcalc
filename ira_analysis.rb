@@ -26,7 +26,7 @@ class IraAnalysis < TaxForm
   NAME = 'IRA Analysis'
 
   def year
-    2024
+    2025
   end
 
   attr_reader :form8606, :pub590a_w1_1, :pub590a_w1_2, :pub590b_w1_1
@@ -123,20 +123,24 @@ class IraAnalysis < TaxForm
     source, dest = form.line[:source].to_sym, form.line[:destination].to_sym
     case [ source, dest ]
     when [ :trad_ira, :roth_ira ]
-      raise "Inconsistent form" unless x.line[:ira_sep_simple?]
-      raise "Inconsistent form" unless x.line[7, :all].include?('2')
+      raise "Inconsistent form" unless form.line[:ira_sep_simple?]
+      raise "Inconsistent form" unless form.line[7, :all].include?(2)
       return :roth_conversion
+
     when [ :roth_ira, :roth_ira ]
-      raise "Inconsistent form" unless x.line[7, :all].include?('H')
+      raise "Inconsistent form" unless form.line[7, :all].include?('H')
       return :roth_rollover
+
     when [ :trad_ira, :trad_ira ], [ :trad_ira, :trad_qp ]
-      raise "Inconsistent form" unless x.line[:ira_sep_simple?]
-      raise "Inconsistent form" unless x.line[7, :all].include?('G')
+      raise "Inconsistent form" unless form.line[:ira_sep_simple?]
+      raise "Inconsistent form" unless form.line[7, :all].include?('G')
       return :trad_rollover
+
     when [ :trad_qp, :trad_qp ]
-      raise "Inconsistent form" unless x.line[7, :all].include?('G')
+      raise "Inconsistent form" unless form.line[7, :all].include?('G')
       # This is the IRA analysis; should it deal with QPs?
       raise "Look at this"
+
     else
       raise "Unknown 1099-R type"
     end
@@ -298,8 +302,8 @@ class IraAnalysis < TaxForm
     #
     # Part II: Traditional-to-Roth conversions
     #
-    if line[:distrib_roth] > 0
-      line['8606_16'] = line[:distrib_roth]
+    if line[:distrib_roth_conversion] > 0
+      line['8606_16'] = line[:distrib_roth_conversion]
       line['8606_17'] = @pub590b_w1_1.line[:nontax_distrib]
       line['8606_18'] = @pub590b_w1_1.line[:taxable_roth_conv]
       line['8606_18*note'] = 'Lines 17 and 18 from Pub. 590-B Worksheet 1-1'

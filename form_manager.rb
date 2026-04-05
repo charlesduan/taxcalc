@@ -11,6 +11,7 @@ class FormManager
     @forms = {}
     @no_forms = {}
     @ordered_forms = []
+    @not_needed_forms = {}
     @interviewer = Interviewer.new
     @explain = {}
     @submanagers = {}
@@ -156,6 +157,7 @@ class FormManager
     unless needed
       form.explain("Removing Form #{form.name} as not needed")
       remove_form(form)
+      @not_needed_forms[form.name] = 1
       return nil
     end
     yield(form) if block_given? and form
@@ -242,10 +244,10 @@ class FormManager
   # returned. If an SSN is given, then only forms which match the SSN will be
   # returned.
   #
-  def forms(name, ssn: nil)
+  def forms(name, ssn: nil, required: true)
     name = name.to_s
     unless @forms.include?(name)
-      ensure_no_forms(name)
+      ensure_no_forms(name) if required
     end
     mf = MultiForm.new(@forms[name] || [])
     if ssn
@@ -258,6 +260,7 @@ class FormManager
   end
 
   def ensure_no_forms(name)
+    name = name.to_s
     unless @no_forms.include?(name)
       warn(
         "Warning: No forms #{name}, in computing #{currently_computing&.name}" \
@@ -270,7 +273,7 @@ class FormManager
   # Performs a block if the named form exists and returns the result; otherwise
   # performs an alternate block and/or returns an alternate value.
   def with_form(name, ssn: nil, otherwise: nil, required: false)
-    fs = forms(name, ssn: ssn)
+    fs = forms(name, ssn: ssn, required: required)
     case fs.count
     when 1 then yield(fs[0])
     when 0

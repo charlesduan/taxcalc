@@ -25,6 +25,7 @@ require_relative 'qbi_manager'
 require_relative 'home_office'
 require_relative 'amt_test_worksheet'
 require_relative 'tax_computation'
+require_relative 'penalty_analysis'
 
 class Form1040 < TaxForm
 
@@ -52,6 +53,16 @@ class Form1040 < TaxForm
   # needed.
   #
   def compute_early_schedules
+    confirm("You have no foreign earned income")
+    @manager.no_form('2555')
+    @manager.no_form('4563') unless @bio.line[:city_zip] =~ /\bAS\b/
+
+    confirm("You cashed no series EE or I bonds")
+    @manager.no_form(8815)
+
+    confirm("You adopted no one")
+    @manager.no_form(8839)
+
     compute_form('Home Office Manager')
 
     if has_form?('Sole Proprietorship')
@@ -141,9 +152,10 @@ class Form1040 < TaxForm
     #
 
     forms('Dependent').each do |dep|
+      first_name, last_name = split_name(dep.line[:name])
       row = {
-        :dep_1 => dep.line[:first_name],
-        :dep_2 => dep.line[:last_name],
+        :dep_1 => first_name,
+        :dep_2 => last_name,
         :dep_3 => dep.line[:ssn],
         :dep_4 => dep.line[:relationship],
       }
@@ -180,11 +192,11 @@ class Form1040 < TaxForm
       #
       # Determine which credit applies.
       #
-      if dep[:ssn, :present]
+      if dep.line[:ssn, :present]
         if age(dep) < 17
-          row[:dep_7_ctc] = 'X'
+          row['dep_7_ctc/dep_ctc'] = 'X'
         else
-          row[:dep_7_other] = 'X'
+          row['dep_7_other/dep_other'] = 'X'
         end
       end
 
@@ -263,6 +275,8 @@ class Form1040 < TaxForm
       ) do |sched_d|
         sched_d.line[:tot_gain]
       end
+    else
+      line['7/cap_gain'] = BlankZero
     end
 
     # Other income, Schedule 1
@@ -334,10 +348,11 @@ class Form1040 < TaxForm
     #
     line['13a/qbid'] = compute_form('QBI Manager').line[:deduction]
 
-    # No Schedule 1-A deductions for line 13b
+    # No Schedule 1-A deductions for line 13b. If there are, update Form 8995-A
+    # which depends on it.
 
     # Total deductions
-    line[14] = sum_lines('12e', '13a', '13b')
+    line['14/tot_deductions'] = sum_lines('12e', '13a', '13b')
     # Taxable income
     line['15/taxinc'] = [ line['11b'] - line[14], 0 ].max
 

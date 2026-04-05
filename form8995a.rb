@@ -6,7 +6,7 @@ class Form8995A < TaxForm
   NAME = '8995-A'
 
   def year
-    2024
+    2025
   end
 
   def compute

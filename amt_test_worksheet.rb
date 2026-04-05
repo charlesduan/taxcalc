@@ -2,7 +2,9 @@ require_relative 'tax_form'
 require_relative 'form6251'
 
 #
-# From 1040 instructions, Schedule 2 Line 1
+# Form 1040 instructions, Schedule 2 Line 2, used to include a worksheet for
+# determining whether AMT was required. That worksheet no longer appears to
+# exist.
 #
 class AMTTestWorksheet < TaxForm
   NAME = "1040 Worksheet to See If You Should Fill In Form 6251"

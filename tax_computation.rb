@@ -2,12 +2,16 @@ require_relative 'tax_table'
 require_relative 'tax_form'
 require_relative 'form5329'
 
+#
+# This implements the instructions under line 16 of Form 1040 (the tax
+# computation).
+#
 class TaxComputation < TaxForm
 
   NAME = "Tax Computation"
 
   def year
-    2024
+    2025
   end
 
 
@@ -83,12 +87,12 @@ class QdcgtWorksheet < TaxForm
   NAME = '1040 QDCGT Worksheet'
 
   def year
-    2024
+    2025
   end
 
   def compute
     @f1040 = form(1040)
-    confirm("You have no foreign income")
+    assert_no_forms(2555)
 
     line[1] = @f1040.line[:taxinc]
     line[2] = @f1040.line[:qualdiv]
@@ -133,13 +137,16 @@ class QdcgtWorksheet < TaxForm
   end
 end
 
+# QDCGT worksheet, line 6
 FilingStatus.set_param('qdcgt_exemption',
-                       single: 47_025, mfj: 94_050, mfs: :single,
-                       hoh: 63_000, qw: :mfj)
+                       single: 48_350, mfj: 96_700, mfs: :single,
+                       hoh: 64_750, qw: :mfj)
+
+# QDCGT worksheet, line 13
 FilingStatus.set_param('qdcgt_cap',
-                       single: 518_900, mfj: 583_750,
-                       mfs: 291_850, # not :half_mfj?
-                       hoh: 551_350, qw: :mfj)
+                       single: 533_400, mfj: 600_050,
+                       mfs: 300_000, # not :half_mfj?
+                       hoh: 566_700, qw: :mfj)
 
 # A one-liner that will convert the tables of the tax brackets worksheet into
 # the appropriate forms below:
@@ -150,13 +157,19 @@ FilingStatus.set_param(
   'tax_brackets',
   single: nil,
   mfj: [
-    [ 201050, 0.22, 9894.00 ],
-    [ 383900, 0.24, 13915.00 ],
-    [ 487450, 0.32, 44627.00 ],
-    [ 731200, 0.35, 59250.50 ],
-    [ nil, 0.37, 73874.50 ],
+    [ 206700, 0.22, 10172.00 ],
+    [ 394600, 0.24, 14306.00 ],
+    [ 501050, 0.32, 45874.00 ],
+    [ 751600, 0.35, 60905.50 ],
+    [ nil, 0.37, 75937.50 ],
   ],
-  mfs: nil,
+  mfs: [
+    [ 103350, 0.22, 5086.00 ],
+    [ 197300, 0.24, 7153.00 ],
+    [ 250525, 0.32, 22937.00 ],
+    [ 375800, 0.35, 30452.75 ],
+    [ nil, 0.37, 37968.75 ],
+  ],
   hoh: nil,
   qw: nil
 )

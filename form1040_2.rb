@@ -16,11 +16,12 @@ class Form1040_2 < TaxForm
 
     line['1z'] = sum_lines(*('1a'..'1y'))
 
-    amt_test = compute_form(
-      "1040 Worksheet to See If You Should Fill In Form 6251"
-    )
-    if amt_test.line[:fill_yes, :present]
-      line[2] = compute_form(6251).line[:amt_tax]
+    #amt_test = compute_form(
+    #  "1040 Worksheet to See If You Should Fill In Form 6251"
+    #)
+    form6251 = compute_form(6251)
+    if form6251
+      line[2] = form6251.line[:amt_tax]
     end
 
     line['3/add_tax'] = sum_lines('1z', 2)

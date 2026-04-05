@@ -6,7 +6,7 @@ class Pub590AWorksheet1_2 < TaxForm
   NAME = "Pub. 590-A Worksheet 1-2"
 
   def year
-    2024
+    2025
   end
 
   def initialize(manager, ssn, spouse_ssn)
@@ -77,8 +77,8 @@ class Pub590AWorksheet1_2 < TaxForm
       end
     end
 
-    line[:deductible_contrib] = line[7]
-    line[:nondeductible_contrib] = line[8]
+    alias_line(7, :deductible_contrib)
+    alias_line(8, :nondeductible_contrib)
   end
 
   #
@@ -164,12 +164,12 @@ end
 # Traditional IRA deduction limits for modified AGI, per worksheet line 1.
 FilingStatus.set_param(
   'ira_deduction_limit',
-  single: [ 77_000, 87_000 ], mfj: [ 123_000, 143_000 ], mfs: [ 0, 10_000 ],
+  single: [ 79_000, 89_000 ], mfj: [ 126_000, 146_000 ], mfs: [ 0, 10_000 ],
   hoh: :single, qw: :mfj
 )
 FilingStatus.set_param(
   'ira_deduction_limit_spouse',
-  single: nil, mfj: [ 230_000, 240_000 ], mfs: [ 0, 10_000 ],
+  single: nil, mfj: [ 236_000, 246_000 ], mfs: [ 0, 10_000 ],
   hoh: nil, qw: nil
 )
 

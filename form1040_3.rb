@@ -32,7 +32,7 @@ class Form1040_3 < TaxForm
     # so to the extent that Form 8978 is to be computed, then it must be done
     # here.
     #
-    assert_no_forms(8986)
+    # assert_no_forms(8986)
     #line['6l/pship_tax_adjust'] = BlankZero
 
     #

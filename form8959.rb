@@ -7,7 +7,7 @@ class Form8959 < TaxForm
   NAME = '8959'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -57,6 +57,7 @@ class Form8959 < TaxForm
   def needed?
     return true if line[1] > 200_000
     return true if sum_lines(4, 8) > line[5]
+    return true if line[:mc_wh] != 0
     return false
   end
 end
