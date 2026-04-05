@@ -57,6 +57,7 @@ class TaxForm
 
     @manager = manager
     @exportable = true
+    @discarded = false
     @used = false
   end
 
@@ -76,6 +77,11 @@ class TaxForm
   # The FormManager associated with this form.
   #
   attr_accessor :manager
+
+  #
+  # Whether this form was discarded as not needed.
+  #
+  attr_accessor :discarded
 
   #
   # Returns the name of this form as given in the TaxForm::NAME constant.
@@ -728,7 +734,12 @@ class TaxForm
 
     def export(io = STDOUT)
 
-      io.puts("Form #{@form.name}")
+      if @form.discarded
+        io.puts("Discarded Form #{@form.name}")
+      else
+        io.puts("Form #{@form.name}")
+      end
+
       @lines_order.each do |line|
         data = @lines_data[line]
         prefix = "\t#{line}\t"

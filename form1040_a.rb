@@ -25,16 +25,16 @@ class Form1040A < TaxForm
     line['5d/salt_all'] = sum_lines(*%w(5a 5b 5c))
 
     cap_test = (form(1040).line(:agi) <= form(1040).status.halve_mfs(500_000))
-    cap_test ||= !has_form?(2555)
-    cap_test ||= !has_form?(4563)
+    cap_test &&= !has_form?(2555)
+    cap_test &&= !has_form?(4563)
     if cap_test
-      line[:salt_cap] = form(1040).status.halve_mfs(40_000)
+      line[:salt_cap!] = form(1040).status.halve_mfs(40_000)
     else
       compute_form('Schedule A State and Local Tax Deduction Worksheet') do |f|
-        line[:salt_cap] = f.line[:salt_cap]
+        line[:salt_cap!] = f.line[:salt_cap]
       end
     end
-    line['5e/salt_lim'] = [ line[:salt_cap], line['5d'] ].min
+    line['5e/salt_lim'] = [ line[:salt_cap!], line['5d'] ].min
 
     # This is for foreign taxes and the GST. The former is better dealt with as
     # a credit; the latter applies only to transfers of over $11 million.

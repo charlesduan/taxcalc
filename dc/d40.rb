@@ -10,7 +10,7 @@ class FormD40 < TaxForm
   NAME = 'D-40'
 
   def year
-    2024
+    2025
   end
 
   def compute
@@ -118,9 +118,9 @@ class FormD40 < TaxForm
       # Assumed no special conditions apply. These amounts are given in the
       # instructions under Filing Status, Standard Deduction.
       line['18/ded'] = case line['status']
-                       when 'mfssr', 'mfj', 'qw' then 29_200
-                       when 'single', 'mfs' then 14_600
-                       when 'hoh' then 21_900
+                       when 'mfssr', 'mfj', 'qw' then 30_000
+                       when 'single', 'mfs' then 15_000
+                       when 'hoh' then 22_500
                        else raise "Unknown status"
                        end
 
@@ -157,7 +157,7 @@ class FormD40 < TaxForm
     if line[:status] != 'mfs'
       if f1040.any? { |f| f.line['status.mfs', :present] }
         line[21] = BlankZero
-      else
+      elsif has_form?(2441)
         line['21.pre'] = forms(2441).lines(:credit, :sum)
         line[21] = (0.32 * line['21.pre']).round
       end
@@ -256,7 +256,7 @@ class D40CalculationF < TaxForm
   NAME = 'D-40 Calculation F'
 
   def year
-    2024
+    2025
   end
 
   def compute

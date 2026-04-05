@@ -36,6 +36,9 @@ class FormManager
       warn("Form #{f.name} was not used") unless f.used
       f.export(io) if all || f.exportable
     end
+    @not_needed_forms.values.flatten.each do |f|
+      f.export(io) if all || f.exportable
+    end
   end
 
   def each(&block)
@@ -157,7 +160,8 @@ class FormManager
     unless needed
       form.explain("Removing Form #{form.name} as not needed")
       remove_form(form)
-      @not_needed_forms[form.name] = 1
+      form.discarded = true
+      (@not_needed_forms[form.name] ||= []).push(form)
       return nil
     end
     yield(form) if block_given? and form
