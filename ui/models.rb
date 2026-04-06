@@ -10,10 +10,11 @@ module Marking
     def initialize(formname)
       @name = formname
       @file = nil
+      @discarded = false
       @lines = []
     end
 
-    attr_reader :name, :file, :lines
+    attr_reader :name, :file, :lines, :discarded
 
     def line_names
       @lines.map(&:name)
@@ -65,6 +66,8 @@ module Marking
       unless tax_form.name == @name
         raise "Wrong form #{tax_form.name} for #{self.class} #@name"
       end
+
+      @discarded = tax_form.discarded
 
       new_lines = tax_form.line.map { |l, v|
         next [] if l.end_with?("!")

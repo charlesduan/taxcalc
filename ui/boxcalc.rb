@@ -29,10 +29,10 @@ class BoxCalculator
     # Left edge
     xmin = p + advance_line(p, ymax, Point.new(-1, 0), @maxdx)
 
-    # Find the line immediately below the bottom edge (by 2px to be safe).
+    # Find the line immediately below the bottom edge.
     # Calculate a left and right boundary based on this, and choose the more
     # reasonable boundary.
-    ybot = ymax + Point.new(0, 2)
+    ybot = ymax + Point.new(0, 1)
     if max_rect.include?(ybot)
       xbotmax = ymax + advance_line(ybot, ybot, Point.new(1, 0), @maxdx)
       xbotmin = ymax + advance_line(ybot, ybot, Point.new(-1, 0), @maxdx)

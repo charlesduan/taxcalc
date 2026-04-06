@@ -760,7 +760,7 @@ class TaxForm
     # given order.
     #
     def place_lines(*nums)
-      nums.each do |num|
+      nums.map { |a| a.is_a?(Range) ? a.to_a : a }.flatten.each do |num|
         num = resolve_alias(num)
         if @lines_order.include?(num)
           @lines_order.delete(num)

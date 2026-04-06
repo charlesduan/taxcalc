@@ -381,8 +381,6 @@ end
 
 IO.open(ARGV[0].to_i, 'r') do |rio|
   IO.open(ARGV[1].to_i, 'w') do |wio|
-    puts "Running UI"
     TaxUIApp.new(rio, wio).run
-    puts "Done running UI"
   end
 end

@@ -110,13 +110,15 @@ class Form2441 < TaxForm
 
     # For the first three providers, add them onto the form
     providers[0, 3].each do |f|
+      addr_lines = break_lines(f.line[:address], 28).split("\n", 2)
       add_table_row({
         '1a' => break_lines(f.line[:name], 15),
-        '1b' => break_lines(f.line[:address], 28),
+        '1b' => addr_lines[0],
+        '1b.bot' => addr_lines[1],
         '1c' => f.line[:tin],
         (f.line[:employee?] ? '1d.yes' : '1d.no') => 'X',
         '1e' => f.line[:amount]
-      })
+      }.compact)
     end
 
     compute_part_iii
@@ -278,7 +280,7 @@ class Form2441 < TaxForm
 
     line['11/credit'] = [ line['9c'], line[10] ].min
 
-    place_lines(*12..31)
+    place_lines(12..21, '22.no', '22.yes', 22..31)
 
   end
 

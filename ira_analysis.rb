@@ -83,7 +83,8 @@ class IraAnalysis < TaxForm
     end
     line[:total_distrib] = all_1099rs.lines(1, :sum)
 
-    line[:rollover?] = (distrib[:roth_rollover] || distrib[:trad_rollover])
+    line[:rollover?] = (distrib[:roth_rollover] || distrib[:trad_rollover]) ? \
+      "yes" : "no"
 
     #
     # II. Computing

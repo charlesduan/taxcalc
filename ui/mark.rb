@@ -95,8 +95,26 @@ end
 # exit.
 if ARGV.count != 1
   puts("Provide a form name to work with. The following forms are available:")
+  res = {
+    'Managers' => [],
+    'Complete forms' => [],
+    'Incomplete not-for-filing' => [],
+    'Incomplete forms' => [],
+  }
   @controller.forms.each do |name, form|
-    puts "  #{name}#{form.all_positioned? ? '' : ' (incomplete)'}"
+    if form.all_positioned?
+      res['Complete forms'].push(name)
+    elsif %w(Manager Analysis).any? { |x| name.include?(x) }
+      res['Managers'].push(name)
+    elsif form.discarded
+      res['Incomplete not-for-filing'].push(name)
+    else
+      res['Incomplete forms'].push(name)
+    end
+  end
+  res.each do |cat, forms|
+    puts "\n#{cat}"
+    forms.each do |f| puts "  #{f}" end
   end
   exit
 elsif ARGV[0] == 'next'
@@ -158,7 +176,7 @@ end
 begin
 
   @ctrl_read.each do |line|
-    puts "<- #{line}"
+    # puts "<- #{line}"
     obj = JSON.parse(line)
     command, payload = obj['command'], obj['payload']
     if @controller.respond_to?("cmd_#{command}")

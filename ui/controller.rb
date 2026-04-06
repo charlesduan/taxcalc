@@ -26,13 +26,20 @@ module Marking; class Controller
 
   def import_forms(form_manager)
     form_manager.each do |tax_form|
-      if @forms.include?(tax_form.name)
-        form = @forms[tax_form.name]
-      else
-        form = @forms[tax_form.name] = Form.new(tax_form.name)
-      end
-      form.merge_lines(tax_form)
+      import_form(tax_form)
     end
+    form_manager.each_discarded do |tax_form|
+      import_form(tax_form)
+    end
+  end
+
+  def import_form(tax_form)
+    if @forms.include?(tax_form.name)
+      form = @forms[tax_form.name]
+    else
+      form = @forms[tax_form.name] = Form.new(tax_form.name)
+    end
+    form.merge_lines(tax_form)
   end
 
   def select_form(name)
@@ -43,7 +50,8 @@ module Marking; class Controller
   def set_current_form_file(file, force: false)
     raise "No selected form" unless @current_form
     if @current_form.file
-      raise "Refusing to overwrite form data; use 'force' option" unless force
+      warn("Refusing to overwrite form data; use 'force' option") unless force
+      return
     end
     @current_form.file = file
   end
@@ -51,7 +59,8 @@ module Marking; class Controller
   def download_current_form_file(dir:, url: nil, force: false)
     raise "No selected form" unless @current_form
     if @current_form.file
-      raise "Refusing to overwrite form data; use 'force' option" unless force
+      warn("Refusing to overwrite form data; use 'force' option") unless force
+      return
     end
     shortname = @current_form.name.downcase.gsub(/\W+/, '-')
     filename = File.join(dir, "form#{shortname}.pdf")

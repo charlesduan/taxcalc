@@ -32,17 +32,21 @@ class FormManager
   end
 
   def export_all(io = STDOUT, all = false)
-    @ordered_forms.each do |f|
+    each do |f|
       warn("Form #{f.name} was not used") unless f.used
       f.export(io) if all || f.exportable
     end
-    @not_needed_forms.values.flatten.each do |f|
+    each_discarded do |f|
       f.export(io) if all || f.exportable
     end
   end
 
   def each(&block)
     @ordered_forms.each(&block)
+  end
+
+  def each_discarded(&block)
+    @not_needed_forms.values.flatten.each(&block)
   end
 
   def list_forms
@@ -310,7 +314,7 @@ class FormManager
           next unless (line && line =~ /\w/)
           next if line =~ /^\s*#/
 
-          unless (line =~ /^((No )?Form|Table) /)
+          unless (line =~ /^((No |Discarded )?Form|Table) /)
             raise "Invalid start of form"
           end
           type = $1
@@ -325,6 +329,11 @@ class FormManager
             new_form = NamedForm.new(name, self)
             new_form.import(io)
             add_form(new_form)
+          when 'Discarded Form'
+            new_form = NamedForm.new(name, self)
+            new_form.import(io)
+            new_form.discarded = true
+            (@not_needed_forms[new_form.name] ||= []).push(new_form)
           else
             raise "Unknown form type #{type}"
           end

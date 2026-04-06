@@ -161,7 +161,7 @@ class Form1040 < TaxForm
       }
       row[:dep_5a] = 'X' if dep.line[:where, :opt] == 'with'
       if row[:dep_5a] && line[:us_home, :present]
-        row[:dep_6b] = 'X'
+        row[:dep_5b] = 'X'
       end
 
       row[:dep_6_student] = 'X' if dep.line[:student?]
@@ -270,13 +270,16 @@ class Form1040 < TaxForm
     # Capital gains/losses
     if has_form?('1099-B')
       compute_form('1040 Schedule D')
-      line['7/cap_gain'] = with_form(
+      line['7a/cap_gain'] = with_form(
         '1040 Schedule D', otherwise: BlankZero
       ) do |sched_d|
         sched_d.line[:tot_gain]
       end
     else
-      line['7/cap_gain'] = BlankZero
+      line['7a/cap_gain'] = BlankZero
+    end
+    unless has_form?('1040 Schedule D')
+      line['7b.sch_d_not_reqd'] = 'X'
     end
 
     # Other income, Schedule 1

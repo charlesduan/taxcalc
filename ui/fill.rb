@@ -14,6 +14,7 @@ require_relative 'form_filler'
 
 @options = OpenStruct.new(
   fill_dir: "filled",
+  discard_dir: "filled/discarded",
   posdata: "posdata.yaml",
   prefix: nil,
   bio: nil,
@@ -53,7 +54,7 @@ OptionParser.new do |opts|
 end.parse!
 
 
-posdata = YAML.load(
+@posdata = YAML.load(
   open(@options.posdata, &:read),
   permitted_classes: [ Marking::Form, Marking::Line, Marking::Position ],
 )
@@ -65,58 +66,62 @@ end
 
 Dir.mkdir(@options.fill_dir) unless File.directory?(@options.fill_dir)
 
-#
-# Select the forms to fill
-#
 manager = FormManager.new
 manager.import(form_file)
-
-if form_names.empty?
-  forms = manager.to_a
-else
-  forms = form_names.map { |name| manager.forms(name) }.flatten
-end
 
 #
 # This is a somewhat hackish way of finding the biographical information but it
 # works for most purposes, I think
 #
-bio = @options.bio
-bio ||= manager.with_form(1040) { |f|
+@bio = @options.bio
+@bio ||= manager.with_form(1040) { |f|
   "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:ssn]}"
 }
-bio ||= manager.with_form(1065) { |f|
+@bio ||= manager.with_form(1065) { |f|
   "#{f.line[:name]}, EIN #{f.line[:ein]}"
 }
-bio ||= manager.with_form('D-40') { |f|
+@bio ||= manager.with_form('D-40') { |f|
   "#{f.line[:first_name]} #{f.line[:last_name]}, SSN #{f.line[:tin]}"
 }
-unless bio
+unless @bio
   raise "No biographical information found; use --biographical option"
 end
 
 
-files_created = {}
+@files_created = {}
 
-forms.each do |tax_form|
-  pos_form = posdata[tax_form.name]
-  next unless pos_form && pos_form.file
+def fill_form(tax_form, dir)
+  pos_form = @posdata[tax_form.name]
+  return unless pos_form && pos_form.file
   puts "Filling Form #{tax_form.name}"
 
   filler = FormFiller.new(tax_form, pos_form)
   filler.even_pages = @options.even
-  filler.continuation_bio = bio
+  filler.continuation_bio = @bio
 
   # Deal with multiple forms of the same name
   filename = [
     @options.prefix, tax_form.name.downcase.gsub(/\W+/, '-'), ".pdf"
   ].join("")
-  if files_created[filename]
-    files_created[filename] += 1
-    filename = filename.sub(/\.pdf\z/, "-#{files_created[filename]}.pdf")
+  if @files_created[filename]
+    @files_created[filename] += 1
+    filename = filename.sub(/\.pdf\z/, "-#{@files_created[filename]}.pdf")
   else
-    files_created[filename] = 0
+    @files_created[filename] = 0
   end
 
-  filler.fill(File.join(@options.fill_dir, filename))
+  filler.fill(File.join(dir, filename))
+end
+
+Dir.mkdir(@options.fill_dir) unless File.directory?(@options.fill_dir)
+Dir.mkdir(@options.discard_dir) unless File.directory?(@options.discard_dir)
+
+manager.each do |tax_form|
+  next unless form_names.empty? || form_names.include?(tax_form.name)
+  fill_form(tax_form, @options.fill_dir)
+end
+
+manager.each_discarded do |tax_form|
+  next unless form_names.empty? || form_names.include?(tax_form.name)
+  fill_form(tax_form, @options.discard_dir)
 end
