@@ -146,7 +146,7 @@ class Form2441 < TaxForm
     line[16] = forms('Dependent Care Provider').lines(:fsa, :sum)
 
     # The forfeited/carryover amount is whatever wasn't spent.
-    line[14] = sum_lines(12, 13) - line[16]
+    line[14] = [ sum_lines(12, 13) - line[16], 0 ].max
     line[15] = sum_lines(12, 13) - line[14, :opt]
 
     place_lines(16)
@@ -155,7 +155,7 @@ class Form2441 < TaxForm
 
     compute_earned_income(18, 19)
 
-    line[20] = [ line[17], line[18], line[19], 0 ].min
+    line[20] = [ [ line[17], line[18], line[19] ].min, 0 ].max
     line[21] = [
       form(1040).status.halve_mfs(5000), @use_form.line[:max_contrib]
     ].min

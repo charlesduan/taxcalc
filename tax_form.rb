@@ -688,6 +688,17 @@ class TaxForm
       @form.used = true
       line, value = args.first.to_s, args.last
       type = args.count == 3 ? args[1] : nil
+
+      # Force boolean lines to be booleans
+      if line.end_with?('?')
+        if !value || value.to_s =~ /^no?|false/i
+          value = false
+        else
+          value = true
+        end
+      end
+
+      # Determine how to use the value depending on the type parameter
       case type
       when :all
         value = [ value ].flatten
@@ -703,6 +714,8 @@ class TaxForm
           raise "#{line_name(line)}: not expecting an array"
         end
       end
+
+      # Set the line value
       @lines_order.push(line) unless @lines_data[line]
       form.explain("    #{line}:  #{value.inspect}")
       @lines_data[line] = value
@@ -744,9 +757,15 @@ class TaxForm
         data = @lines_data[line]
         prefix = "\t#{line}\t"
         [ data ].flatten.each do |item|
-          item = item.strftime("%-m/%-d/%Y") if item.is_a?(Date)
-          item = "'#{item}" if item.is_a?(String) && item =~ /\A\d+\z/
-          item = item.to_s.gsub("\n", "\\n")
+          case item
+          when Date
+            item = item.strftime("%-m/%-d/%Y")
+          when String
+            item = "'#{item}" if item =~ /\A\d+\z/
+          else
+            item = item.to_s
+          end
+          item = item.gsub("\n", "\\n")
           io.puts("#{prefix}#{item}")
           prefix = "\t#{'"'.ljust(line.length)}\t"
         end

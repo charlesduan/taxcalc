@@ -43,6 +43,7 @@ module Marking
               when /Pub\. ([\w-]+)/ then "p#$1".downcase.gsub('-', '')
               when /^1040 .*Worksheet/ then "i1040gi"
               when /^(\d{4}) .*Worksheet/ then "i#$1"
+              when /Schedule (\w+).*Worksheet/ then "i1040sc#$1".downcase
               else raise "Can't determine form URL"
               end
       return "https://www.irs.gov/pub/irs-pdf/#{uname}.pdf"

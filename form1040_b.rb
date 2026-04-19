@@ -27,7 +27,7 @@ class Form1040B < TaxForm
     end
 
     with_forms('1065 Schedule K-1') do |f|
-      if f.line[5, :present]
+      if f.line[5, :opt] != 0
         add_table_row('1l' => f.line[:B].split("\n")[0], '1r' => f.line[5])
       end
     end

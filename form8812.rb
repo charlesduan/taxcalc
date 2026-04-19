@@ -82,6 +82,10 @@ class Form8812 < TaxForm
     line['14/ctc'] = [ line[12], line[13] ].min
   end
 
+  def needed?
+    line[12] > 0
+  end
+
   #
   # Compute the additional child tax credit.
   #
